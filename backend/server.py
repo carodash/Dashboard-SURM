@@ -241,7 +241,12 @@ async def delete_sourcing_partner(partner_id: str):
 async def create_dealflow_partner(partner: DealflowPartnerCreate):
     partner_dict = partner.dict()
     partner_obj = DealflowPartner(**partner_dict)
-    result = await db.dealflow_partners.insert_one(partner_obj.dict())
+    # Convert date objects to strings for MongoDB storage
+    partner_data = partner_obj.dict()
+    for key, value in partner_data.items():
+        if isinstance(value, date) and not isinstance(value, datetime):
+            partner_data[key] = value.isoformat()
+    result = await db.dealflow_partners.insert_one(partner_data)
     return partner_obj
 
 @api_router.get("/dealflow", response_model=List[DealflowPartner])
