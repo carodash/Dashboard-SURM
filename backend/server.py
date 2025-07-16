@@ -271,6 +271,11 @@ async def update_dealflow_partner(partner_id: str, partner_update: DealflowPartn
     update_dict = {k: v for k, v in partner_update.dict().items() if v is not None}
     update_dict["updated_at"] = datetime.utcnow()
     
+    # Convert date objects to strings for MongoDB storage
+    for key, value in update_dict.items():
+        if isinstance(value, date) and not isinstance(value, datetime):
+            update_dict[key] = value.isoformat()
+    
     result = await db.dealflow_partners.update_one(
         {"id": partner_id},
         {"$set": update_dict}
