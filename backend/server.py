@@ -193,7 +193,12 @@ class DashboardStats(BaseModel):
 async def create_sourcing_partner(partner: SourcingPartnerCreate):
     partner_dict = partner.dict()
     partner_obj = SourcingPartner(**partner_dict)
-    result = await db.sourcing_partners.insert_one(partner_obj.dict())
+    # Convert date objects to strings for MongoDB storage
+    partner_data = partner_obj.dict()
+    for key, value in partner_data.items():
+        if isinstance(value, date) and not isinstance(value, datetime):
+            partner_data[key] = value.isoformat()
+    result = await db.sourcing_partners.insert_one(partner_data)
     return partner_obj
 
 @api_router.get("/sourcing", response_model=List[SourcingPartner])
