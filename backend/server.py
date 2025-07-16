@@ -310,7 +310,12 @@ async def transition_to_dealflow(sourcing_id: str, dealflow_data: Dict[str, Any]
     }
     
     dealflow_partner = DealflowPartner(**dealflow_partner_data)
-    await db.dealflow_partners.insert_one(dealflow_partner.dict())
+    # Convert date objects to strings for MongoDB storage
+    dealflow_data_for_db = dealflow_partner.dict()
+    for key, value in dealflow_data_for_db.items():
+        if isinstance(value, date) and not isinstance(value, datetime):
+            dealflow_data_for_db[key] = value.isoformat()
+    await db.dealflow_partners.insert_one(dealflow_data_for_db)
     
     # Update sourcing partner status
     await db.sourcing_partners.update_one(
