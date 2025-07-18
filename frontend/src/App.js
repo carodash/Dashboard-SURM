@@ -424,7 +424,27 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    // Ensure all required fields are filled
+    if (!formData.nom || !formData.domaine || !formData.typologie || !formData.objet || 
+        !formData.source || !formData.pilote || !formData.metiers_concernes || 
+        !formData.date_reception_fichier) {
+      alert("Veuillez remplir tous les champs requis marqués d'un *");
+      return;
+    }
+    
+    // Process date fields
+    const processedData = { ...formData };
+    
+    // Convert empty date strings to null
+    Object.keys(processedData).forEach(key => {
+      if (key.includes('date') && processedData[key] === '') {
+        processedData[key] = null;
+      }
+    });
+    
+    console.log("Submitting dealflow data:", processedData);
+    onSubmit(processedData);
   };
 
   const handleChange = (e) => {
