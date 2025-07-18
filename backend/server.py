@@ -329,6 +329,50 @@ async def enrich_company_data(company_name: str, domain: str = None) -> Dict[str
     
     return enriched_data
 
+# COLUMN CONFIGURATION ENDPOINTS
+@api_router.post("/config/columns")
+async def save_column_config(column_config: Dict[str, Any]):
+    """Save column configuration"""
+    result = await db.column_configurations.replace_one(
+        {"type": "columns"},
+        {"type": "columns", "config": column_config, "updated_at": datetime.utcnow()},
+        upsert=True
+    )
+    return {"message": "Column configuration saved successfully"}
+
+@api_router.get("/config/columns")
+async def get_column_config():
+    """Get column configuration"""
+    config = await db.column_configurations.find_one({"type": "columns"})
+    if not config:
+        # Return default configuration
+        return {
+            "sourcing": {
+                "nom_entreprise": {"visible": True, "label": "Entreprise"},
+                "statut": {"visible": True, "label": "Statut"},
+                "domaine_activite": {"visible": True, "label": "Domaine"},
+                "pilote": {"visible": True, "label": "Pilote"},
+                "pays_origine": {"visible": False, "label": "Pays"},
+                "typologie": {"visible": False, "label": "Typologie"},
+                "technologie": {"visible": False, "label": "Technologie"},
+                "source": {"visible": False, "label": "Source"},
+                "date_entree_sourcing": {"visible": False, "label": "Date entrée"},
+                "interet": {"visible": False, "label": "Intérêt"}
+            },
+            "dealflow": {
+                "nom": {"visible": True, "label": "Nom"},
+                "statut": {"visible": True, "label": "Statut"},
+                "domaine": {"visible": True, "label": "Domaine"},
+                "metiers_concernes": {"visible": True, "label": "Métiers"},
+                "pilote": {"visible": False, "label": "Pilote"},
+                "typologie": {"visible": False, "label": "Typologie"},
+                "source": {"visible": False, "label": "Source"},
+                "date_reception_fichier": {"visible": False, "label": "Date réception"},
+                "date_pre_qualification": {"visible": False, "label": "Date pré-qualification"}
+            }
+        }
+    return config["config"]
+
 # CONFIGURATION ENDPOINTS
 @api_router.post("/config/form", response_model=FormConfiguration)
 async def create_form_config(config: FormConfiguration):
