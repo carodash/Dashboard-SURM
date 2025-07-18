@@ -2020,6 +2020,14 @@ const Dashboard = () => {
                             >
                               {loading ? "Enrichissement..." : "Enrichir"}
                             </button>
+                            {partner.enriched_data && Object.keys(partner.enriched_data).length > 0 && (
+                              <button
+                                onClick={() => handleShowEnrichedData(partner, "sourcing")}
+                                className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 px-2 py-1 rounded"
+                              >
+                                📊 Voir données
+                              </button>
+                            )}
                             {partner.statut !== "Dealflow" && (
                               <button
                                 onClick={() => handleTransitionToDealflow(partner.id)}
