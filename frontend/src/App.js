@@ -1596,17 +1596,24 @@ const Dashboard = () => {
   };
 
   const handleEnrichData = async (partnerId, partnerType) => {
+    setLoading(true);
     try {
-      await axios.post(`${API}/enrich/${partnerId}?partner_type=${partnerType}`);
+      console.log(`Enriching partner ${partnerId} of type ${partnerType}`);
+      const response = await axios.post(`${API}/enrich/${partnerId}?partner_type=${partnerType}`);
+      console.log("Enrichment response:", response.data);
+      
       if (partnerType === "sourcing") {
         await fetchSourcingPartners();
       } else {
         await fetchDealflowPartners();
       }
+      
       alert("Données enrichies avec succès !");
     } catch (error) {
       console.error("Error enriching data:", error);
-      alert("Erreur lors de l'enrichissement des données");
+      alert(`Erreur lors de l'enrichissement des données: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
