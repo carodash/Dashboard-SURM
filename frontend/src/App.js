@@ -1787,6 +1787,12 @@ const Dashboard = () => {
     fetchStatistics();
   };
 
+  const handleShowEnrichedData = (partner, partnerType) => {
+    setSelectedPartner(partner);
+    setSelectedPartnerType(partnerType);
+    setShowEnrichedData(true);
+  };
+
   // Update filtered data when original data changes
   useEffect(() => {
     setFilteredSourcingPartners(sourcingPartners);
