@@ -1939,28 +1939,31 @@ const Dashboard = () => {
                             </td>
                           ) : null
                         )}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <button
-                            onClick={() => {
-                              setEditingPartner(partner);
-                              setShowDealflowForm(true);
-                            }}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Modifier
-                          </button>
-                          <button
-                            onClick={() => handleDeleteDealflow(partner.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Supprimer
-                          </button>
-                          <button
-                            onClick={() => handleEnrichData(partner.id, "dealflow")}
-                            className="text-green-600 hover:text-green-900"
-                          >
-                            Enrichir
-                          </button>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingPartner(partner);
+                                setShowDealflowForm(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded"
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              onClick={() => handleDeleteDealflow(partner.id)}
+                              className="text-red-600 hover:text-red-900 hover:bg-red-50 px-2 py-1 rounded"
+                            >
+                              Supprimer
+                            </button>
+                            <button
+                              onClick={() => handleEnrichData(partner.id, "dealflow")}
+                              disabled={loading}
+                              className="text-green-600 hover:text-green-900 hover:bg-green-50 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {loading ? "Enrichissement..." : "Enrichir"}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
