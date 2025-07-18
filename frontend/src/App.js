@@ -1337,6 +1337,8 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sourcingPartners, setSourcingPartners] = useState([]);
   const [dealflowPartners, setDealflowPartners] = useState([]);
+  const [filteredSourcingPartners, setFilteredSourcingPartners] = useState([]);
+  const [filteredDealflowPartners, setFilteredDealflowPartners] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [showSourcingForm, setShowSourcingForm] = useState(false);
   const [showDealflowForm, setShowDealflowForm] = useState(false);
@@ -1347,11 +1349,38 @@ const Dashboard = () => {
     sourcing: [],
     dealflow: []
   });
+  const [columnConfig, setColumnConfig] = useState({
+    sourcing: {
+      nom_entreprise: { visible: true, label: "Entreprise" },
+      statut: { visible: true, label: "Statut" },
+      domaine_activite: { visible: true, label: "Domaine" },
+      pilote: { visible: true, label: "Pilote" },
+      pays_origine: { visible: false, label: "Pays" },
+      typologie: { visible: false, label: "Typologie" },
+      technologie: { visible: false, label: "Technologie" },
+      source: { visible: false, label: "Source" },
+      date_entree_sourcing: { visible: false, label: "Date entrée" },
+      interet: { visible: false, label: "Intérêt" }
+    },
+    dealflow: {
+      nom: { visible: true, label: "Nom" },
+      statut: { visible: true, label: "Statut" },
+      domaine: { visible: true, label: "Domaine" },
+      metiers_concernes: { visible: true, label: "Métiers" },
+      pilote: { visible: false, label: "Pilote" },
+      typologie: { visible: false, label: "Typologie" },
+      source: { visible: false, label: "Source" },
+      date_reception_fichier: { visible: false, label: "Date réception" },
+      date_pre_qualification: { visible: false, label: "Date pré-qualification" }
+    }
+  });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   const fetchSourcingPartners = async () => {
     try {
       const response = await axios.get(`${API}/sourcing`);
       setSourcingPartners(response.data);
+      setFilteredSourcingPartners(response.data);
     } catch (error) {
       console.error("Error fetching sourcing partners:", error);
     }
@@ -1361,6 +1390,7 @@ const Dashboard = () => {
     try {
       const response = await axios.get(`${API}/dealflow`);
       setDealflowPartners(response.data);
+      setFilteredDealflowPartners(response.data);
     } catch (error) {
       console.error("Error fetching dealflow partners:", error);
     }
@@ -1388,12 +1418,81 @@ const Dashboard = () => {
     }
   };
 
+  const fetchColumnConfig = async () => {
+    try {
+      const response = await axios.get(`${API}/config/columns`);
+      if (response.data) {
+        setColumnConfig(response.data);
+      }
+    } catch (error) {
+      console.log("No column configuration found, using defaults");
+    }
+  };
+
   useEffect(() => {
     fetchSourcingPartners();
     fetchDealflowPartners();
     fetchStatistics();
     fetchCustomFields();
+    fetchColumnConfig();
   }, []);
+
+  const handleSearch = (searchTerm, type) => {
+    if (type === 'sourcing') {
+      if (!searchTerm) {
+        setFilteredSourcingPartners(sourcingPartners);
+      } else {
+        const filtered = sourcingPartners.filter(partner =>
+          Object.values(partner).some(value =>
+            value && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        );
+        setFilteredSourcingPartners(filtered);
+      }
+    } else {
+      if (!searchTerm) {
+        setFilteredDealflowPartners(dealflowPartners);
+      } else {
+        const filtered = dealflowPartners.filter(partner =>
+          Object.values(partner).some(value =>
+            value && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        );
+        setFilteredDealflowPartners(filtered);
+      }
+    }
+  };
+
+  const handleSort = (key, direction) => {
+    setSortConfig({ key, direction });
+    
+    const sortData = (data) => {
+      return [...data].sort((a, b) => {
+        let aValue = a[key];
+        let bValue = b[key];
+        
+        // Handle null/undefined values
+        if (aValue === null || aValue === undefined) aValue = '';
+        if (bValue === null || bValue === undefined) bValue = '';
+        
+        // Convert to strings for comparison
+        aValue = aValue.toString().toLowerCase();
+        bValue = bValue.toString().toLowerCase();
+        
+        if (direction === 'asc') {
+          return aValue.localeCompare(bValue);
+        } else {
+          return bValue.localeCompare(aValue);
+        }
+      });
+    };
+
+    if (activeTab === 'sourcing') {
+      setFilteredSourcingPartners(sortData(filteredSourcingPartners));
+    } else if (activeTab === 'dealflow') {
+      setFilteredDealflowPartners(sortData(filteredDealflowPartners));
+    }
+  };
 
   const handleCreateSourcing = async (formData) => {
     setLoading(true);
@@ -1513,9 +1612,41 @@ const Dashboard = () => {
 
   const handleSettingsSave = () => {
     fetchCustomFields();
+    fetchColumnConfig();
     fetchSourcingPartners();
     fetchDealflowPartners();
     fetchStatistics();
+  };
+
+  const renderTableCell = (partner, key, config) => {
+    const value = partner[key];
+    
+    if (key === 'statut') {
+      const statusColors = {
+        "A traiter": "bg-yellow-100 text-yellow-800",
+        "Clos": "bg-red-100 text-red-800",
+        "Dealflow": "bg-green-100 text-green-800",
+        "Klaxoon": "bg-blue-100 text-blue-800",
+        "En cours avec les métiers": "bg-blue-100 text-blue-800",
+        "En cours avec l'équipe inno": "bg-green-100 text-green-800"
+      };
+      
+      return (
+        <span className={`px-2 py-1 rounded-full text-xs ${statusColors[value] || 'bg-gray-100 text-gray-800'}`}>
+          {value}
+        </span>
+      );
+    }
+    
+    if (key === 'interet') {
+      return value ? '✓' : '✗';
+    }
+    
+    if (key.includes('date') && value) {
+      return new Date(value).toLocaleDateString('fr-FR');
+    }
+    
+    return value || '-';
   };
 
   const renderStatisticsCard = (title, value, subtitle = null) => (
