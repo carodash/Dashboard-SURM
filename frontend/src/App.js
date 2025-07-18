@@ -1828,36 +1828,39 @@ const Dashboard = () => {
                             </td>
                           ) : null
                         )}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                          <button
-                            onClick={() => {
-                              setEditingPartner(partner);
-                              setShowSourcingForm(true);
-                            }}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Modifier
-                          </button>
-                          <button
-                            onClick={() => handleDeleteSourcing(partner.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Supprimer
-                          </button>
-                          <button
-                            onClick={() => handleEnrichData(partner.id, "sourcing")}
-                            className="text-green-600 hover:text-green-900"
-                          >
-                            Enrichir
-                          </button>
-                          {partner.statut !== "Dealflow" && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex flex-wrap gap-2">
                             <button
-                              onClick={() => handleTransitionToDealflow(partner.id)}
-                              className="text-purple-600 hover:text-purple-900"
+                              onClick={() => {
+                                setEditingPartner(partner);
+                                setShowSourcingForm(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded"
                             >
-                              → Dealflow
+                              Modifier
                             </button>
-                          )}
+                            <button
+                              onClick={() => handleDeleteSourcing(partner.id)}
+                              className="text-red-600 hover:text-red-900 hover:bg-red-50 px-2 py-1 rounded"
+                            >
+                              Supprimer
+                            </button>
+                            <button
+                              onClick={() => handleEnrichData(partner.id, "sourcing")}
+                              disabled={loading}
+                              className="text-green-600 hover:text-green-900 hover:bg-green-50 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {loading ? "Enrichissement..." : "Enrichir"}
+                            </button>
+                            {partner.statut !== "Dealflow" && (
+                              <button
+                                onClick={() => handleTransitionToDealflow(partner.id)}
+                                className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 px-2 py-1 rounded"
+                              >
+                                → Dealflow
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
