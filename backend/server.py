@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Body
+from fastapi import FastAPI, APIRouter, HTTPException, Body, Request
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,10 +6,14 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 import uuid
 from datetime import datetime, date
 from enum import Enum
+import httpx
+from bs4 import BeautifulSoup
+import re
+import json
 
 
 ROOT_DIR = Path(__file__).parent
@@ -38,9 +42,61 @@ class DealflowStatus(str, Enum):
     EN_COURS_METIERS = "En cours avec les métiers"
     EN_COURS_EQUIPE_INNO = "En cours avec l'équipe inno"
 
-# Models for Sourcing
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    MANAGER = "manager"
+    USER = "user"
+
+class FieldType(str, Enum):
+    TEXT = "text"
+    DATE = "date"
+    SELECT = "select"
+    CHECKBOX = "checkbox"
+    TEXTAREA = "textarea"
+    NUMBER = "number"
+    EMAIL = "email"
+
+# Configuration Models
+class FormField(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    label: str
+    type: FieldType
+    required: bool = False
+    options: Optional[List[str]] = None  # For select fields
+    placeholder: Optional[str] = None
+    validation_regex: Optional[str] = None
+    order: int = 0
+    visible: bool = True
+    editable_by_roles: List[UserRole] = [UserRole.ADMIN, UserRole.MANAGER, UserRole.USER]
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class FormConfiguration(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    form_type: str  # "sourcing" or "dealflow"
+    fields: List[FormField]
+    permissions: Dict[str, List[UserRole]] = {}  # action -> roles
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class UserPermission(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    role: UserRole
+    permissions: Dict[str, bool] = {}  # permission_name -> allowed
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class EnrichmentSettings(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    auto_enrich: bool = True
+    sources: List[str] = ["linkedin", "crunchbase", "website"]
+    fields_to_enrich: List[str] = ["founding_year", "employee_count", "funding_rounds", "contact_emails"]
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Models for Sourcing (with dynamic fields support)
 class SourcingPartner(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    # Core fields
     nom_entreprise: str
     statut: SourcingStatus
     pays_origine: str
@@ -55,6 +111,9 @@ class SourcingPartner(BaseModel):
     date_presentation_metiers: Optional[date] = None
     pilote: str
     actions_commentaires: Optional[str] = ""
+    # Dynamic fields for enrichment
+    enriched_data: Optional[Dict[str, Any]] = {}
+    custom_fields: Optional[Dict[str, Any]] = {}
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -73,6 +132,7 @@ class SourcingPartnerCreate(BaseModel):
     date_presentation_metiers: Optional[date] = None
     pilote: str
     actions_commentaires: Optional[str] = ""
+    custom_fields: Optional[Dict[str, Any]] = {}
 
 class SourcingPartnerUpdate(BaseModel):
     nom_entreprise: Optional[str] = None
@@ -89,8 +149,9 @@ class SourcingPartnerUpdate(BaseModel):
     date_presentation_metiers: Optional[date] = None
     pilote: Optional[str] = None
     actions_commentaires: Optional[str] = None
+    custom_fields: Optional[Dict[str, Any]] = None
 
-# Models for Dealflow
+# Models for Dealflow (with dynamic fields support)
 class DealflowPartner(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     nom: str
@@ -117,6 +178,9 @@ class DealflowPartner(BaseModel):
     cas_usage: Optional[str] = None
     technologie: Optional[str] = None
     interet: Optional[bool] = None
+    # Dynamic fields
+    enriched_data: Optional[Dict[str, Any]] = {}
+    custom_fields: Optional[Dict[str, Any]] = {}
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -144,6 +208,7 @@ class DealflowPartnerCreate(BaseModel):
     cas_usage: Optional[str] = None
     technologie: Optional[str] = None
     interet: Optional[bool] = None
+    custom_fields: Optional[Dict[str, Any]] = {}
 
 class DealflowPartnerUpdate(BaseModel):
     nom: Optional[str] = None
@@ -164,6 +229,7 @@ class DealflowPartnerUpdate(BaseModel):
     date_cloture: Optional[date] = None
     actions_commentaires: Optional[str] = None
     points_etapes_intermediaires: Optional[str] = None
+    custom_fields: Optional[Dict[str, Any]] = None
 
 # Statistics models
 class QuarterlyStats(BaseModel):
@@ -188,16 +254,187 @@ class DashboardStats(BaseModel):
     total_sourcing: int
     total_dealflow: int
 
+# AUTO-ENRICHMENT FUNCTIONS
+async def scrape_linkedin_basic(company_name: str) -> Dict[str, Any]:
+    """Basic LinkedIn scraping without authentication"""
+    try:
+        async with httpx.AsyncClient() as client:
+            # Simple search approach
+            search_url = f"https://www.linkedin.com/company/{company_name.lower().replace(' ', '-')}"
+            response = await client.get(search_url, timeout=10)
+            
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                
+                # Extract basic info from meta tags
+                description = soup.find('meta', property='og:description')
+                title = soup.find('meta', property='og:title')
+                
+                return {
+                    "linkedin_description": description.get('content', '') if description else '',
+                    "linkedin_title": title.get('content', '') if title else '',
+                    "linkedin_url": search_url
+                }
+    except Exception as e:
+        logging.error(f"LinkedIn scraping failed: {e}")
+    
+    return {}
+
+async def scrape_website_info(domain: str) -> Dict[str, Any]:
+    """Extract basic company info from website"""
+    try:
+        if not domain.startswith('http'):
+            domain = f"https://{domain}"
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(domain, timeout=10)
+            
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                
+                # Extract emails
+                email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
+                emails = list(set(email_pattern.findall(response.text)))
+                
+                # Extract meta info
+                description = soup.find('meta', attrs={'name': 'description'})
+                title = soup.find('title')
+                
+                return {
+                    "website_description": description.get('content', '') if description else '',
+                    "website_title": title.text if title else '',
+                    "contact_emails": emails[:3],  # Limit to 3 emails
+                    "website_url": domain
+                }
+    except Exception as e:
+        logging.error(f"Website scraping failed: {e}")
+    
+    return {}
+
+async def enrich_company_data(company_name: str, domain: str = None) -> Dict[str, Any]:
+    """Enrich company data from multiple sources"""
+    enriched_data = {}
+    
+    # LinkedIn enrichment
+    linkedin_data = await scrape_linkedin_basic(company_name)
+    enriched_data.update(linkedin_data)
+    
+    # Website enrichment
+    if domain:
+        website_data = await scrape_website_info(domain)
+        enriched_data.update(website_data)
+    
+    # Add enrichment timestamp
+    enriched_data["enriched_at"] = datetime.utcnow().isoformat()
+    
+    return enriched_data
+
+# CONFIGURATION ENDPOINTS
+@api_router.post("/config/form", response_model=FormConfiguration)
+async def create_form_config(config: FormConfiguration):
+    """Create or update form configuration"""
+    config_dict = config.dict()
+    
+    # Convert datetime objects to strings for MongoDB
+    for field in config_dict.get("fields", []):
+        if isinstance(field.get("created_at"), datetime):
+            field["created_at"] = field["created_at"].isoformat()
+    
+    result = await db.form_configurations.replace_one(
+        {"form_type": config.form_type},
+        config_dict,
+        upsert=True
+    )
+    return config
+
+@api_router.get("/config/form/{form_type}", response_model=FormConfiguration)
+async def get_form_config(form_type: str):
+    """Get form configuration"""
+    config = await db.form_configurations.find_one({"form_type": form_type})
+    if not config:
+        raise HTTPException(status_code=404, detail="Form configuration not found")
+    return FormConfiguration(**config)
+
+@api_router.get("/config/forms", response_model=List[FormConfiguration])
+async def get_all_form_configs():
+    """Get all form configurations"""
+    configs = await db.form_configurations.find().to_list(100)
+    return [FormConfiguration(**config) for config in configs]
+
+@api_router.post("/config/permissions", response_model=UserPermission)
+async def create_user_permissions(permission: UserPermission):
+    """Create or update user permissions"""
+    permission_dict = permission.dict()
+    result = await db.user_permissions.replace_one(
+        {"user_id": permission.user_id},
+        permission_dict,
+        upsert=True
+    )
+    return permission
+
+@api_router.get("/config/permissions/{user_id}", response_model=UserPermission)
+async def get_user_permissions(user_id: str):
+    """Get user permissions"""
+    permissions = await db.user_permissions.find_one({"user_id": user_id})
+    if not permissions:
+        # Return default permissions
+        return UserPermission(
+            user_id=user_id,
+            role=UserRole.USER,
+            permissions={
+                "create_sourcing": True,
+                "edit_sourcing": True,
+                "delete_sourcing": False,
+                "create_dealflow": True,
+                "edit_dealflow": True,
+                "delete_dealflow": False,
+                "view_statistics": True,
+                "manage_config": False
+            }
+        )
+    return UserPermission(**permissions)
+
+@api_router.post("/config/enrichment", response_model=EnrichmentSettings)
+async def create_enrichment_settings(settings: EnrichmentSettings):
+    """Create or update enrichment settings"""
+    settings_dict = settings.dict()
+    result = await db.enrichment_settings.replace_one(
+        {"id": settings.id},
+        settings_dict,
+        upsert=True
+    )
+    return settings
+
+@api_router.get("/config/enrichment", response_model=EnrichmentSettings)
+async def get_enrichment_settings():
+    """Get enrichment settings"""
+    settings = await db.enrichment_settings.find_one()
+    if not settings:
+        return EnrichmentSettings()
+    return EnrichmentSettings(**settings)
+
 # SOURCING ENDPOINTS
 @api_router.post("/sourcing", response_model=SourcingPartner)
 async def create_sourcing_partner(partner: SourcingPartnerCreate):
     partner_dict = partner.dict()
+    
+    # Auto-enrichment if enabled
+    enrichment_settings = await get_enrichment_settings()
+    if enrichment_settings.auto_enrich:
+        enriched_data = await enrich_company_data(
+            partner.nom_entreprise,
+            partner_dict.get("website_domain")
+        )
+        partner_dict["enriched_data"] = enriched_data
+    
     partner_obj = SourcingPartner(**partner_dict)
+    
     # Convert date objects to strings for MongoDB storage
     partner_data = partner_obj.dict()
     for key, value in partner_data.items():
         if isinstance(value, date) and not isinstance(value, datetime):
             partner_data[key] = value.isoformat()
+    
     result = await db.sourcing_partners.insert_one(partner_data)
     return partner_obj
 
@@ -245,12 +482,24 @@ async def delete_sourcing_partner(partner_id: str):
 @api_router.post("/dealflow", response_model=DealflowPartner)
 async def create_dealflow_partner(partner: DealflowPartnerCreate):
     partner_dict = partner.dict()
+    
+    # Auto-enrichment if enabled
+    enrichment_settings = await get_enrichment_settings()
+    if enrichment_settings.auto_enrich:
+        enriched_data = await enrich_company_data(
+            partner.nom,
+            partner_dict.get("website_domain")
+        )
+        partner_dict["enriched_data"] = enriched_data
+    
     partner_obj = DealflowPartner(**partner_dict)
+    
     # Convert date objects to strings for MongoDB storage
     partner_data = partner_obj.dict()
     for key, value in partner_data.items():
         if isinstance(value, date) and not isinstance(value, datetime):
             partner_data[key] = value.isoformat()
+    
     result = await db.dealflow_partners.insert_one(partner_data)
     return partner_obj
 
@@ -315,16 +564,20 @@ async def transition_to_dealflow(sourcing_id: str, dealflow_data: Dict[str, Any]
         "cas_usage": sourcing_partner["cas_usage"],
         "technologie": sourcing_partner["technologie"],
         "interet": sourcing_partner["interet"],
+        "enriched_data": sourcing_partner.get("enriched_data", {}),
+        "custom_fields": sourcing_partner.get("custom_fields", {}),
         # Required dealflow fields from the request
         **dealflow_data
     }
     
     dealflow_partner = DealflowPartner(**dealflow_partner_data)
+    
     # Convert date objects to strings for MongoDB storage
     dealflow_data_for_db = dealflow_partner.dict()
     for key, value in dealflow_data_for_db.items():
         if isinstance(value, date) and not isinstance(value, datetime):
             dealflow_data_for_db[key] = value.isoformat()
+    
     await db.dealflow_partners.insert_one(dealflow_data_for_db)
     
     # Update sourcing partner status
@@ -436,6 +689,33 @@ async def get_dashboard_statistics():
         total_sourcing=len(sourcing_partners),
         total_dealflow=len(dealflow_partners)
     )
+
+# ENRICHMENT ENDPOINT
+@api_router.post("/enrich/{partner_id}")
+async def enrich_partner_data(partner_id: str, partner_type: str = "sourcing"):
+    """Manually trigger enrichment for a specific partner"""
+    collection = db.sourcing_partners if partner_type == "sourcing" else db.dealflow_partners
+    
+    partner = await collection.find_one({"id": partner_id})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Partner not found")
+    
+    # Get company name
+    company_name = partner.get("nom_entreprise" if partner_type == "sourcing" else "nom")
+    
+    # Perform enrichment
+    enriched_data = await enrich_company_data(company_name)
+    
+    # Update partner with enriched data
+    await collection.update_one(
+        {"id": partner_id},
+        {"$set": {
+            "enriched_data": enriched_data,
+            "updated_at": datetime.utcnow()
+        }}
+    )
+    
+    return {"message": "Partner enriched successfully", "enriched_data": enriched_data}
 
 # Include the router in the main app
 app.include_router(api_router)
