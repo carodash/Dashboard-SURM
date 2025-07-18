@@ -1775,6 +1775,10 @@ const Dashboard = () => {
     }
   };
 
+  const [showEnrichedData, setShowEnrichedData] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState(null);
+  const [selectedPartnerType, setSelectedPartnerType] = useState(null);
+
   const handleSettingsSave = () => {
     fetchCustomFields();
     fetchColumnConfig();
