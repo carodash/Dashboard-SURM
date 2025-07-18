@@ -26,7 +26,15 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Convert date strings to proper format
+    const processedData = { ...formData };
+    if (processedData.date_entree_sourcing) {
+      processedData.date_entree_sourcing = processedData.date_entree_sourcing;
+    }
+    if (processedData.date_presentation_metiers) {
+      processedData.date_presentation_metiers = processedData.date_presentation_metiers;
+    }
+    onSubmit(processedData);
   };
 
   const handleChange = (e) => {
