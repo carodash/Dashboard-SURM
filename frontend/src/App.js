@@ -762,6 +762,31 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
     sourcing: { fields: [] },
     dealflow: { fields: [] }
   });
+  const [columnConfig, setColumnConfig] = useState({
+    sourcing: {
+      nom_entreprise: { visible: true, label: "Entreprise" },
+      statut: { visible: true, label: "Statut" },
+      domaine_activite: { visible: true, label: "Domaine" },
+      pilote: { visible: true, label: "Pilote" },
+      pays_origine: { visible: false, label: "Pays" },
+      typologie: { visible: false, label: "Typologie" },
+      technologie: { visible: false, label: "Technologie" },
+      source: { visible: false, label: "Source" },
+      date_entree_sourcing: { visible: false, label: "Date entrée" },
+      interet: { visible: false, label: "Intérêt" }
+    },
+    dealflow: {
+      nom: { visible: true, label: "Nom" },
+      statut: { visible: true, label: "Statut" },
+      domaine: { visible: true, label: "Domaine" },
+      metiers_concernes: { visible: true, label: "Métiers" },
+      pilote: { visible: false, label: "Pilote" },
+      typologie: { visible: false, label: "Typologie" },
+      source: { visible: false, label: "Source" },
+      date_reception_fichier: { visible: false, label: "Date réception" },
+      date_pre_qualification: { visible: false, label: "Date pré-qualification" }
+    }
+  });
   const [permissions, setPermissions] = useState({
     role: "user",
     permissions: {}
@@ -793,6 +818,12 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
         sourcing: sourcingConfig.data,
         dealflow: dealflowConfig.data
       });
+
+      // Load column configurations
+      const columnConfigResponse = await axios.get(`${API}/config/columns`);
+      if (columnConfigResponse.data) {
+        setColumnConfig(columnConfigResponse.data);
+      }
     } catch (error) {
       console.log("No existing config found, using defaults");
     }
@@ -846,6 +877,19 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
     }));
   };
 
+  const handleColumnToggle = (formType, columnKey) => {
+    setColumnConfig(prev => ({
+      ...prev,
+      [formType]: {
+        ...prev[formType],
+        [columnKey]: {
+          ...prev[formType][columnKey],
+          visible: !prev[formType][columnKey].visible
+        }
+      }
+    }));
+  };
+
   const handleSave = async () => {
     try {
       // Save form configurations
@@ -858,6 +902,9 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
         form_type: "dealflow",
         fields: formConfig.dealflow.fields || []
       });
+
+      // Save column configurations
+      await axios.post(`${API}/config/columns`, columnConfig);
       
       // Save permissions
       await axios.post(`${API}/config/permissions`, {
@@ -898,6 +945,12 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
             Configuration Formulaires
           </button>
           <button
+            onClick={() => setActiveTab("columns")}
+            className={`px-4 py-2 ${activeTab === "columns" ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-600"}`}
+          >
+            Colonnes à afficher
+          </button>
+          <button
             onClick={() => setActiveTab("permissions")}
             className={`px-4 py-2 ${activeTab === "permissions" ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-600"}`}
           >
@@ -910,6 +963,55 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
             Auto-enrichissement
           </button>
         </div>
+
+        {activeTab === "columns" && (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold">Configuration des colonnes à afficher</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Sourcing Columns */}
+              <div>
+                <h4 className="text-md font-medium mb-4">Colonnes Sourcing</h4>
+                <div className="space-y-3">
+                  {Object.entries(columnConfig.sourcing).map(([key, config]) => (
+                    <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                      <span className="font-medium">{config.label}</span>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={config.visible}
+                          onChange={() => handleColumnToggle("sourcing", key)}
+                          className="mr-2"
+                        />
+                        Afficher
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dealflow Columns */}
+              <div>
+                <h4 className="text-md font-medium mb-4">Colonnes Dealflow</h4>
+                <div className="space-y-3">
+                  {Object.entries(columnConfig.dealflow).map(([key, config]) => (
+                    <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                      <span className="font-medium">{config.label}</span>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={config.visible}
+                          onChange={() => handleColumnToggle("dealflow", key)}
+                          className="mr-2"
+                        />
+                        Afficher
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {activeTab === "forms" && (
           <div className="space-y-6">
