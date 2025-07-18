@@ -2196,6 +2196,15 @@ const Dashboard = () => {
           onSave={handleSettingsSave}
         />
       )}
+
+      {showEnrichedData && (
+        <EnrichedDataModal
+          isOpen={showEnrichedData}
+          onClose={() => setShowEnrichedData(false)}
+          partner={selectedPartner}
+          partnerType={selectedPartnerType}
+        />
+      )}
     </div>
   );
 };
