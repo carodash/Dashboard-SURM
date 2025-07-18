@@ -1752,189 +1752,208 @@ const Dashboard = () => {
 
         {activeTab === "sourcing" && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Partenaires Sourcing</h2>
-              <button
-                onClick={() => setShowSourcingForm(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                Nouveau Partenaire
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <div className="w-full sm:w-80">
+                  <SearchBar 
+                    onSearch={(term) => handleSearch(term, 'sourcing')}
+                    placeholder="Rechercher dans sourcing..."
+                  />
+                </div>
+                <button
+                  onClick={() => setShowSourcingForm(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 whitespace-nowrap"
+                >
+                  Nouveau Partenaire
+                </button>
+              </div>
             </div>
             
             <div className="bg-white shadow rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Entreprise
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Statut
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Domaine
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Pilote
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {sourcingPartners.map((partner) => (
-                    <tr key={partner.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {partner.nom_entreprise}
-                        {partner.enriched_data && (
-                          <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                            Enrichi
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          partner.statut === "A traiter" ? "bg-yellow-100 text-yellow-800" :
-                          partner.statut === "Clos" ? "bg-red-100 text-red-800" :
-                          partner.statut === "Dealflow" ? "bg-green-100 text-green-800" :
-                          "bg-blue-100 text-blue-800"
-                        }`}>
-                          {partner.statut}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {partner.domaine_activite}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {partner.pilote}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button
-                          onClick={() => {
-                            setEditingPartner(partner);
-                            setShowSourcingForm(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Modifier
-                        </button>
-                        <button
-                          onClick={() => handleDeleteSourcing(partner.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Supprimer
-                        </button>
-                        <button
-                          onClick={() => handleEnrichData(partner.id, "sourcing")}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          Enrichir
-                        </button>
-                        {partner.statut !== "Dealflow" && (
-                          <button
-                            onClick={() => handleTransitionToDealflow(partner.id)}
-                            className="text-purple-600 hover:text-purple-900"
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {Object.entries(columnConfig.sourcing).map(([key, config]) => 
+                        config.visible ? (
+                          <SortableTableHeader
+                            key={key}
+                            sortKey={key}
+                            currentSort={sortConfig}
+                            onSort={handleSort}
                           >
-                            → Dealflow
-                          </button>
-                        )}
-                      </td>
+                            {config.label}
+                          </SortableTableHeader>
+                        ) : null
+                      )}
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredSourcingPartners.map((partner) => (
+                      <tr key={partner.id} className="hover:bg-gray-50">
+                        {Object.entries(columnConfig.sourcing).map(([key, config]) => 
+                          config.visible ? (
+                            <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {key === 'nom_entreprise' && (
+                                <div className="flex items-center">
+                                  <span className="font-medium">{partner[key]}</span>
+                                  {partner.enriched_data && (
+                                    <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                      Enrichi
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {key !== 'nom_entreprise' && renderTableCell(partner, key, config)}
+                            </td>
+                          ) : null
+                        )}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingPartner(partner);
+                              setShowSourcingForm(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSourcing(partner.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Supprimer
+                          </button>
+                          <button
+                            onClick={() => handleEnrichData(partner.id, "sourcing")}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            Enrichir
+                          </button>
+                          {partner.statut !== "Dealflow" && (
+                            <button
+                              onClick={() => handleTransitionToDealflow(partner.id)}
+                              className="text-purple-600 hover:text-purple-900"
+                            >
+                              → Dealflow
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {filteredSourcingPartners.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Aucun partenaire sourcing trouvé.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {activeTab === "dealflow" && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Partenaires Dealflow</h2>
-              <button
-                onClick={() => setShowDealflowForm(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                Nouveau Partenaire
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <div className="w-full sm:w-80">
+                  <SearchBar 
+                    onSearch={(term) => handleSearch(term, 'dealflow')}
+                    placeholder="Rechercher dans dealflow..."
+                  />
+                </div>
+                <button
+                  onClick={() => setShowDealflowForm(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 whitespace-nowrap"
+                >
+                  Nouveau Partenaire
+                </button>
+              </div>
             </div>
             
             <div className="bg-white shadow rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nom
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Statut
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Domaine
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Métiers
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {dealflowPartners.map((partner) => (
-                    <tr key={partner.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {partner.nom}
-                        {partner.enriched_data && (
-                          <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                            Enrichi
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          partner.statut === "Clos" ? "bg-red-100 text-red-800" :
-                          partner.statut === "En cours avec les métiers" ? "bg-blue-100 text-blue-800" :
-                          "bg-green-100 text-green-800"
-                        }`}>
-                          {partner.statut}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {partner.domaine}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {partner.metiers_concernes}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button
-                          onClick={() => {
-                            setEditingPartner(partner);
-                            setShowDealflowForm(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Modifier
-                        </button>
-                        <button
-                          onClick={() => handleDeleteDealflow(partner.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Supprimer
-                        </button>
-                        <button
-                          onClick={() => handleEnrichData(partner.id, "dealflow")}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          Enrichir
-                        </button>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {Object.entries(columnConfig.dealflow).map(([key, config]) => 
+                        config.visible ? (
+                          <SortableTableHeader
+                            key={key}
+                            sortKey={key}
+                            currentSort={sortConfig}
+                            onSort={handleSort}
+                          >
+                            {config.label}
+                          </SortableTableHeader>
+                        ) : null
+                      )}
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredDealflowPartners.map((partner) => (
+                      <tr key={partner.id} className="hover:bg-gray-50">
+                        {Object.entries(columnConfig.dealflow).map(([key, config]) => 
+                          config.visible ? (
+                            <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {key === 'nom' && (
+                                <div className="flex items-center">
+                                  <span className="font-medium">{partner[key]}</span>
+                                  {partner.enriched_data && (
+                                    <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                      Enrichi
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {key !== 'nom' && renderTableCell(partner, key, config)}
+                            </td>
+                          ) : null
+                        )}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingPartner(partner);
+                              setShowDealflowForm(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            onClick={() => handleDeleteDealflow(partner.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Supprimer
+                          </button>
+                          <button
+                            onClick={() => handleEnrichData(partner.id, "dealflow")}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            Enrichir
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {filteredDealflowPartners.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Aucun partenaire dealflow trouvé.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
