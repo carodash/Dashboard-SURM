@@ -1618,6 +1618,15 @@ const Dashboard = () => {
     fetchStatistics();
   };
 
+  // Update filtered data when original data changes
+  useEffect(() => {
+    setFilteredSourcingPartners(sourcingPartners);
+  }, [sourcingPartners]);
+
+  useEffect(() => {
+    setFilteredDealflowPartners(dealflowPartners);
+  }, [dealflowPartners]);
+
   const renderTableCell = (partner, key, config) => {
     const value = partner[key];
     
