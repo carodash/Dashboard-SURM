@@ -1490,6 +1490,8 @@ const EnrichedDataModal = ({ isOpen, onClose, partner, partnerType }) => {
     </div>
   );
 };
+
+const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sourcingPartners, setSourcingPartners] = useState([]);
   const [dealflowPartners, setDealflowPartners] = useState([]);
