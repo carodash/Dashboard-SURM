@@ -2171,6 +2171,14 @@ const Dashboard = () => {
   const [showEnrichedData, setShowEnrichedData] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [selectedPartnerType, setSelectedPartnerType] = useState(null);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showUserRoleManager, setShowUserRoleManager] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({});
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [currentUser, setCurrentUser] = useState({
+    role: 'ADMIN',
+    permissions: USER_ROLES.ADMIN.permissions
+  });
 
   const handleSettingsSave = () => {
     fetchCustomFields();
