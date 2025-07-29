@@ -1099,9 +1099,12 @@ async def get_inactive_partners(threshold_days: int = 90):
 @api_router.get("/analytics/monthly-evolution")
 async def get_monthly_evolution(start_date: str = None, end_date: str = None):
     """Get monthly evolution of startups by status"""
-    # Parse date filters
-    start_dt = datetime.fromisoformat(start_date) if start_date else datetime.utcnow() - timedelta(days=365)
-    end_dt = datetime.fromisoformat(end_date) if end_date else datetime.utcnow()
+    # Parse date filters with error handling
+    try:
+        start_dt = datetime.fromisoformat(start_date) if start_date else datetime.utcnow() - timedelta(days=365)
+        end_dt = datetime.fromisoformat(end_date) if end_date else datetime.utcnow()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid date format: {str(e)}")
     
     # Get all partners
     sourcing_partners = await db.sourcing_partners.find().to_list(1000)
