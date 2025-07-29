@@ -880,6 +880,13 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     date_cloture: "",
     actions_commentaires: "",
     points_etapes_intermediaires: "",
+    // Phase 1 - Suivi & Relance
+    date_prochaine_action: "",
+    // Scoring fields
+    score_maturite: "",
+    priorite_strategique: "",
+    score_potentiel: "",
+    tags_strategiques: [],
     custom_fields: {},
     ...initialData
   });
