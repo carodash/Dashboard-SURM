@@ -159,6 +159,11 @@ class SourcingPartnerUpdate(BaseModel):
     date_presentation_metiers: Optional[date] = None
     pilote: Optional[str] = None
     actions_commentaires: Optional[str] = None
+    # Nouveaux champs de scoring
+    score_maturite: Optional[int] = None
+    priorite_strategique: Optional[str] = None
+    score_potentiel: Optional[int] = None
+    tags_strategiques: Optional[List[str]] = None
     custom_fields: Optional[Dict[str, Any]] = None
 
 # Models for Dealflow (with dynamic fields support)
