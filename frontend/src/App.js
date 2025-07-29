@@ -506,6 +506,83 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
               Intérêt
             </label>
           </div>
+
+          {/* Section Scoring et Priorité */}
+          <div className="col-span-1 md:col-span-2">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-blue-800 mb-4">🎯 Évaluation Stratégique</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                {/* Score de Maturité */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Score de Maturité</label>
+                  <select
+                    name="score_maturite"
+                    value={formData.score_maturite}
+                    onChange={handleChange}
+                    className="w-full border rounded-md px-3 py-2"
+                  >
+                    <option value="">Non évalué</option>
+                    {SCORE_MATURITE.map(score => (
+                      <option key={score.value} value={score.value}>
+                        {score.stars} {score.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Priorité Stratégique */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Priorité Stratégique</label>
+                  <select
+                    name="priorite_strategique"
+                    value={formData.priorite_strategique}
+                    onChange={handleChange}
+                    className="w-full border rounded-md px-3 py-2"
+                  >
+                    <option value="">Non définie</option>
+                    {Object.entries(PRIORITE_STRATEGIQUE).map(([key, config]) => (
+                      <option key={key} value={key}>
+                        {config.icon} {config.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Score Potentiel */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Score Potentiel (1-10)</label>
+                  <select
+                    name="score_potentiel"
+                    value={formData.score_potentiel}
+                    onChange={handleChange}
+                    className="w-full border rounded-md px-3 py-2"
+                  >
+                    <option value="">Non évalué</option>
+                    {[1,2,3,4,5,6,7,8,9,10].map(score => (
+                      <option key={score} value={score}>
+                        {score}/10 {score >= 8 ? '🔥' : score >= 6 ? '⭐' : score >= 4 ? '👍' : '📌'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Tags Stratégiques */}
+                <div className="md:col-span-3">
+                  <label className="block text-sm font-medium mb-1">Tags Stratégiques</label>
+                  <input
+                    type="text"
+                    name="tags_strategiques"
+                    value={formData.tags_strategiques ? formData.tags_strategiques.join(', ') : ''}
+                    onChange={handleChange}
+                    placeholder="Ex: Innovation, Partenariat, B2B, Scaling..."
+                    className="w-full border rounded-md px-3 py-2"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Séparez les tags par des virgules</p>
+                </div>
+              </div>
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1">Actions/Commentaires</label>
             <textarea
