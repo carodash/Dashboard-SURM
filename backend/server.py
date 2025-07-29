@@ -259,6 +259,8 @@ class DealflowPartnerUpdate(BaseModel):
     date_cloture: Optional[date] = None
     actions_commentaires: Optional[str] = None
     points_etapes_intermediaires: Optional[str] = None
+    # Phase 1 - Suivi & Relance
+    date_prochaine_action: Optional[date] = None
     custom_fields: Optional[Dict[str, Any]] = None
 
 # Statistics models
