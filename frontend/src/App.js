@@ -2368,12 +2368,12 @@ const Dashboard = () => {
 
   // Update filtered data when original data changes
   useEffect(() => {
-    setFilteredSourcingPartners(sourcingPartners);
-  }, [sourcingPartners]);
+    setFilteredSourcingPartners(applyFilters(sourcingPartners, activeFilters));
+  }, [sourcingPartners, activeFilters]);
 
   useEffect(() => {
-    setFilteredDealflowPartners(dealflowPartners);
-  }, [dealflowPartners]);
+    setFilteredDealflowPartners(applyFilters(dealflowPartners, activeFilters));
+  }, [dealflowPartners, activeFilters]);
 
   const renderTableCell = (partner, key, config) => {
     const value = partner[key];
