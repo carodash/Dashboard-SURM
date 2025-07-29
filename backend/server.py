@@ -286,6 +286,37 @@ class DashboardStats(BaseModel):
     total_sourcing: int
     total_dealflow: int
 
+# Phase 1 - Activity Timeline Model
+class ActivityType(str, Enum):
+    CREATED = "created"
+    UPDATED = "updated"
+    TRANSITIONED = "transitioned"
+    COMMENT_ADDED = "comment_added"
+    STATUS_CHANGED = "status_changed"
+    ENRICHED = "enriched"
+
+class ActivityLog(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    partner_id: str  # Reference to sourcing or dealflow partner
+    partner_type: str  # "sourcing" or "dealflow"
+    activity_type: ActivityType
+    description: str
+    details: Optional[Dict[str, Any]] = {}  # Additional context (old_value, new_value, etc.)
+    user_id: Optional[str] = None  # Who performed the action
+    user_name: Optional[str] = None  # User display name
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ActivityLogResponse(BaseModel):
+    id: str
+    partner_id: str
+    partner_type: str
+    activity_type: str
+    description: str
+    details: Dict[str, Any]
+    user_id: Optional[str]
+    user_name: Optional[str]
+    created_at: datetime
+
 # AUTO-ENRICHMENT FUNCTIONS
 async def scrape_linkedin_basic(company_name: str) -> Dict[str, Any]:
     """Basic LinkedIn scraping without authentication"""
