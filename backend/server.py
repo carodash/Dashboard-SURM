@@ -111,6 +111,11 @@ class SourcingPartner(BaseModel):
     date_presentation_metiers: Optional[date] = None
     pilote: str
     actions_commentaires: Optional[str] = ""
+    # Nouveaux champs de scoring
+    score_maturite: Optional[int] = None  # 1-5
+    priorite_strategique: Optional[str] = None  # HAUTE, MOYENNE, BASSE
+    score_potentiel: Optional[int] = None  # 1-10
+    tags_strategiques: Optional[List[str]] = []
     # Dynamic fields for enrichment
     enriched_data: Optional[Dict[str, Any]] = {}
     custom_fields: Optional[Dict[str, Any]] = {}
