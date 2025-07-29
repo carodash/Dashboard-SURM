@@ -113,6 +113,9 @@ class SourcingPartner(BaseModel):
     actions_commentaires: Optional[str] = ""
     # Phase 1 - Suivi & Relance
     date_prochaine_action: Optional[date] = None
+    # Phase 1 - Inactivity indicators (computed fields)
+    is_inactive: Optional[bool] = None
+    days_since_update: Optional[int] = None
     # Nouveaux champs de scoring
     score_maturite: Optional[int] = None  # 1-5
     priorite_strategique: Optional[str] = None  # HAUTE, MOYENNE, BASSE
