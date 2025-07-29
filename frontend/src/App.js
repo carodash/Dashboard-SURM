@@ -1197,6 +1197,19 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
               />
             </div>
             
+            {/* Phase 1 - Date prochaine action */}
+            <div>
+              <label className="block text-sm font-medium mb-1">📅 Date prochaine action</label>
+              <input
+                type="date"
+                name="date_prochaine_action"
+                value={formData.date_prochaine_action}
+                onChange={handleChange}
+                className="w-full border rounded-md px-3 py-2"
+                title="Planifier la prochaine action à effectuer"
+              />
+            </div>
+            
             {/* Custom Fields */}
             {customFields.filter(field => field.visible).map(field => (
               <div key={field.id}>
