@@ -2887,6 +2887,24 @@ const Dashboard = () => {
           partnerType={selectedPartnerType}
         />
       )}
+
+      {showAdvancedFilters && (
+        <AdvancedFilters
+          isOpen={showAdvancedFilters}
+          onClose={() => setShowAdvancedFilters(false)}
+          onApplyFilters={handleApplyFilters}
+          filterType={activeTab}
+        />
+      )}
+
+      {showUserRoleManager && (
+        <UserRoleManager
+          isOpen={showUserRoleManager}
+          onClose={() => setShowUserRoleManager(false)}
+          currentUser={currentUser}
+          onUpdateUser={setCurrentUser}
+        />
+      )}
     </div>
   );
 };
