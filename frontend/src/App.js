@@ -1,6 +1,32 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  ArcElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  ArcElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const PRIORITE_STRATEGIQUE = {
   HAUTE: { label: "Priorité Haute", color: "bg-red-100 text-red-800", icon: "🔥" },
