@@ -1095,6 +1095,190 @@ async def get_inactive_partners(threshold_days: int = 90):
         "total_inactive": len(inactive_sourcing) + len(inactive_dealflow)
     }
 
+# PHASE 2 - ENHANCED ANALYTICS ENDPOINTS
+@api_router.get("/analytics/monthly-evolution")
+async def get_monthly_evolution(start_date: str = None, end_date: str = None):
+    """Get monthly evolution of startups by status"""
+    # Parse date filters
+    start_dt = datetime.fromisoformat(start_date) if start_date else datetime.utcnow() - timedelta(days=365)
+    end_dt = datetime.fromisoformat(end_date) if end_date else datetime.utcnow()
+    
+    # Get all partners
+    sourcing_partners = await db.sourcing_partners.find().to_list(1000)
+    dealflow_partners = await db.dealflow_partners.find().to_list(1000)
+    
+    monthly_data = {}
+    
+    # Process sourcing partners
+    for partner in sourcing_partners:
+        created_date = partner.get("created_at")
+        if isinstance(created_date, str):
+            created_date = datetime.fromisoformat(created_date.replace('Z', '+00:00'))
+        
+        if start_dt <= created_date <= end_dt:
+            month_key = f"{created_date.year}-{created_date.month:02d}"
+            if month_key not in monthly_data:
+                monthly_data[month_key] = {
+                    "sourcing_created": 0,
+                    "dealflow_created": 0,
+                    "sourcing_closed": 0,
+                    "dealflow_closed": 0,
+                    "transitions": 0
+                }
+            monthly_data[month_key]["sourcing_created"] += 1
+    
+    # Process dealflow partners
+    for partner in dealflow_partners:
+        created_date = partner.get("created_at")
+        if isinstance(created_date, str):
+            created_date = datetime.fromisoformat(created_date.replace('Z', '+00:00'))
+        
+        if start_dt <= created_date <= end_dt:
+            month_key = f"{created_date.year}-{created_date.month:02d}"
+            if month_key not in monthly_data:
+                monthly_data[month_key] = {
+                    "sourcing_created": 0,
+                    "dealflow_created": 0,
+                    "sourcing_closed": 0,
+                    "dealflow_closed": 0,
+                    "transitions": 0
+                }
+            monthly_data[month_key]["dealflow_created"] += 1
+            
+            # Check if it's a transition from sourcing
+            if partner.get("sourcing_id"):
+                monthly_data[month_key]["transitions"] += 1
+        
+        # Check closure dates
+        closure_date = partner.get("date_cloture")
+        if closure_date:
+            if isinstance(closure_date, str):
+                closure_date = datetime.fromisoformat(closure_date.replace('Z', '+00:00'))
+            if start_dt <= closure_date <= end_dt:
+                month_key = f"{closure_date.year}-{closure_date.month:02d}"
+                if month_key not in monthly_data:
+                    monthly_data[month_key] = {
+                        "sourcing_created": 0,
+                        "dealflow_created": 0,
+                        "sourcing_closed": 0,
+                        "dealflow_closed": 0,
+                        "transitions": 0
+                    }
+                monthly_data[month_key]["dealflow_closed"] += 1
+    
+    # Process sourcing closures
+    for partner in sourcing_partners:
+        if partner.get("statut") == "Clos":
+            updated_date = partner.get("updated_at")
+            if isinstance(updated_date, str):
+                updated_date = datetime.fromisoformat(updated_date.replace('Z', '+00:00'))
+            if start_dt <= updated_date <= end_dt:
+                month_key = f"{updated_date.year}-{updated_date.month:02d}"
+                if month_key not in monthly_data:
+                    monthly_data[month_key] = {
+                        "sourcing_created": 0,
+                        "dealflow_created": 0,
+                        "sourcing_closed": 0,
+                        "dealflow_closed": 0,
+                        "transitions": 0
+                    }
+                monthly_data[month_key]["sourcing_closed"] += 1
+    
+    # Sort by date and return
+    sorted_data = sorted(monthly_data.items())
+    return {
+        "period": {"start": start_dt.isoformat(), "end": end_dt.isoformat()},
+        "monthly_evolution": sorted_data
+    }
+
+@api_router.get("/analytics/distribution")
+async def get_enhanced_distribution(filter_by: str = None, filter_value: str = None, 
+                                  start_date: str = None, end_date: str = None):
+    """Get enhanced distribution analytics with filtering"""
+    # Parse date filters
+    start_dt = datetime.fromisoformat(start_date) if start_date else None
+    end_dt = datetime.fromisoformat(end_date) if end_date else None
+    
+    # Get all partners
+    sourcing_partners = await db.sourcing_partners.find().to_list(1000)
+    dealflow_partners = await db.dealflow_partners.find().to_list(1000)
+    
+    # Apply filters
+    if start_dt and end_dt:
+        sourcing_partners = [p for p in sourcing_partners 
+                           if start_dt <= datetime.fromisoformat(p.get("created_at", "").replace('Z', '+00:00')) <= end_dt]
+        dealflow_partners = [p for p in dealflow_partners 
+                           if start_dt <= datetime.fromisoformat(p.get("created_at", "").replace('Z', '+00:00')) <= end_dt]
+    
+    if filter_by and filter_value:
+        if filter_by == "domaine":
+            sourcing_partners = [p for p in sourcing_partners if p.get("domaine_activite") == filter_value]
+            dealflow_partners = [p for p in dealflow_partners if p.get("domaine") == filter_value]
+        elif filter_by == "pilote":
+            sourcing_partners = [p for p in sourcing_partners if p.get("pilote") == filter_value]
+            dealflow_partners = [p for p in dealflow_partners if p.get("pilote") == filter_value]
+    
+    # Calculate distributions
+    distributions = {
+        "by_status": {},
+        "by_domain": {},
+        "by_typologie": {},
+        "by_pilote": {},
+        "by_source": {},
+        "summary": {
+            "total_sourcing": len(sourcing_partners),
+            "total_dealflow": len(dealflow_partners),
+            "total_partners": len(sourcing_partners) + len(dealflow_partners)
+        }
+    }
+    
+    # Status distribution
+    for partner in sourcing_partners:
+        status = partner.get("statut", "Unknown")
+        distributions["by_status"][f"Sourcing - {status}"] = distributions["by_status"].get(f"Sourcing - {status}", 0) + 1
+    
+    for partner in dealflow_partners:
+        status = partner.get("statut", "Unknown")
+        distributions["by_status"][f"Dealflow - {status}"] = distributions["by_status"].get(f"Dealflow - {status}", 0) + 1
+    
+    # Domain distribution
+    for partner in sourcing_partners:
+        domain = partner.get("domaine_activite", "Unknown")
+        distributions["by_domain"][domain] = distributions["by_domain"].get(domain, 0) + 1
+    
+    for partner in dealflow_partners:
+        domain = partner.get("domaine", "Unknown")
+        distributions["by_domain"][domain] = distributions["by_domain"].get(domain, 0) + 1
+    
+    # Typologie distribution
+    for partner in sourcing_partners:
+        typologie = partner.get("typologie", "Unknown")
+        distributions["by_typologie"][typologie] = distributions["by_typologie"].get(typologie, 0) + 1
+    
+    for partner in dealflow_partners:
+        typologie = partner.get("typologie", "Unknown")
+        distributions["by_typologie"][typologie] = distributions["by_typologie"].get(typologie, 0) + 1
+    
+    # Pilote distribution
+    for partner in sourcing_partners:
+        pilote = partner.get("pilote", "Unknown")
+        distributions["by_pilote"][pilote] = distributions["by_pilote"].get(pilote, 0) + 1
+    
+    for partner in dealflow_partners:
+        pilote = partner.get("pilote", "Unknown")
+        distributions["by_pilote"][pilote] = distributions["by_pilote"].get(pilote, 0) + 1
+    
+    # Source distribution
+    for partner in sourcing_partners:
+        source = partner.get("source", "Unknown")
+        distributions["by_source"][source] = distributions["by_source"].get(source, 0) + 1
+    
+    for partner in dealflow_partners:
+        source = partner.get("source", "Unknown")
+        distributions["by_source"][source] = distributions["by_source"].get(source, 0) + 1
+    
+    return distributions
+
 # Include the router in the main app
 app.include_router(api_router)
 
