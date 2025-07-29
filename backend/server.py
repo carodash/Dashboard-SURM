@@ -1006,7 +1006,76 @@ async def enrich_partner_data(partner_id: str, partner_type: str = "sourcing"):
         }}
     )
     
+    # Log enrichment activity
+    await log_activity(
+        partner_id=partner_id,
+        partner_type=partner_type,
+        activity_type=ActivityType.ENRICHED,
+        description=f"Données enrichies automatiquement pour '{company_name}'",
+        details={"sources": ["linkedin", "website"], "fields_updated": list(enriched_data.keys())},
+        user_name="System"
+    )
+    
     return {"message": "Partner enriched successfully", "enriched_data": enriched_data}
+
+# PHASE 1 - ACTIVITY TIMELINE ENDPOINTS
+@api_router.get("/activity/{partner_id}", response_model=List[ActivityLogResponse])
+async def get_partner_activity_timeline(partner_id: str, partner_type: str = "sourcing"):
+    """Get activity timeline for a specific partner"""
+    activities = await db.activity_logs.find({
+        "partner_id": partner_id,
+        "partner_type": partner_type
+    }).sort("created_at", -1).to_list(100)  # Most recent first, limit 100
+    
+    return [ActivityLogResponse(**activity) for activity in activities]
+
+@api_router.post("/activity/{partner_id}")
+async def add_manual_activity(partner_id: str, partner_type: str, 
+                             description: str, user_name: str = "User"):
+    """Manually add an activity entry to partner timeline"""
+    # Verify partner exists
+    collection = db.sourcing_partners if partner_type == "sourcing" else db.dealflow_partners
+    partner = await collection.find_one({"id": partner_id})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Partner not found")
+    
+    # Log manual activity
+    activity = await log_activity(
+        partner_id=partner_id,
+        partner_type=partner_type,
+        activity_type=ActivityType.COMMENT_ADDED,
+        description=description,
+        details={"manual_entry": True},
+        user_name=user_name
+    )
+    
+    return {"message": "Activity added successfully", "activity_id": activity.id}
+
+@api_router.get("/inactive-partners")
+async def get_inactive_partners(threshold_days: int = 90):
+    """Get list of partners inactive for specified days (default 90)"""
+    threshold_date = datetime.utcnow() - timedelta(days=threshold_days)
+    
+    # Get inactive sourcing partners
+    inactive_sourcing = await db.sourcing_partners.find({
+        "updated_at": {"$lt": threshold_date.isoformat()}
+    }).to_list(100)
+    
+    # Get inactive dealflow partners
+    inactive_dealflow = await db.dealflow_partners.find({
+        "updated_at": {"$lt": threshold_date.isoformat()}
+    }).to_list(100)
+    
+    # Add inactivity status
+    inactive_sourcing_with_status = [add_inactivity_status(p) for p in inactive_sourcing]
+    inactive_dealflow_with_status = [add_inactivity_status(p) for p in inactive_dealflow]
+    
+    return {
+        "threshold_days": threshold_days,
+        "inactive_sourcing": inactive_sourcing_with_status,
+        "inactive_dealflow": inactive_dealflow_with_status,
+        "total_inactive": len(inactive_sourcing) + len(inactive_dealflow)
+    }
 
 # Include the router in the main app
 app.include_router(api_router)
