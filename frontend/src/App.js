@@ -2334,6 +2334,10 @@ const Dashboard = () => {
     }
   });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  
+  // Phase 1 - Activity Timeline state
+  const [showTimelineModal, setShowTimelineModal] = useState(false);
+  const [selectedTimelinePartner, setSelectedTimelinePartner] = useState(null);
 
   const fetchSourcingPartners = async () => {
     try {
