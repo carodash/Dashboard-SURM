@@ -3343,6 +3343,14 @@ const Dashboard = () => {
                                 📊 Voir données
                               </button>
                             )}
+                            {/* Phase 1 - Timeline Button */}
+                            <button
+                              onClick={() => handleShowTimeline(partner, 'dealflow')}
+                              className="text-orange-600 hover:text-orange-900 hover:bg-orange-50 px-2 py-1 rounded"
+                              title="Voir l'historique des actions"
+                            >
+                              📋 Timeline
+                            </button>
                           </div>
                         </td>
                       </tr>
