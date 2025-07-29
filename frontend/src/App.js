@@ -730,6 +730,332 @@ const AnalyticsDashboard = ({ isVisible }) => {
   );
 };
 
+// Phase 3 - Private Comments Component
+const PrivateCommentsModal = ({ isOpen, onClose, partnerId, partnerType, partnerName }) => {
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [editingComment, setEditingComment] = useState(null);
+
+  useEffect(() => {
+    if (isOpen && partnerId) {
+      loadComments();
+    }
+  }, [isOpen, partnerId]);
+
+  const loadComments = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/comments/${partnerId}?partner_type=${partnerType}&user_id=default_user`);
+      setComments(response.data);
+    } catch (error) {
+      console.error("Error loading comments:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+    
+    try {
+      await axios.post(`${API}/comments?user_id=default_user`, {
+        partner_id: partnerId,
+        partner_type: partnerType,
+        comment: newComment
+      });
+      setNewComment("");
+      loadComments(); // Refresh comments
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  };
+
+  const handleEditComment = async (commentId, newText) => {
+    try {
+      await axios.put(`${API}/comments/${commentId}?user_id=default_user`, {
+        comment: newText
+      });
+      setEditingComment(null);
+      loadComments(); // Refresh comments
+    } catch (error) {
+      console.error("Error editing comment:", error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce commentaire ?")) return;
+    
+    try {
+      await axios.delete(`${API}/comments/${commentId}?user_id=default_user`);
+      loadComments(); // Refresh comments
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">💬 Commentaires privés - {partnerName}</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Add new comment */}
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+          <h3 className="font-medium mb-2">Ajouter un commentaire privé</h3>
+          <div className="space-y-2">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Votre commentaire privé (visible uniquement par vous et les admins)..."
+              className="w-full border rounded px-3 py-2 h-24 resize-none"
+            />
+            <button
+              onClick={handleAddComment}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Ajouter
+            </button>
+          </div>
+        </div>
+
+        {/* Comments List */}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="text-center py-8">Chargement des commentaires...</div>
+          ) : comments.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">Aucun commentaire privé</div>
+          ) : (
+            comments.map((comment) => (
+              <div key={comment.id} className="p-4 border border-blue-200 rounded-lg bg-blue-50">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center mb-2">
+                      <span className="font-medium text-blue-800">🔒 {comment.user_name}</span>
+                      <span className="text-xs text-gray-500 ml-2">{formatDate(comment.created_at)}</span>
+                      {comment.updated_at !== comment.created_at && (
+                        <span className="text-xs text-gray-500 ml-1">(modifié)</span>
+                      )}
+                    </div>
+                    {editingComment === comment.id ? (
+                      <div className="space-y-2">
+                        <textarea
+                          defaultValue={comment.comment}
+                          className="w-full border rounded px-3 py-2 h-20 resize-none"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.ctrlKey) {
+                              handleEditComment(comment.id, e.target.value);
+                            }
+                          }}
+                        />
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={(e) => {
+                              const textarea = e.target.parentNode.parentNode.querySelector('textarea');
+                              handleEditComment(comment.id, textarea.value);
+                            }}
+                            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                          >
+                            Sauvegarder
+                          </button>
+                          <button
+                            onClick={() => setEditingComment(null)}
+                            className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-gray-700 whitespace-pre-wrap">{comment.comment}</p>
+                    )}
+                  </div>
+                  {editingComment !== comment.id && (
+                    <div className="flex space-x-2 ml-4">
+                      <button
+                        onClick={() => setEditingComment(comment.id)}
+                        className="text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Phase 3 - Personal Dashboard Component
+const PersonalDashboard = ({ isVisible, currentUser }) => {
+  const [myStartups, setMyStartups] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isVisible && currentUser) {
+      loadMyStartups();
+    }
+  }, [isVisible, currentUser]);
+
+  const loadMyStartups = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/my-startups?user_id=${currentUser.id || 'default_user'}`);
+      setMyStartups(response.data);
+    } catch (error) {
+      console.error("Error loading my startups:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-2xl font-bold mb-4">👨‍💼 Mes Startups</h2>
+        <p className="text-gray-600 mb-6">
+          Startups dont vous êtes le pilote : {myStartups?.user?.full_name || currentUser?.full_name}
+        </p>
+
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-2 text-gray-600">Chargement de vos startups...</p>
+          </div>
+        ) : myStartups ? (
+          <>
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">
+                  {myStartups.summary.total_sourcing}
+                </div>
+                <div className="text-sm text-gray-600">Sourcing</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {myStartups.summary.total_dealflow}
+                </div>
+                <div className="text-sm text-gray-600">Dealflow</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">
+                  {myStartups.summary.total_partners}
+                </div>
+                <div className="text-sm text-gray-600">Total</div>
+              </div>
+              <div className="text-center p-4 bg-red-50 rounded-lg">
+                <div className="text-2xl font-bold text-red-600">
+                  {myStartups.summary.inactive_sourcing + myStartups.summary.inactive_dealflow}
+                </div>
+                <div className="text-sm text-gray-600">Inactifs (90j+)</div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Recent Sourcing */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-blue-800 mb-3">📋 Sourcing récents</h3>
+                {myStartups.sourcing_partners.slice(0, 5).map(partner => (
+                  <div key={partner.id} className="flex justify-between items-center py-2 border-b border-blue-200 last:border-b-0">
+                    <div>
+                      <span className="font-medium">{partner.nom_entreprise}</span>
+                      <span className="text-sm text-gray-600 ml-2">({partner.domaine_activite})</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {partner.is_inactive && (
+                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Inactif"></span>
+                      )}
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        partner.statut === 'A traiter' ? 'bg-yellow-100 text-yellow-800' :
+                        partner.statut === 'Dealflow' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {partner.statut}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recent Dealflow */}
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-green-800 mb-3">🚀 Dealflow récents</h3>
+                {myStartups.dealflow_partners.slice(0, 5).map(partner => (
+                  <div key={partner.id} className="flex justify-between items-center py-2 border-b border-green-200 last:border-b-0">
+                    <div>
+                      <span className="font-medium">{partner.nom}</span>
+                      <span className="text-sm text-gray-600 ml-2">({partner.domaine})</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {partner.is_inactive && (
+                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Inactif"></span>
+                      )}
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        partner.statut === 'En cours avec les métiers' ? 'bg-blue-100 text-blue-800' :
+                        partner.statut === 'En cours avec l\'équipe inno' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {partner.statut}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            Aucune startup assignée
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [] }) => {
   const [formData, setFormData] = useState({
     nom_entreprise: "",
