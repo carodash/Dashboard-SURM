@@ -2,6 +2,29 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
 
+const USER_ROLES = {
+  ADMIN: { 
+    label: "Administrateur", 
+    permissions: ["create", "read", "update", "delete", "manage_users", "view_all", "export", "import", "manage_config"]
+  },
+  MANAGER: { 
+    label: "Manager", 
+    permissions: ["create", "read", "update", "delete", "view_all", "export"]
+  },
+  USER: { 
+    label: "Utilisateur", 
+    permissions: ["create", "read", "update", "view_own"]
+  }
+};
+
+const FILTER_OPTIONS = {
+  statuts_sourcing: ["A traiter", "Clos", "Dealflow", "Klaxoon"],
+  statuts_dealflow: ["Clos", "En cours avec les métiers", "En cours avec l'équipe inno"],
+  typologies: ["Startup", "PME", "Scale-up", "Corporate", "Autre"],
+  pays: ["France", "Allemagne", "États-Unis", "Royaume-Uni", "Espagne", "Italie", "Suisse", "Belgique", "Autre"],
+  sources: ["VivaTech", "Salon tech", "Partenariat", "Concours", "LinkedIn", "Recommandation", "Autre"]
+};
+
 const DOMAINES_ACTIVITE = [
   "CleanTech",
   "ClimateTech", 
