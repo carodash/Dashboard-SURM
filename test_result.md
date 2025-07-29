@@ -165,6 +165,42 @@ backend:
         agent: "testing"
         comment: "✅ STATISTICS ENDPOINT FULLY WORKING: GET /api/statistics returns accurate quarterly entries by domain, monthly pre-qualifications and go-studies counts, comprehensive distributions (domain, typologie, technology, metiers, statuses), correct totals. All calculations verified accurate against actual data."
 
+  - task: "Phase 1 - Inactivity Indicators Backend"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Adding logic to detect startups inactive for 90+ days based on updated_at field. Will add computed field in API responses."
+
+  - task: "Phase 1 - Next Action Date Field Backend"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Adding date_prochaine_action field to both SourcingPartner and DealflowPartner models with validation."
+
+  - task: "Phase 1 - Activity Timeline Backend"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Creating ActivityLog model and endpoints to track startup activity history (create, update, transition, comments). Timeline endpoint per partner."
+
 frontend:
   - task: "SURM Frontend - Dashboard Statistics UI"
     implemented: true
