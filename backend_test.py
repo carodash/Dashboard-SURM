@@ -822,7 +822,7 @@ def test_error_handling():
 
 def main():
     """Run all tests"""
-    print("🚀 Starting SURM Backend API Tests - Including Phase 1 Features")
+    print("🚀 Starting SURM Backend API Tests - Including Phase 1 & Phase 2 Features")
     print("=" * 60)
     
     try:
@@ -853,11 +853,25 @@ def main():
         # Test Phase 1 - Enhanced Transition
         enhanced_transition_dealflow_id = test_phase1_transition_inheritance()
         
+        # === PHASE 2 TESTS ===
+        print("\n" + "=" * 60)
+        print("📊 PHASE 2 - ENHANCED ANALYTICS FEATURES TESTING")
+        print("=" * 60)
+        
+        # Test Phase 2 - Monthly Evolution Analytics
+        test_phase2_monthly_evolution()
+        
+        # Test Phase 2 - Enhanced Distribution Analytics
+        test_phase2_enhanced_distribution()
+        
+        # Test Phase 2 - Data Accuracy and Edge Cases
+        test_phase2_data_accuracy()
+        
         # Test error handling
         test_error_handling()
         
         print("\n" + "=" * 60)
-        print("🎉 SURM Backend API Testing Complete - Phase 1 Included!")
+        print("🎉 SURM Backend API Testing Complete - Phase 1 & Phase 2 Included!")
         print("Check the results above for any failures.")
         
     except Exception as e:
