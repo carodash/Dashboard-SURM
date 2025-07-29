@@ -704,6 +704,20 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                 className="w-full border rounded-md px-3 py-2"
               />
             </div>
+            
+            {/* Phase 1 - Date prochaine action */}
+            <div>
+              <label className="block text-sm font-medium mb-1">📅 Date prochaine action</label>
+              <input
+                type="date"
+                name="date_prochaine_action"
+                value={formData.date_prochaine_action}
+                onChange={handleChange}
+                className="w-full border rounded-md px-3 py-2"
+                title="Planifier la prochaine action à effectuer"
+              />
+            </div>
+            
             <div>
               <label className="block text-sm font-medium mb-1">Date présentation métiers</label>
               <input
