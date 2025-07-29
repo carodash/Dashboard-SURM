@@ -583,22 +583,48 @@ async def create_sourcing_partner(partner: SourcingPartnerCreate):
             partner_data[key] = value.isoformat()
     
     result = await db.sourcing_partners.insert_one(partner_data)
+    
+    # Log creation activity
+    await log_activity(
+        partner_id=partner_obj.id,
+        partner_type="sourcing",
+        activity_type=ActivityType.CREATED,
+        description=f"Startup '{partner.nom_entreprise}' créée en sourcing",
+        details={"statut": partner.statut, "domaine": partner.domaine_activite},
+        user_name="System"  # Could be replaced with actual user info
+    )
+    
     return partner_obj
 
 @api_router.get("/sourcing", response_model=List[SourcingPartner])
 async def get_sourcing_partners():
     partners = await db.sourcing_partners.find().to_list(1000)
-    return [SourcingPartner(**partner) for partner in partners]
+    
+    # Add inactivity status to each partner
+    partners_with_status = []
+    for partner in partners:
+        partner_with_status = add_inactivity_status(partner)
+        partners_with_status.append(SourcingPartner(**partner_with_status))
+    
+    return partners_with_status
 
 @api_router.get("/sourcing/{partner_id}", response_model=SourcingPartner)
 async def get_sourcing_partner(partner_id: str):
     partner = await db.sourcing_partners.find_one({"id": partner_id})
     if partner is None:
         raise HTTPException(status_code=404, detail="Partner not found")
-    return SourcingPartner(**partner)
+    
+    # Add inactivity status
+    partner_with_status = add_inactivity_status(partner)
+    return SourcingPartner(**partner_with_status)
 
 @api_router.put("/sourcing/{partner_id}", response_model=SourcingPartner)
 async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartnerUpdate):
+    # Get original partner for comparison
+    original_partner = await db.sourcing_partners.find_one({"id": partner_id})
+    if not original_partner:
+        raise HTTPException(status_code=404, detail="Partner not found")
+    
     update_dict = {k: v for k, v in partner_update.dict().items() if v is not None}
     update_dict["updated_at"] = datetime.utcnow()
     
@@ -615,14 +641,49 @@ async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartn
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Partner not found")
     
+    # Log update activity with changes
+    changes = []
+    for key, new_value in update_dict.items():
+        if key != "updated_at" and key in original_partner:
+            old_value = original_partner[key]
+            if old_value != new_value:
+                changes.append(f"{key}: {old_value} → {new_value}")
+    
+    if changes:
+        await log_activity(
+            partner_id=partner_id,
+            partner_type="sourcing",
+            activity_type=ActivityType.UPDATED,
+            description=f"Startup '{original_partner['nom_entreprise']}' mise à jour",
+            details={"changes": changes},
+            user_name="System"
+        )
+    
     updated_partner = await db.sourcing_partners.find_one({"id": partner_id})
+    updated_partner = add_inactivity_status(updated_partner)
     return SourcingPartner(**updated_partner)
 
 @api_router.delete("/sourcing/{partner_id}")
 async def delete_sourcing_partner(partner_id: str):
+    # Get partner info before deletion for logging
+    partner = await db.sourcing_partners.find_one({"id": partner_id})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Partner not found")
+    
     result = await db.sourcing_partners.delete_one({"id": partner_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Partner not found")
+    
+    # Log deletion activity
+    await log_activity(
+        partner_id=partner_id,
+        partner_type="sourcing",
+        activity_type=ActivityType.UPDATED,  # Using UPDATED as we don't have DELETED
+        description=f"Startup '{partner['nom_entreprise']}' supprimée du sourcing",
+        details={"action": "deleted"},
+        user_name="System"
+    )
+    
     return {"message": "Partner deleted successfully"}
 
 # DEALFLOW ENDPOINTS
