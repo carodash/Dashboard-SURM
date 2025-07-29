@@ -44,8 +44,8 @@ class DealflowStatus(str, Enum):
 
 class UserRole(str, Enum):
     ADMIN = "admin"
-    MANAGER = "manager"
-    USER = "user"
+    CONTRIBUTEUR = "contributeur" 
+    OBSERVATEUR = "observateur"
 
 class FieldType(str, Enum):
     TEXT = "text"
