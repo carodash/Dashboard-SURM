@@ -193,6 +193,11 @@ class DealflowPartner(BaseModel):
     cas_usage: Optional[str] = None
     technologie: Optional[str] = None
     interet: Optional[bool] = None
+    # Nouveaux champs de scoring
+    score_maturite: Optional[int] = None  # 1-5
+    priorite_strategique: Optional[str] = None  # HAUTE, MOYENNE, BASSE
+    score_potentiel: Optional[int] = None  # 1-10
+    tags_strategiques: Optional[List[str]] = []
     # Dynamic fields
     enriched_data: Optional[Dict[str, Any]] = {}
     custom_fields: Optional[Dict[str, Any]] = {}
