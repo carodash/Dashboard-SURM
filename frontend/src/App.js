@@ -156,6 +156,82 @@ const SearchBar = ({ onSearch, placeholder = "Rechercher..." }) => {
   );
 };
 
+// Phase 1 - Inactivity Indicator Component
+const InactivityIndicator = ({ isInactive, daysSinceUpdate }) => {
+  if (!isInactive) return null;
+  
+  const getIndicatorColor = (days) => {
+    if (days >= 180) return "bg-red-500"; // 6+ months
+    if (days >= 120) return "bg-orange-500"; // 4+ months
+    return "bg-yellow-500"; // 3+ months
+  };
+  
+  return (
+    <div className="flex items-center space-x-1" title={`Inactif depuis ${daysSinceUpdate} jours`}>
+      <div className={`w-3 h-3 rounded-full ${getIndicatorColor(daysSinceUpdate)} animate-pulse`}></div>
+      <span className="text-xs text-gray-500">{daysSinceUpdate}j</span>
+    </div>
+  );
+};
+
+// Phase 1 - Next Action Date Component
+const NextActionDate = ({ date, onUpdate, partnerId, partnerType }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [actionDate, setActionDate] = useState(date || "");
+  
+  const handleSave = async () => {
+    try {
+      const updateData = { date_prochaine_action: actionDate || null };
+      const response = await axios.put(`${API}/${partnerType}/${partnerId}`, updateData);
+      onUpdate(response.data);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating next action date:", error);
+    }
+  };
+  
+  const getUrgencyColor = (date) => {
+    if (!date) return "text-gray-400";
+    const actionDate = new Date(date);
+    const today = new Date();
+    const diffDays = Math.ceil((actionDate - today) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return "text-red-600 font-medium"; // Overdue
+    if (diffDays <= 3) return "text-orange-600 font-medium"; // Soon
+    if (diffDays <= 7) return "text-yellow-600"; // This week
+    return "text-green-600"; // Future
+  };
+  
+  if (isEditing) {
+    return (
+      <div className="flex items-center space-x-2">
+        <input
+          type="date"
+          value={actionDate}
+          onChange={(e) => setActionDate(e.target.value)}
+          className="text-xs border rounded px-2 py-1"
+        />
+        <button onClick={handleSave} className="text-green-600 hover:text-green-800">
+          ✓
+        </button>
+        <button onClick={() => setIsEditing(false)} className="text-gray-600 hover:text-gray-800">
+          ✕
+        </button>
+      </div>
+    );
+  }
+  
+  return (
+    <div 
+      className={`cursor-pointer text-xs ${getUrgencyColor(date)}`}
+      onClick={() => setIsEditing(true)}
+      title="Cliquer pour modifier"
+    >
+      {date ? new Date(date).toLocaleDateString('fr-FR') : "📅 Programmer"}
+    </div>
+  );
+};
+
 const SortableTableHeader = ({ children, sortKey, currentSort, onSort }) => {
   const handleSort = () => {
     const newDirection = currentSort.key === sortKey && currentSort.direction === 'asc' ? 'desc' : 'asc';
