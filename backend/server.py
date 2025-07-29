@@ -1643,24 +1643,35 @@ async def get_partners_by_pilote():
     
     # Group sourcing partners by pilote
     for partner in sourcing_partners:
+        # Remove MongoDB ObjectId if present
+        if '_id' in partner:
+            del partner['_id']
+        
         pilote = partner.get("pilote", "Unknown")
         if pilote not in pilotes:
-            pilotes[pilote] = {"sourcing": [], "dealflow": []}
-        pilotes[pilote]["sourcing"].append(partner)
+            pilotes[pilote] = {"sourcing_partners": [], "dealflow_partners": []}
+        pilotes[pilote]["sourcing_partners"].append(partner)
     
     # Group dealflow partners by pilote
     for partner in dealflow_partners:
+        # Remove MongoDB ObjectId if present
+        if '_id' in partner:
+            del partner['_id']
+            
         pilote = partner.get("pilote", "Unknown")
         if pilote not in pilotes:
-            pilotes[pilote] = {"sourcing": [], "dealflow": []}
-        pilotes[pilote]["dealflow"].append(partner)
+            pilotes[pilote] = {"sourcing_partners": [], "dealflow_partners": []}
+        pilotes[pilote]["dealflow_partners"].append(partner)
     
-    # Add summary stats
+    # Add summary stats for each pilote
     for pilote, data in pilotes.items():
+        sourcing_count = len(data["sourcing_partners"])
+        dealflow_count = len(data["dealflow_partners"])
+        data["total_partners"] = sourcing_count + dealflow_count
         data["summary"] = {
-            "total_sourcing": len(data["sourcing"]),
-            "total_dealflow": len(data["dealflow"]),
-            "total_partners": len(data["sourcing"]) + len(data["dealflow"])
+            "total_sourcing": sourcing_count,
+            "total_dealflow": dealflow_count,
+            "total_partners": sourcing_count + dealflow_count
         }
     
     return pilotes
