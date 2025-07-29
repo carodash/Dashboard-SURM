@@ -2867,6 +2867,24 @@ const Dashboard = () => {
       );
     }
     
+    // Phase 1 - Inactivity Indicator
+    if (key === 'is_inactive') {
+      return <InactivityIndicator isInactive={partner.is_inactive} daysSinceUpdate={partner.days_since_update} />;
+    }
+    
+    // Phase 1 - Next Action Date
+    if (key === 'date_prochaine_action') {
+      const partnerType = partner.nom_entreprise ? 'sourcing' : 'dealflow';
+      return (
+        <NextActionDate 
+          date={value} 
+          onUpdate={(updatedPartner) => handlePartnerUpdate(updatedPartner, partnerType)}
+          partnerId={partner.id}
+          partnerType={partnerType}
+        />
+      );
+    }
+    
     if (key === 'priorite_strategique') {
       return <PriorityTag priority={value} />;
     }
