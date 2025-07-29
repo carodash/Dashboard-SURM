@@ -709,22 +709,48 @@ async def create_dealflow_partner(partner: DealflowPartnerCreate):
             partner_data[key] = value.isoformat()
     
     result = await db.dealflow_partners.insert_one(partner_data)
+    
+    # Log creation activity
+    await log_activity(
+        partner_id=partner_obj.id,
+        partner_type="dealflow",
+        activity_type=ActivityType.CREATED,
+        description=f"Startup '{partner.nom}' créée en dealflow",
+        details={"statut": partner.statut, "domaine": partner.domaine},
+        user_name="System"
+    )
+    
     return partner_obj
 
 @api_router.get("/dealflow", response_model=List[DealflowPartner])
 async def get_dealflow_partners():
     partners = await db.dealflow_partners.find().to_list(1000)
-    return [DealflowPartner(**partner) for partner in partners]
+    
+    # Add inactivity status to each partner
+    partners_with_status = []
+    for partner in partners:
+        partner_with_status = add_inactivity_status(partner)
+        partners_with_status.append(DealflowPartner(**partner_with_status))
+    
+    return partners_with_status
 
 @api_router.get("/dealflow/{partner_id}", response_model=DealflowPartner)
 async def get_dealflow_partner(partner_id: str):
     partner = await db.dealflow_partners.find_one({"id": partner_id})
     if partner is None:
         raise HTTPException(status_code=404, detail="Partner not found")
-    return DealflowPartner(**partner)
+    
+    # Add inactivity status
+    partner_with_status = add_inactivity_status(partner)
+    return DealflowPartner(**partner_with_status)
 
 @api_router.put("/dealflow/{partner_id}", response_model=DealflowPartner)
 async def update_dealflow_partner(partner_id: str, partner_update: DealflowPartnerUpdate):
+    # Get original partner for comparison
+    original_partner = await db.dealflow_partners.find_one({"id": partner_id})
+    if not original_partner:
+        raise HTTPException(status_code=404, detail="Partner not found")
+    
     update_dict = {k: v for k, v in partner_update.dict().items() if v is not None}
     update_dict["updated_at"] = datetime.utcnow()
     
@@ -741,14 +767,49 @@ async def update_dealflow_partner(partner_id: str, partner_update: DealflowPartn
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Partner not found")
     
+    # Log update activity with changes
+    changes = []
+    for key, new_value in update_dict.items():
+        if key != "updated_at" and key in original_partner:
+            old_value = original_partner[key]
+            if old_value != new_value:
+                changes.append(f"{key}: {old_value} → {new_value}")
+    
+    if changes:
+        await log_activity(
+            partner_id=partner_id,
+            partner_type="dealflow",
+            activity_type=ActivityType.UPDATED,
+            description=f"Startup '{original_partner['nom']}' mise à jour",
+            details={"changes": changes},
+            user_name="System"
+        )
+    
     updated_partner = await db.dealflow_partners.find_one({"id": partner_id})
+    updated_partner = add_inactivity_status(updated_partner)
     return DealflowPartner(**updated_partner)
 
 @api_router.delete("/dealflow/{partner_id}")
 async def delete_dealflow_partner(partner_id: str):
+    # Get partner info before deletion for logging
+    partner = await db.dealflow_partners.find_one({"id": partner_id})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Partner not found")
+    
     result = await db.dealflow_partners.delete_one({"id": partner_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Partner not found")
+    
+    # Log deletion activity
+    await log_activity(
+        partner_id=partner_id,
+        partner_type="dealflow",
+        activity_type=ActivityType.UPDATED,
+        description=f"Startup '{partner['nom']}' supprimée du dealflow",
+        details={"action": "deleted"},
+        user_name="System"
+    )
+    
     return {"message": "Partner deleted successfully"}
 
 # TRANSITION ENDPOINT - Move from sourcing to dealflow
