@@ -2435,12 +2435,28 @@ const Dashboard = () => {
           <div className="flex justify-between items-center py-6">
             <h1 className="text-3xl font-bold text-gray-900">SURM Dashboard</h1>
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setShowSettings(true)}
-                className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
-              >
-                ⚙️ Paramètres
-              </button>
+              {hasPermission('manage_config') && (
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  ⚙️ Paramètres
+                </button>
+              )}
+              {hasPermission('manage_users') && (
+                <button
+                  onClick={() => setShowUserRoleManager(true)}
+                  className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  👥 Rôles
+                </button>
+              )}
+              <div className="flex items-center bg-gray-100 rounded-lg px-2">
+                <span className="text-sm text-gray-600 mr-2">
+                  {USER_ROLES[currentUser.role]?.label}
+                </span>
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              </div>
               <nav className="flex space-x-8">
                 <button
                   onClick={() => setActiveTab("dashboard")}
