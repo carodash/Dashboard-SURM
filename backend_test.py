@@ -1327,7 +1327,7 @@ def test_error_handling():
 
 def main():
     """Run all tests"""
-    print("🚀 Starting SURM Backend API Tests - Including Phase 1 & Phase 2 Features")
+    print("🚀 Starting SURM Backend API Tests - Including Phase 1, Phase 2 & Phase 3 Features")
     print("=" * 60)
     
     try:
@@ -1372,11 +1372,28 @@ def main():
         # Test Phase 2 - Data Accuracy and Edge Cases
         test_phase2_data_accuracy()
         
+        # === PHASE 3 TESTS ===
+        print("\n" + "=" * 60)
+        print("👥 PHASE 3 - ADVANCED USER ROLES & PRIVATE COMMENTS TESTING")
+        print("=" * 60)
+        
+        # Test Phase 3 - User Management System
+        created_users = test_phase3_user_management()
+        
+        # Test Phase 3 - Private Comments System
+        comments_test_data = test_phase3_private_comments()
+        
+        # Test Phase 3 - Personal Dashboard View
+        dashboard_user = test_phase3_personal_dashboard()
+        
+        # Test Phase 3 - Enhanced Authorization
+        auth_test_data = test_phase3_enhanced_authorization()
+        
         # Test error handling
         test_error_handling()
         
         print("\n" + "=" * 60)
-        print("🎉 SURM Backend API Testing Complete - Phase 1 & Phase 2 Included!")
+        print("🎉 SURM Backend API Testing Complete - All Phases (1, 2 & 3) Included!")
         print("Check the results above for any failures.")
         
     except Exception as e:
