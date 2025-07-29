@@ -238,6 +238,42 @@ frontend:
         agent: "main"
         comment: "Implemented dealflow partners table with all required fields and dates management."
 
+  - task: "Phase 1 - Inactivity Indicators Frontend"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Adding visual indicators (red dot/clock icon) for startups inactive 90+ days in tables. Tooltip with days since last update."
+
+  - task: "Phase 1 - Next Action Date Frontend"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Adding date_prochaine_action field to forms and tables with visual reminder styling (red/yellow/green based on urgency)."
+
+  - task: "Phase 1 - Activity Timeline Frontend"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Creating timeline modal/component showing startup activity history. Button in each row to view timeline."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
