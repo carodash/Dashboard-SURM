@@ -2573,6 +2573,22 @@ const Dashboard = () => {
       );
     }
     
+    if (key === 'priorite_strategique') {
+      return <PriorityTag priority={value} />;
+    }
+    
+    if (key === 'score_maturite') {
+      return <ScoreDisplay score={value} type="maturite" />;
+    }
+    
+    if (key === 'score_potentiel') {
+      return <ScoreDisplay score={value} type="potentiel" />;
+    }
+    
+    if (key === 'tags_strategiques') {
+      return <StrategicTags tags={value} />;
+    }
+    
     if (key === 'interet') {
       return value ? '✓' : '✗';
     }
