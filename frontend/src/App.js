@@ -2539,6 +2539,30 @@ const Dashboard = () => {
     }
   };
 
+  // Phase 1 - Timeline functions
+  const handleShowTimeline = (partner, partnerType) => {
+    setSelectedTimelinePartner({
+      id: partner.id,
+      name: partnerType === 'sourcing' ? partner.nom_entreprise : partner.nom,
+      type: partnerType
+    });
+    setShowTimelineModal(true);
+  };
+
+  const handleCloseTimeline = () => {
+    setShowTimelineModal(false);
+    setSelectedTimelinePartner(null);
+  };
+
+  // Phase 1 - Update partner after next action date change
+  const handlePartnerUpdate = (updatedPartner, partnerType) => {
+    if (partnerType === 'sourcing') {
+      setSourcingPartners(prev => prev.map(p => p.id === updatedPartner.id ? updatedPartner : p));
+    } else {
+      setDealflowPartners(prev => prev.map(p => p.id === updatedPartner.id ? updatedPartner : p));
+    }
+  };
+
   const handleTransitionToDealflow = async (sourcingId) => {
     const dealflowData = {
       statut: "En cours avec l'équipe inno",
