@@ -1417,6 +1417,198 @@ async def get_enhanced_distribution(filter_by: str = None, filter_value: str = N
     
     return distributions
 
+# PHASE 3 - USER MANAGEMENT ENDPOINTS
+@api_router.post("/users", response_model=User)
+async def create_user(user: UserCreate):
+    """Create a new user"""
+    user_obj = User(**user.dict())
+    
+    # Convert datetime objects to strings for MongoDB storage
+    user_data = user_obj.dict()
+    user_data["created_at"] = user_obj.created_at.isoformat()
+    user_data["updated_at"] = user_obj.updated_at.isoformat()
+    
+    result = await db.users.insert_one(user_data)
+    return user_obj
+
+@api_router.get("/users", response_model=List[User])
+async def get_users():
+    """Get all users"""
+    users = await db.users.find().to_list(1000)
+    return [User(**user) for user in users]
+
+@api_router.get("/users/{user_id}", response_model=User)
+async def get_user(user_id: str):
+    """Get specific user"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return User(**user)
+
+@api_router.put("/users/{user_id}", response_model=User)
+async def update_user(user_id: str, user_update: UserUpdate):
+    """Update user"""
+    update_dict = {k: v for k, v in user_update.dict().items() if v is not None}
+    update_dict["updated_at"] = datetime.utcnow()
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": update_dict}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    updated_user = await db.users.find_one({"id": user_id})
+    return User(**updated_user)
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str):
+    """Delete user"""
+    result = await db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "User deleted successfully"}
+
+# PHASE 3 - PRIVATE COMMENTS ENDPOINTS
+@api_router.post("/comments", response_model=PrivateCommentResponse)
+async def create_private_comment(comment: PrivateCommentCreate, user_id: str = "default_user"):
+    """Create a private comment"""
+    current_user = await get_current_user(user_id)
+    
+    comment_obj = PrivateComment(
+        **comment.dict(),
+        user_id=current_user.id,
+        user_name=current_user.full_name
+    )
+    
+    # Convert datetime objects to strings for MongoDB storage
+    comment_data = comment_obj.dict()
+    comment_data["created_at"] = comment_obj.created_at.isoformat()
+    comment_data["updated_at"] = comment_obj.updated_at.isoformat()
+    
+    result = await db.private_comments.insert_one(comment_data)
+    return PrivateCommentResponse(**comment_obj.dict())
+
+@api_router.get("/comments/{partner_id}", response_model=List[PrivateCommentResponse])
+async def get_partner_comments(partner_id: str, partner_type: str = "sourcing", user_id: str = "default_user"):
+    """Get private comments for a partner (user sees only own comments + admin sees all)"""
+    current_user = await get_current_user(user_id)
+    
+    # Build query based on user role
+    query = {"partner_id": partner_id, "partner_type": partner_type}
+    if current_user.role != UserRole.ADMIN:
+        query["user_id"] = current_user.id  # Non-admin users see only their own comments
+    
+    comments = await db.private_comments.find(query).sort("created_at", -1).to_list(100)
+    return [PrivateCommentResponse(**comment) for comment in comments]
+
+@api_router.put("/comments/{comment_id}", response_model=PrivateCommentResponse)
+async def update_private_comment(comment_id: str, comment_update: PrivateCommentUpdate, user_id: str = "default_user"):
+    """Update a private comment (only by owner or admin)"""
+    current_user = await get_current_user(user_id)
+    
+    # Get existing comment
+    existing_comment = await db.private_comments.find_one({"id": comment_id})
+    if not existing_comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    # Check permissions
+    if not can_view_private_comment(existing_comment["user_id"], current_user.id, current_user.role):
+        raise HTTPException(status_code=403, detail="Not authorized to edit this comment")
+    
+    update_dict = comment_update.dict()
+    update_dict["updated_at"] = datetime.utcnow()
+    
+    result = await db.private_comments.update_one(
+        {"id": comment_id},
+        {"$set": update_dict}
+    )
+    
+    updated_comment = await db.private_comments.find_one({"id": comment_id})
+    return PrivateCommentResponse(**updated_comment)
+
+@api_router.delete("/comments/{comment_id}")
+async def delete_private_comment(comment_id: str, user_id: str = "default_user"):
+    """Delete a private comment (only by owner or admin)"""
+    current_user = await get_current_user(user_id)
+    
+    # Get existing comment
+    existing_comment = await db.private_comments.find_one({"id": comment_id})
+    if not existing_comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    
+    # Check permissions
+    if not can_view_private_comment(existing_comment["user_id"], current_user.id, current_user.role):
+        raise HTTPException(status_code=403, detail="Not authorized to delete this comment")
+    
+    result = await db.private_comments.delete_one({"id": comment_id})
+    return {"message": "Comment deleted successfully"}
+
+# PHASE 3 - PERSONAL DASHBOARD ENDPOINTS  
+@api_router.get("/my-startups", response_model=Dict[str, Any])
+async def get_my_startups(user_id: str = "default_user"):
+    """Get startups assigned to current user"""
+    current_user = await get_current_user(user_id)
+    
+    # Get sourcing partners assigned to user
+    sourcing_query = {"pilote": current_user.full_name}
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(1000)
+    
+    # Get dealflow partners assigned to user
+    dealflow_query = {"pilote": current_user.full_name}
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(1000)
+    
+    # Add inactivity status
+    sourcing_with_status = [add_inactivity_status(p) for p in sourcing_partners]
+    dealflow_with_status = [add_inactivity_status(p) for p in dealflow_partners]
+    
+    return {
+        "user": current_user.dict(),
+        "sourcing_partners": sourcing_with_status,
+        "dealflow_partners": dealflow_with_status,
+        "summary": {
+            "total_sourcing": len(sourcing_partners),
+            "total_dealflow": len(dealflow_partners),
+            "total_partners": len(sourcing_partners) + len(dealflow_partners),
+            "inactive_sourcing": len([p for p in sourcing_with_status if p.get("is_inactive")]),
+            "inactive_dealflow": len([p for p in dealflow_with_status if p.get("is_inactive")])
+        }
+    }
+
+@api_router.get("/partners-by-pilote")
+async def get_partners_by_pilote():
+    """Get partners grouped by pilote for filtering"""
+    # Get all sourcing partners
+    sourcing_partners = await db.sourcing_partners.find().to_list(1000)
+    dealflow_partners = await db.dealflow_partners.find().to_list(1000)
+    
+    pilotes = {}
+    
+    # Group sourcing partners by pilote
+    for partner in sourcing_partners:
+        pilote = partner.get("pilote", "Unknown")
+        if pilote not in pilotes:
+            pilotes[pilote] = {"sourcing": [], "dealflow": []}
+        pilotes[pilote]["sourcing"].append(partner)
+    
+    # Group dealflow partners by pilote
+    for partner in dealflow_partners:
+        pilote = partner.get("pilote", "Unknown")
+        if pilote not in pilotes:
+            pilotes[pilote] = {"sourcing": [], "dealflow": []}
+        pilotes[pilote]["dealflow"].append(partner)
+    
+    # Add summary stats
+    for pilote, data in pilotes.items():
+        data["summary"] = {
+            "total_sourcing": len(data["sourcing"]),
+            "total_dealflow": len(data["dealflow"]),
+            "total_partners": len(data["sourcing"]) + len(data["dealflow"])
+        }
+    
+    return pilotes
+
 # Include the router in the main app
 app.include_router(api_router)
 
