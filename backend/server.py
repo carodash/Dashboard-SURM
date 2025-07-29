@@ -1594,14 +1594,35 @@ async def get_my_startups(user_id: str = "default_user"):
     dealflow_query = {"pilote": current_user.full_name}
     dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(1000)
     
-    # Add inactivity status
-    sourcing_with_status = [add_inactivity_status(p) for p in sourcing_partners]
-    dealflow_with_status = [add_inactivity_status(p) for p in dealflow_partners]
+    # Convert MongoDB documents to proper format and add inactivity status
+    sourcing_with_status = []
+    for p in sourcing_partners:
+        # Remove MongoDB ObjectId if present
+        if '_id' in p:
+            del p['_id']
+        partner_with_status = add_inactivity_status(p)
+        sourcing_with_status.append(partner_with_status)
+    
+    dealflow_with_status = []
+    for p in dealflow_partners:
+        # Remove MongoDB ObjectId if present
+        if '_id' in p:
+            del p['_id']
+        partner_with_status = add_inactivity_status(p)
+        dealflow_with_status.append(partner_with_status)
     
     return {
-        "user": current_user.dict(),
+        "user": {
+            "id": current_user.id,
+            "username": current_user.username,
+            "email": current_user.email,
+            "full_name": current_user.full_name,
+            "role": current_user.role,
+            "is_active": current_user.is_active
+        },
         "sourcing_partners": sourcing_with_status,
         "dealflow_partners": dealflow_with_status,
+        "total_assigned": len(sourcing_partners) + len(dealflow_partners),
         "summary": {
             "total_sourcing": len(sourcing_partners),
             "total_dealflow": len(dealflow_partners),
