@@ -77,7 +77,9 @@ DEALFLOW_TEST_DATA = {
     "date_reception_fichier": "2024-02-01",
     "date_pre_qualification": "2024-02-15",
     "date_presentation_meetup_referents": "2024-02-28",
-    "actions_commentaires": "Très bon potentiel commercial"
+    "actions_commentaires": "Très bon potentiel commercial",
+    # Phase 1 - Next Action Date
+    "date_prochaine_action": "2024-04-10"
 }
 
 def test_sourcing_crud():
