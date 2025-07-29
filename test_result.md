@@ -281,7 +281,10 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Phase 1 - Inactivity Indicators Backend"
+    - "Phase 1 - Next Action Date Field Backend"
+    - "Phase 1 - Activity Timeline Backend"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
