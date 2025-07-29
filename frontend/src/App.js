@@ -243,10 +243,17 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
           [customFieldName]: type === 'checkbox' ? checked : value
         }
       }));
+    } else if (name === 'tags_strategiques') {
+      // Handle tags as comma-separated string
+      const tags = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+      setFormData(prev => ({
+        ...prev,
+        [name]: tags
+      }));
     } else {
       setFormData(prev => ({
         ...prev,
-        [name]: type === 'checkbox' ? checked : value
+        [name]: type === 'checkbox' ? checked : (value === '' ? null : value)
       }));
     }
   };
