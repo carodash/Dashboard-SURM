@@ -593,8 +593,8 @@ def test_error_handling():
 
 def main():
     """Run all tests"""
-    print("🚀 Starting SURM Backend API Tests")
-    print("=" * 50)
+    print("🚀 Starting SURM Backend API Tests - Including Phase 1 Features")
+    print("=" * 60)
     
     try:
         # Test CRUD operations
@@ -607,11 +607,28 @@ def main():
         # Test statistics
         test_statistics_endpoint()
         
+        # === PHASE 1 TESTS ===
+        print("\n" + "=" * 60)
+        print("🔥 PHASE 1 - SUIVI & RELANCE FEATURES TESTING")
+        print("=" * 60)
+        
+        # Test Phase 1 - Next Action Date Field
+        next_action_sourcing_id, next_action_dealflow_id = test_phase1_next_action_date()
+        
+        # Test Phase 1 - Inactivity Indicators
+        test_phase1_inactivity_indicators()
+        
+        # Test Phase 1 - Activity Timeline
+        timeline_partner_id = test_phase1_activity_timeline()
+        
+        # Test Phase 1 - Enhanced Transition
+        enhanced_transition_dealflow_id = test_phase1_transition_inheritance()
+        
         # Test error handling
         test_error_handling()
         
-        print("\n" + "=" * 50)
-        print("🎉 SURM Backend API Testing Complete!")
+        print("\n" + "=" * 60)
+        print("🎉 SURM Backend API Testing Complete - Phase 1 Included!")
         print("Check the results above for any failures.")
         
     except Exception as e:
