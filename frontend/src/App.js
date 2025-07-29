@@ -3427,6 +3427,17 @@ const Dashboard = () => {
           onUpdateUser={setCurrentUser}
         />
       )}
+
+      {/* Phase 1 - Activity Timeline Modal */}
+      {showTimelineModal && selectedTimelinePartner && (
+        <ActivityTimelineModal
+          isOpen={showTimelineModal}
+          onClose={handleCloseTimeline}
+          partnerId={selectedTimelinePartner.id}
+          partnerType={selectedTimelinePartner.type}
+          partnerName={selectedTimelinePartner.name}
+        />
+      )}
     </div>
   );
 };
