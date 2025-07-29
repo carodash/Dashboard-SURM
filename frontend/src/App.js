@@ -451,6 +451,285 @@ const ActivityTimelineModal = ({ isOpen, onClose, partnerId, partnerType, partne
   );
 };
 
+// Phase 2 - Chart Components
+const MonthlyEvolutionChart = ({ data, title = "Évolution mensuelle des startups" }) => {
+  if (!data || !data.monthly_evolution) return null;
+
+  const chartData = {
+    labels: data.monthly_evolution.map(([month, _]) => {
+      const [year, monthNum] = month.split('-');
+      return new Date(year, monthNum - 1).toLocaleDateString('fr-FR', { 
+        month: 'short', 
+        year: 'numeric' 
+      });
+    }),
+    datasets: [
+      {
+        label: 'Sourcing créés',
+        data: data.monthly_evolution.map(([_, stats]) => stats.sourcing_created),
+        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+        borderColor: 'rgb(59, 130, 246)',
+        borderWidth: 1,
+      },
+      {
+        label: 'Dealflow créés',
+        data: data.monthly_evolution.map(([_, stats]) => stats.dealflow_created),
+        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+        borderColor: 'rgb(16, 185, 129)',
+        borderWidth: 1,
+      },
+      {
+        label: 'Transitions',
+        data: data.monthly_evolution.map(([_, stats]) => stats.transitions),
+        backgroundColor: 'rgba(245, 158, 11, 0.8)',
+        borderColor: 'rgb(245, 158, 11)',
+        borderWidth: 1,
+      },
+      {
+        label: 'Clôtures',
+        data: data.monthly_evolution.map(([_, stats]) => stats.sourcing_closed + stats.dealflow_closed),
+        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+        borderColor: 'rgb(239, 68, 68)',
+        borderWidth: 1,
+      }
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: title,
+      },
+    },
+    scales: {
+      x: {
+        stacked: true,
+      },
+      y: {
+        stacked: true,
+        beginAtZero: true,
+      },
+    },
+  };
+
+  return <Bar data={chartData} options={options} />;
+};
+
+const DistributionPieChart = ({ data, title, dataKey }) => {
+  if (!data || !data[dataKey]) return null;
+
+  const chartData = {
+    labels: Object.keys(data[dataKey]),
+    datasets: [
+      {
+        data: Object.values(data[dataKey]),
+        backgroundColor: [
+          '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+          '#EC4899', '#14B8A6', '#F97316', '#84CC16', '#6366F1',
+          '#06B6D4', '#A855F7', '#F43F5E', '#22C55E', '#EAB308'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff',
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'right',
+      },
+      title: {
+        display: true,
+        text: title,
+      },
+    },
+  };
+
+  return <Doughnut data={chartData} options={options} />;
+};
+
+// Phase 2 - Analytics Dashboard Component  
+const AnalyticsDashboard = ({ isVisible }) => {
+  const [monthlyData, setMonthlyData] = useState(null);
+  const [distributionData, setDistributionData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [dateFilter, setDateFilter] = useState({
+    start_date: new Date(new Date().getFullYear() - 1, 0, 1).toISOString().split('T')[0],
+    end_date: new Date().toISOString().split('T')[0]
+  });
+  const [filters, setFilters] = useState({
+    filter_by: '',
+    filter_value: ''
+  });
+
+  useEffect(() => {
+    if (isVisible) {
+      loadAnalyticsData();
+    }
+  }, [isVisible, dateFilter, filters]);
+
+  const loadAnalyticsData = async () => {
+    setLoading(true);
+    try {
+      // Load monthly evolution
+      const monthlyParams = new URLSearchParams(dateFilter);
+      const monthlyResponse = await axios.get(`${API}/analytics/monthly-evolution?${monthlyParams}`);
+      setMonthlyData(monthlyResponse.data);
+
+      // Load distribution data
+      const distributionParams = new URLSearchParams({
+        ...dateFilter,
+        ...filters
+      });
+      const distributionResponse = await axios.get(`${API}/analytics/distribution?${distributionParams}`);
+      setDistributionData(distributionResponse.data);
+    } catch (error) {
+      console.error("Error loading analytics:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDateFilterChange = (field, value) => {
+    setDateFilter(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFilterChange = (field, value) => {
+    setFilters(prev => ({ ...prev, [field]: value }));
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="space-y-6">
+      {/* Filter Controls */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h3 className="text-lg font-semibold mb-4">📊 Filtres d'analyse</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Date début</label>
+            <input
+              type="date"
+              value={dateFilter.start_date}
+              onChange={(e) => handleDateFilterChange('start_date', e.target.value)}
+              className="w-full border rounded-md px-3 py-2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Date fin</label>
+            <input
+              type="date"
+              value={dateFilter.end_date}
+              onChange={(e) => handleDateFilterChange('end_date', e.target.value)}
+              className="w-full border rounded-md px-3 py-2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Filtrer par</label>
+            <select
+              value={filters.filter_by}
+              onChange={(e) => handleFilterChange('filter_by', e.target.value)}
+              className="w-full border rounded-md px-3 py-2"
+            >
+              <option value="">Aucun filtre</option>
+              <option value="domaine">Domaine</option>
+              <option value="pilote">Pilote</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Valeur</label>
+            <input
+              type="text"
+              value={filters.filter_value}
+              onChange={(e) => handleFilterChange('filter_value', e.target.value)}
+              placeholder="Valeur du filtre..."
+              className="w-full border rounded-md px-3 py-2"
+              disabled={!filters.filter_by}
+            />
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600">Chargement des analyses...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Monthly Evolution Chart */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <MonthlyEvolutionChart data={monthlyData} />
+          </div>
+
+          {/* Distribution Charts */}
+          {distributionData && (
+            <>
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <DistributionPieChart 
+                  data={distributionData} 
+                  title="Répartition par statut" 
+                  dataKey="by_status" 
+                />
+              </div>
+              
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <DistributionPieChart 
+                  data={distributionData} 
+                  title="Répartition par domaine" 
+                  dataKey="by_domain" 
+                />
+              </div>
+              
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <DistributionPieChart 
+                  data={distributionData} 
+                  title="Répartition par typologie" 
+                  dataKey="by_typologie" 
+                />
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Summary Stats */}
+      {distributionData && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold mb-4">📈 Résumé</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">
+                {distributionData.summary.total_sourcing}
+              </div>
+              <div className="text-sm text-gray-600">Sourcing</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">
+                {distributionData.summary.total_dealflow}
+              </div>
+              <div className="text-sm text-gray-600">Dealflow</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">
+                {distributionData.summary.total_partners}
+              </div>
+              <div className="text-sm text-gray-600">Total</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [] }) => {
   const [formData, setFormData] = useState({
     nom_entreprise: "",
