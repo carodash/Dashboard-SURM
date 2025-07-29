@@ -3306,31 +3306,39 @@ const Dashboard = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "dashboard" && statistics && (
+        {activeTab === "dashboard" && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {renderStatisticsCard("Total Sourcing", statistics.total_sourcing)}
-              {renderStatisticsCard("Total Dealflow", statistics.total_dealflow)}
-              {renderStatisticsCard(
-                "Entrées ce trimestre",
-                statistics.quarterly_entries.reduce((sum, q) => sum + q.total_entries, 0)
-              )}
-              {renderStatisticsCard(
-                "Pré-qualifications ce mois",
-                statistics.monthly_stats.reduce((sum, m) => sum + m.pre_qualifications, 0)
-              )}
-            </div>
+            {/* Phase 2 - Enhanced Analytics Dashboard */}
+            <AnalyticsDashboard isVisible={true} />
+            
+            {/* Original Statistics (kept for reference) */}
+            {statistics && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {renderStatisticsCard("Total Sourcing", statistics.total_sourcing)}
+                  {renderStatisticsCard("Total Dealflow", statistics.total_dealflow)}
+                  {renderStatisticsCard(
+                    "Entrées ce trimestre",
+                    statistics.quarterly_entries.reduce((sum, q) => sum + q.total_entries, 0)
+                  )}
+                  {renderStatisticsCard(
+                    "Pré-qualifications ce mois",
+                    statistics.monthly_stats.reduce((sum, m) => sum + m.pre_qualifications, 0)
+                  )}
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {renderDistributionChart("Répartition par domaine", statistics.domain_distribution)}
-              {renderDistributionChart("Répartition par typologie", statistics.typologie_distribution)}
-              {renderDistributionChart("Répartition par technologie", statistics.technology_distribution)}
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {renderDistributionChart("Répartition par domaine", statistics.domain_distribution)}
+                  {renderDistributionChart("Répartition par typologie", statistics.typologie_distribution)}
+                  {renderDistributionChart("Répartition par technologie", statistics.technology_distribution)}
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderDistributionChart("Statuts Sourcing", statistics.sourcing_status_distribution)}
-              {renderDistributionChart("Statuts Dealflow", statistics.dealflow_status_distribution)}
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {renderDistributionChart("Statuts Sourcing", statistics.sourcing_status_distribution)}
+                  {renderDistributionChart("Statuts Dealflow", statistics.dealflow_status_distribution)}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
