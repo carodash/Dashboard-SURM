@@ -210,6 +210,21 @@ backend:
         agent: "testing"
         comment: "✅ ACTIVITY TIMELINE SYSTEM FULLY WORKING: ActivityLog model implemented with comprehensive activity tracking. Activities automatically logged on create/update/delete/transition operations. GET /api/activity/{partner_id}?partner_type=sourcing/dealflow returns complete timeline. POST /api/activity/{partner_id} for manual activity entries working. Transition workflow logs activities for both sourcing and dealflow partners. All activity types (created, updated, transitioned, comment_added) verified working correctly."
 
+  - task: "Phase 2 - Enhanced Analytics Backend"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implementing Phase 2 enhanced analytics with monthly evolution and advanced distribution filtering capabilities."
+      - working: true
+        agent: "testing"
+        comment: "✅ PHASE 2 ENHANCED ANALYTICS FULLY WORKING: (1) Monthly Evolution Analytics - GET /api/analytics/monthly-evolution endpoint working with date range parameters, returns correct monthly data aggregation for sourcing/dealflow creation, transitions, closures with proper period info and monthly_evolution array structure. (2) Enhanced Distribution Analytics - GET /api/analytics/distribution endpoint working with filtering by domaine and pilote, date range filtering, all distribution types (by_status, by_domain, by_typologie, by_pilote, by_source) with accurate summary statistics. (3) Data Accuracy - Monthly evolution calculations match actual data, distribution percentages add up correctly, filtering accuracy verified, proper error handling for invalid dates. Fixed date parsing issues and variable scope problems. All test scenarios passing: basic functionality, date range filtering, domain/pilote filtering, combined filters, edge cases with invalid dates and empty results."
+
 frontend:
   - task: "SURM Frontend - Dashboard Statistics UI"
     implemented: true
