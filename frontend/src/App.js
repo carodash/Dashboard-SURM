@@ -2,6 +2,32 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
 
+const DOMAINES_ACTIVITE = [
+  "CleanTech",
+  "ClimateTech", 
+  "Conseil",
+  "CX Tech",
+  "CyberSecurity",
+  "Data",
+  "DeathTech",
+  "DigitalHealth",
+  "EdTech",
+  "FinTech",
+  "GRC Tech",
+  "InsurTech",
+  "LegalTech",
+  "MarTech",
+  "Mobility",
+  "Pet Tech",
+  "PropTech",
+  "RegTech",
+  "RetailTech",
+  "RhTech",
+  "SilverEconomy",
+  "SmartHome",
+  "Tech"
+];
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
