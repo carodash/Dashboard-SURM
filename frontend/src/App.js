@@ -2694,20 +2694,46 @@ const Dashboard = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Partenaires Dealflow</h2>
               <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowAdvancedFilters(true)}
+                    className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm"
+                  >
+                    🔍 Filtres
+                  </button>
+                  {hasPermission('export') && (
+                    <button
+                      onClick={() => handleBulkExport()}
+                      className="px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 text-sm"
+                    >
+                      📊 Export
+                    </button>
+                  )}
+                </div>
                 <div className="w-full sm:w-80">
                   <SearchBar 
                     onSearch={(term) => handleSearch(term, 'dealflow')}
                     placeholder="Rechercher dans dealflow..."
                   />
                 </div>
-                <button
-                  onClick={() => setShowDealflowForm(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 whitespace-nowrap"
-                >
-                  Nouveau Partenaire
-                </button>
+                {hasPermission('create') && (
+                  <button
+                    onClick={() => setShowDealflowForm(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 whitespace-nowrap"
+                  >
+                    Nouveau Partenaire
+                  </button>
+                )}
               </div>
             </div>
+
+            <BulkActionsBar
+              selectedItems={selectedItems}
+              onBulkDelete={handleBulkDelete}
+              onBulkTransition={null}
+              onBulkExport={handleBulkExport}
+              partnerType="dealflow"
+            />
             
             <div className="bg-white shadow rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
