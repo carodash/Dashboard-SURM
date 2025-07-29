@@ -323,6 +323,59 @@ class ActivityLogResponse(BaseModel):
     user_name: Optional[str]
     created_at: datetime
 
+# Phase 3 - User Management & Private Comments Models
+class User(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    username: str
+    email: str
+    full_name: str
+    role: UserRole
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    full_name: str
+    role: UserRole
+    is_active: bool = True
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    role: Optional[UserRole] = None
+    is_active: Optional[bool] = None
+
+class PrivateComment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    partner_id: str  # Reference to sourcing or dealflow partner
+    partner_type: str  # "sourcing" or "dealflow"
+    user_id: str  # Who wrote the comment
+    user_name: str  # User display name for convenience
+    comment: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class PrivateCommentCreate(BaseModel):
+    partner_id: str
+    partner_type: str
+    comment: str
+
+class PrivateCommentUpdate(BaseModel):
+    comment: str
+
+class PrivateCommentResponse(BaseModel):
+    id: str
+    partner_id: str
+    partner_type: str
+    user_id: str
+    user_name: str
+    comment: str
+    created_at: datetime
+    updated_at: datetime
+
 # AUTO-ENRICHMENT FUNCTIONS
 async def scrape_linkedin_basic(company_name: str) -> Dict[str, Any]:
     """Basic LinkedIn scraping without authentication"""
