@@ -608,14 +608,18 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Domaine *</label>
-              <input
-                type="text"
+              <select
                 name="domaine"
                 value={formData.domaine}
                 onChange={handleChange}
                 required
                 className="w-full border rounded-md px-3 py-2"
-              />
+              >
+                <option value="">Sélectionnez un domaine...</option>
+                {DOMAINES_ACTIVITE.map(domaine => (
+                  <option key={domaine} value={domaine}>{domaine}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Typologie *</label>
