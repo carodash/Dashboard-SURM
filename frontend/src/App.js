@@ -47,13 +47,13 @@ const USER_ROLES = {
     label: "Administrateur", 
     permissions: ["create", "read", "update", "delete", "manage_users", "view_all", "export", "import", "manage_config"]
   },
-  MANAGER: { 
-    label: "Manager", 
-    permissions: ["create", "read", "update", "delete", "view_all", "export"]
+  CONTRIBUTEUR: { 
+    label: "Contributeur", 
+    permissions: ["create", "read", "update", "delete", "view_own", "export"]
   },
-  USER: { 
-    label: "Utilisateur", 
-    permissions: ["create", "read", "update", "view_own"]
+  OBSERVATEUR: { 
+    label: "Observateur", 
+    permissions: ["read", "view_all"]
   }
 };
 
