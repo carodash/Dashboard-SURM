@@ -642,7 +642,7 @@ async def get_user_permissions(user_id: str):
         # Return default permissions
         return UserPermission(
             user_id=user_id,
-            role=UserRole.USER,
+            role=UserRole.CONTRIBUTEUR,
             permissions={
                 "create_sourcing": True,
                 "edit_sourcing": True,
