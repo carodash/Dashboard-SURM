@@ -181,16 +181,19 @@ backend:
         comment: "✅ INACTIVITY INDICATORS FULLY WORKING: Fixed Pydantic model validation by adding is_inactive and days_since_update fields to SourcingPartner and DealflowPartner models. GET /api/sourcing and GET /api/dealflow now return computed inactivity indicators (is_inactive: bool, days_since_update: int). GET /api/inactive-partners endpoint working with default 90-day threshold and custom threshold support. All inactivity calculations verified accurate."
 
   - task: "Phase 1 - Next Action Date Field Backend"
-    implemented: false
-    working: "NA"
+    implemented: true
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Adding date_prochaine_action field to both SourcingPartner and DealflowPartner models with validation."
+      - working: true
+        agent: "testing"
+        comment: "✅ NEXT ACTION DATE FIELD FULLY WORKING: date_prochaine_action field properly implemented in both SourcingPartner and DealflowPartner models. POST /api/sourcing and POST /api/dealflow accept and store date_prochaine_action. PUT updates work correctly for both endpoints. Field is properly serialized and retrieved in all CRUD operations. Date validation working correctly."
 
   - task: "Phase 1 - Activity Timeline Backend"
     implemented: false
