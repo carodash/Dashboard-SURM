@@ -1411,6 +1411,341 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
   );
 };
 
+const AdvancedFilters = ({ isOpen, onClose, onApplyFilters, filterType }) => {
+  const [filters, setFilters] = useState({
+    domaine: "",
+    statut: "",
+    typologie: "",
+    pays: "",
+    source: "",
+    pilote: "",
+    date_debut: "",
+    date_fin: "",
+    interet: ""
+  });
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleApply = () => {
+    onApplyFilters(filters);
+    onClose();
+  };
+
+  const handleReset = () => {
+    setFilters({
+      domaine: "",
+      statut: "",
+      typologie: "",
+      pays: "",
+      source: "",
+      pilote: "",
+      date_debut: "",
+      date_fin: "",
+      interet: ""
+    });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Filtres Avancés - {filterType === 'sourcing' ? 'Sourcing' : 'Dealflow'}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {/* Domaine Filter */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Domaine</label>
+            <select
+              value={filters.domaine}
+              onChange={(e) => handleFilterChange('domaine', e.target.value)}
+              className="w-full border rounded-md px-3 py-2"
+            >
+              <option value="">Tous les domaines</option>
+              {DOMAINES_ACTIVITE.map(domaine => (
+                <option key={domaine} value={domaine}>{domaine}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Statut</label>
+            <select
+              value={filters.statut}
+              onChange={(e) => handleFilterChange('statut', e.target.value)}
+              className="w-full border rounded-md px-3 py-2"
+            >
+              <option value="">Tous les statuts</option>
+              {(filterType === 'sourcing' ? FILTER_OPTIONS.statuts_sourcing : FILTER_OPTIONS.statuts_dealflow).map(statut => (
+                <option key={statut} value={statut}>{statut}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Typologie Filter */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Typologie</label>
+            <select
+              value={filters.typologie}
+              onChange={(e) => handleFilterChange('typologie', e.target.value)}
+              className="w-full border rounded-md px-3 py-2"
+            >
+              <option value="">Toutes les typologies</option>
+              {FILTER_OPTIONS.typologies.map(typo => (
+                <option key={typo} value={typo}>{typo}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Pays Filter */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Pays</label>
+            <select
+              value={filters.pays}
+              onChange={(e) => handleFilterChange('pays', e.target.value)}
+              className="w-full border rounded-md px-3 py-2"
+            >
+              <option value="">Tous les pays</option>
+              {FILTER_OPTIONS.pays.map(pays => (
+                <option key={pays} value={pays}>{pays}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Source Filter */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Source</label>
+            <select
+              value={filters.source}
+              onChange={(e) => handleFilterChange('source', e.target.value)}
+              className="w-full border rounded-md px-3 py-2"
+            >
+              <option value="">Toutes les sources</option>
+              {FILTER_OPTIONS.sources.map(source => (
+                <option key={source} value={source}>{source}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Pilote Filter */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Pilote</label>
+            <input
+              type="text"
+              value={filters.pilote}
+              onChange={(e) => handleFilterChange('pilote', e.target.value)}
+              placeholder="Nom du pilote"
+              className="w-full border rounded-md px-3 py-2"
+            />
+          </div>
+
+          {/* Date Range */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Date début</label>
+            <input
+              type="date"
+              value={filters.date_debut}
+              onChange={(e) => handleFilterChange('date_debut', e.target.value)}
+              className="w-full border rounded-md px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Date fin</label>
+            <input
+              type="date"
+              value={filters.date_fin}
+              onChange={(e) => handleFilterChange('date_fin', e.target.value)}
+              className="w-full border rounded-md px-3 py-2"
+            />
+          </div>
+
+          {/* Interet Filter (Sourcing only) */}
+          {filterType === 'sourcing' && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Intérêt</label>
+              <select
+                value={filters.interet}
+                onChange={(e) => handleFilterChange('interet', e.target.value)}
+                className="w-full border rounded-md px-3 py-2"
+              >
+                <option value="">Tous</option>
+                <option value="true">Oui</option>
+                <option value="false">Non</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-between">
+          <button
+            onClick={handleReset}
+            className="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300"
+          >
+            Réinitialiser
+          </button>
+          <div className="space-x-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleApply}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Appliquer les filtres
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const UserRoleManager = ({ isOpen, onClose, currentUser, onUpdateUser }) => {
+  const [selectedRole, setSelectedRole] = useState(currentUser?.role || 'USER');
+  const [customPermissions, setCustomPermissions] = useState(currentUser?.permissions || []);
+
+  const handleRoleChange = (role) => {
+    setSelectedRole(role);
+    setCustomPermissions(USER_ROLES[role].permissions);
+  };
+
+  const handlePermissionToggle = (permission) => {
+    setCustomPermissions(prev => 
+      prev.includes(permission) 
+        ? prev.filter(p => p !== permission)
+        : [...prev, permission]
+    );
+  };
+
+  const handleSave = () => {
+    onUpdateUser({ role: selectedRole, permissions: customPermissions });
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Gestion des Rôles Utilisateur</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Role Selection */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Rôle</h3>
+            <div className="space-y-2">
+              {Object.entries(USER_ROLES).map(([key, role]) => (
+                <label key={key} className="flex items-center">
+                  <input
+                    type="radio"
+                    name="role"
+                    value={key}
+                    checked={selectedRole === key}
+                    onChange={() => handleRoleChange(key)}
+                    className="mr-2"
+                  />
+                  <span className="font-medium">{role.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Permissions */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Permissions</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { key: 'create', label: 'Créer' },
+                { key: 'read', label: 'Lire' },
+                { key: 'update', label: 'Modifier' },
+                { key: 'delete', label: 'Supprimer' },
+                { key: 'manage_users', label: 'Gérer utilisateurs' },
+                { key: 'view_all', label: 'Voir tout' },
+                { key: 'view_own', label: 'Voir ses données' },
+                { key: 'export', label: 'Exporter' },
+                { key: 'import', label: 'Importer' },
+                { key: 'manage_config', label: 'Gérer config' }
+              ].map(perm => (
+                <label key={perm.key} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={customPermissions.includes(perm.key)}
+                    onChange={() => handlePermissionToggle(perm.key)}
+                    className="mr-2"
+                  />
+                  {perm.label}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-2 mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Sauvegarder
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const BulkActionsBar = ({ selectedItems, onBulkDelete, onBulkTransition, onBulkExport, partnerType }) => {
+  if (selectedItems.length === 0) return null;
+
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center justify-between">
+      <span className="text-blue-800 font-medium">
+        {selectedItems.length} élément{selectedItems.length > 1 ? 's' : ''} sélectionné{selectedItems.length > 1 ? 's' : ''}
+      </span>
+      <div className="flex space-x-2">
+        <button
+          onClick={onBulkExport}
+          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+        >
+          📊 Exporter
+        </button>
+        {partnerType === 'sourcing' && (
+          <button
+            onClick={onBulkTransition}
+            className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+          >
+            ➡️ Vers Dealflow
+          </button>
+        )}
+        <button
+          onClick={onBulkDelete}
+          className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+        >
+          🗑️ Supprimer
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const EnrichedDataModal = ({ isOpen, onClose, partner, partnerType }) => {
   if (!isOpen || !partner) return null;
 
