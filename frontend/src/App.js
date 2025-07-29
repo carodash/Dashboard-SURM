@@ -2740,6 +2740,14 @@ const Dashboard = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th className="px-6 py-3 text-left">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.length === filteredDealflowPartners.length && filteredDealflowPartners.length > 0}
+                          onChange={() => handleSelectAll(filteredDealflowPartners)}
+                          className="rounded"
+                        />
+                      </th>
                       {Object.entries(columnConfig.dealflow).map(([key, config]) => 
                         config.visible ? (
                           <SortableTableHeader
