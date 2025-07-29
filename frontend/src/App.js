@@ -69,6 +69,66 @@ const DOMAINES_ACTIVITE = [
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+const ScoreDisplay = ({ score, type = "maturite" }) => {
+  if (!score) return <span className="text-gray-400">-</span>;
+  
+  if (type === "maturite") {
+    const stars = "⭐".repeat(score);
+    return (
+      <div className="flex items-center space-x-1">
+        <span className="text-yellow-500">{stars}</span>
+        <span className="text-sm text-gray-600">({score}/5)</span>
+      </div>
+    );
+  } else if (type === "potentiel") {
+    const percentage = (score / 10) * 100;
+    return (
+      <div className="flex items-center space-x-2">
+        <div className="w-16 bg-gray-200 rounded-full h-2">
+          <div 
+            className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+            style={{ width: `${percentage}%` }}
+          ></div>
+        </div>
+        <span className="text-sm font-medium text-gray-700">{score}/10</span>
+      </div>
+    );
+  }
+  
+  return <span>{score}</span>;
+};
+
+const PriorityTag = ({ priority }) => {
+  if (!priority) return null;
+  
+  const config = PRIORITE_STRATEGIQUE[priority];
+  if (!config) return null;
+  
+  return (
+    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+      <span className="mr-1">{config.icon}</span>
+      {config.label}
+    </span>
+  );
+};
+
+const StrategicTags = ({ tags }) => {
+  if (!tags || tags.length === 0) return null;
+  
+  return (
+    <div className="flex flex-wrap gap-1">
+      {tags.map((tag, index) => (
+        <span 
+          key={index}
+          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800"
+        >
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+};
+
 const SearchBar = ({ onSearch, placeholder = "Rechercher..." }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
