@@ -1198,9 +1198,19 @@ async def get_monthly_evolution(start_date: str = None, end_date: str = None):
 async def get_enhanced_distribution(filter_by: str = None, filter_value: str = None, 
                                   start_date: str = None, end_date: str = None):
     """Get enhanced distribution analytics with filtering"""
-    # Parse date filters
-    start_dt = datetime.fromisoformat(start_date) if start_date else None
-    end_dt = datetime.fromisoformat(end_date) if end_date else None
+    # Parse date filters with error handling
+    start_dt = None
+    end_dt = None
+    if start_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid start_date format: {start_date}")
+    if end_date:
+        try:
+            end_dt = datetime.fromisoformat(end_date)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid end_date format: {end_date}")
     
     # Get all partners
     sourcing_partners = await db.sourcing_partners.find().to_list(1000)
@@ -1208,10 +1218,38 @@ async def get_enhanced_distribution(filter_by: str = None, filter_value: str = N
     
     # Apply filters
     if start_dt and end_dt:
-        sourcing_partners = [p for p in sourcing_partners 
-                           if start_dt <= datetime.fromisoformat(p.get("created_at", "").replace('Z', '+00:00')) <= end_dt]
-        dealflow_partners = [p for p in dealflow_partners 
-                           if start_dt <= datetime.fromisoformat(p.get("created_at", "").replace('Z', '+00:00')) <= end_dt]
+        filtered_sourcing = []
+        for p in sourcing_partners:
+            created_at = p.get("created_at")
+            if created_at:
+                if isinstance(created_at, str):
+                    try:
+                        created_date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                        if start_dt <= created_date <= end_dt:
+                            filtered_sourcing.append(p)
+                    except ValueError:
+                        continue  # Skip invalid dates
+                elif isinstance(created_at, datetime):
+                    if start_dt <= created_at <= end_dt:
+                        filtered_sourcing.append(p)
+        
+        filtered_dealflow = []
+        for p in dealflow_partners:
+            created_at = p.get("created_at")
+            if created_at:
+                if isinstance(created_at, str):
+                    try:
+                        created_date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                        if start_dt <= created_date <= end_dt:
+                            filtered_dealflow.append(p)
+                    except ValueError:
+                        continue  # Skip invalid dates
+                elif isinstance(created_at, datetime):
+                    if start_dt <= created_date <= end_dt:
+                        filtered_dealflow.append(p)
+        
+        sourcing_partners = filtered_sourcing
+        dealflow_partners = filtered_dealflow
     
     if filter_by and filter_value:
         if filter_by == "domaine":
