@@ -211,6 +211,10 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     date_presentation_metiers: "",
     pilote: "",
     actions_commentaires: "",
+    score_maturite: "",
+    priorite_strategique: "",
+    score_potentiel: "",
+    tags_strategiques: [],
     custom_fields: {},
     ...initialData
   });
