@@ -68,7 +68,7 @@ class FormField(BaseModel):
     validation_regex: Optional[str] = None
     order: int = 0
     visible: bool = True
-    editable_by_roles: List[UserRole] = [UserRole.ADMIN, UserRole.MANAGER, UserRole.USER]
+    editable_by_roles: List[UserRole] = [UserRole.ADMIN, UserRole.CONTRIBUTEUR, UserRole.OBSERVATEUR]
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class FormConfiguration(BaseModel):
