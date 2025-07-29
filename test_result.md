@@ -306,8 +306,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Phase 2 - Chart.js Integration Frontend"
-    - "Phase 2 - Advanced Period Filtering"
+    - "Phase 3 - Advanced User Roles Backend"
+    - "Phase 3 - Private Comments System"
+    - "Phase 3 - Personal Dashboard View"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
