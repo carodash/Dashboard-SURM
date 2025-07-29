@@ -2602,6 +2602,14 @@ const Dashboard = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredSourcingPartners.map((partner) => (
                       <tr key={partner.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.includes(partner.id)}
+                            onChange={() => handleSelectItem(partner.id)}
+                            className="rounded"
+                          />
+                        </td>
                         {Object.entries(columnConfig.sourcing).map(([key, config]) => 
                           config.visible ? (
                             <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
