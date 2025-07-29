@@ -491,6 +491,50 @@ def add_inactivity_status(partner_data: dict) -> dict:
     partner_data["days_since_update"] = calculate_inactivity_days(partner_data.get("updated_at"))
     return partner_data
 
+# PHASE 3 - USER AUTHORIZATION HELPERS
+async def get_current_user(user_id: str = "default_user") -> User:
+    """Get current user - simplified for demo"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        # Create default user if doesn't exist
+        default_user = User(
+            id=user_id,
+            username="demo_user",
+            email="demo@example.com",
+            full_name="Utilisateur Demo",
+            role=UserRole.ADMIN
+        )
+        user_dict = default_user.dict()
+        user_dict["created_at"] = default_user.created_at.isoformat()
+        user_dict["updated_at"] = default_user.updated_at.isoformat()
+        await db.users.insert_one(user_dict)
+        return default_user
+    return User(**user)
+
+def can_view_partner(user_role: UserRole, partner_pilote: str, user_name: str) -> bool:
+    """Check if user can view a partner"""
+    if user_role == UserRole.ADMIN:
+        return True
+    if user_role == UserRole.OBSERVATEUR:
+        return True  # Can view all
+    if user_role == UserRole.CONTRIBUTEUR:
+        return partner_pilote == user_name  # Can only view own
+    return False
+
+def can_edit_partner(user_role: UserRole, partner_pilote: str, user_name: str) -> bool:
+    """Check if user can edit a partner"""
+    if user_role == UserRole.ADMIN:
+        return True
+    if user_role == UserRole.CONTRIBUTEUR:
+        return partner_pilote == user_name  # Can only edit own
+    return False  # Observateur cannot edit
+
+def can_view_private_comment(comment_user_id: str, current_user_id: str, current_user_role: UserRole) -> bool:
+    """Check if user can view a private comment"""
+    if current_user_role == UserRole.ADMIN:
+        return True  # Admin can see all comments
+    return comment_user_id == current_user_id  # Can only see own comments
+
 # COLUMN CONFIGURATION ENDPOINTS
 @api_router.post("/config/columns")
 async def save_column_config(column_config: Dict[str, Any]):
