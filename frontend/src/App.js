@@ -2795,21 +2795,25 @@ const Dashboard = () => {
                         )}
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex flex-wrap gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingPartner(partner);
-                                setShowDealflowForm(true);
-                              }}
-                              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded"
-                            >
-                              Modifier
-                            </button>
-                            <button
-                              onClick={() => handleDeleteDealflow(partner.id)}
-                              className="text-red-600 hover:text-red-900 hover:bg-red-50 px-2 py-1 rounded"
-                            >
-                              Supprimer
-                            </button>
+                            {hasPermission('update') && (
+                              <button
+                                onClick={() => {
+                                  setEditingPartner(partner);
+                                  setShowDealflowForm(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded"
+                              >
+                                Modifier
+                              </button>
+                            )}
+                            {hasPermission('delete') && (
+                              <button
+                                onClick={() => handleDeleteDealflow(partner.id)}
+                                className="text-red-600 hover:text-red-900 hover:bg-red-50 px-2 py-1 rounded"
+                              >
+                                Supprimer
+                              </button>
+                            )}
                             <button
                               onClick={() => handleEnrichData(partner.id, "dealflow")}
                               disabled={loading}
