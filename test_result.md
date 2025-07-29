@@ -166,16 +166,19 @@ backend:
         comment: "✅ STATISTICS ENDPOINT FULLY WORKING: GET /api/statistics returns accurate quarterly entries by domain, monthly pre-qualifications and go-studies counts, comprehensive distributions (domain, typologie, technology, metiers, statuses), correct totals. All calculations verified accurate against actual data."
 
   - task: "Phase 1 - Inactivity Indicators Backend"
-    implemented: false
-    working: "NA"
+    implemented: true
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Adding logic to detect startups inactive for 90+ days based on updated_at field. Will add computed field in API responses."
+      - working: true
+        agent: "testing"
+        comment: "✅ INACTIVITY INDICATORS FULLY WORKING: Fixed Pydantic model validation by adding is_inactive and days_since_update fields to SourcingPartner and DealflowPartner models. GET /api/sourcing and GET /api/dealflow now return computed inactivity indicators (is_inactive: bool, days_since_update: int). GET /api/inactive-partners endpoint working with default 90-day threshold and custom threshold support. All inactivity calculations verified accurate."
 
   - task: "Phase 1 - Next Action Date Field Backend"
     implemented: false
