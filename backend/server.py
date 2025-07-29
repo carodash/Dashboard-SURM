@@ -677,7 +677,13 @@ async def get_enrichment_settings():
 
 # SOURCING ENDPOINTS
 @api_router.post("/sourcing", response_model=SourcingPartner)
-async def create_sourcing_partner(partner: SourcingPartnerCreate):
+async def create_sourcing_partner(partner: SourcingPartnerCreate, user_id: str = "default_user"):
+    current_user = await get_current_user(user_id)
+    
+    # Check permissions
+    if current_user.role == UserRole.OBSERVATEUR:
+        raise HTTPException(status_code=403, detail="Observateur cannot create partners")
+    
     partner_dict = partner.dict()
     
     # Auto-enrichment if enabled
@@ -706,14 +712,23 @@ async def create_sourcing_partner(partner: SourcingPartnerCreate):
         activity_type=ActivityType.CREATED,
         description=f"Startup '{partner.nom_entreprise}' créée en sourcing",
         details={"statut": partner.statut, "domaine": partner.domaine_activite},
-        user_name="System"  # Could be replaced with actual user info
+        user_id=current_user.id,
+        user_name=current_user.full_name
     )
     
     return partner_obj
 
 @api_router.get("/sourcing", response_model=List[SourcingPartner])
-async def get_sourcing_partners():
-    partners = await db.sourcing_partners.find().to_list(1000)
+async def get_sourcing_partners(user_id: str = "default_user"):
+    current_user = await get_current_user(user_id)
+    
+    # Build query based on user role
+    query = {}
+    if current_user.role == UserRole.CONTRIBUTEUR:
+        query["pilote"] = current_user.full_name  # Contributeur sees only their own
+    # Admin and Observateur see all
+    
+    partners = await db.sourcing_partners.find(query).to_list(1000)
     
     # Add inactivity status to each partner
     partners_with_status = []
@@ -724,21 +739,33 @@ async def get_sourcing_partners():
     return partners_with_status
 
 @api_router.get("/sourcing/{partner_id}", response_model=SourcingPartner)
-async def get_sourcing_partner(partner_id: str):
+async def get_sourcing_partner(partner_id: str, user_id: str = "default_user"):
+    current_user = await get_current_user(user_id)
+    
     partner = await db.sourcing_partners.find_one({"id": partner_id})
     if partner is None:
         raise HTTPException(status_code=404, detail="Partner not found")
+    
+    # Check view permissions
+    if not can_view_partner(current_user.role, partner.get("pilote"), current_user.full_name):
+        raise HTTPException(status_code=403, detail="Not authorized to view this partner")
     
     # Add inactivity status
     partner_with_status = add_inactivity_status(partner)
     return SourcingPartner(**partner_with_status)
 
 @api_router.put("/sourcing/{partner_id}", response_model=SourcingPartner)
-async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartnerUpdate):
-    # Get original partner for comparison
+async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartnerUpdate, user_id: str = "default_user"):
+    current_user = await get_current_user(user_id)
+    
+    # Get original partner for permission check
     original_partner = await db.sourcing_partners.find_one({"id": partner_id})
     if not original_partner:
         raise HTTPException(status_code=404, detail="Partner not found")
+    
+    # Check edit permissions
+    if not can_edit_partner(current_user.role, original_partner.get("pilote"), current_user.full_name):
+        raise HTTPException(status_code=403, detail="Not authorized to edit this partner")
     
     update_dict = {k: v for k, v in partner_update.dict().items() if v is not None}
     update_dict["updated_at"] = datetime.utcnow()
@@ -771,7 +798,8 @@ async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartn
             activity_type=ActivityType.UPDATED,
             description=f"Startup '{original_partner['nom_entreprise']}' mise à jour",
             details={"changes": changes},
-            user_name="System"
+            user_id=current_user.id,
+            user_name=current_user.full_name
         )
     
     updated_partner = await db.sourcing_partners.find_one({"id": partner_id})
@@ -779,11 +807,17 @@ async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartn
     return SourcingPartner(**updated_partner)
 
 @api_router.delete("/sourcing/{partner_id}")
-async def delete_sourcing_partner(partner_id: str):
-    # Get partner info before deletion for logging
+async def delete_sourcing_partner(partner_id: str, user_id: str = "default_user"):
+    current_user = await get_current_user(user_id)
+    
+    # Get partner info before deletion for logging and permission check
     partner = await db.sourcing_partners.find_one({"id": partner_id})
     if not partner:
         raise HTTPException(status_code=404, detail="Partner not found")
+    
+    # Check delete permissions (only admin for now)
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can delete partners")
     
     result = await db.sourcing_partners.delete_one({"id": partner_id})
     if result.deleted_count == 0:
@@ -796,7 +830,8 @@ async def delete_sourcing_partner(partner_id: str):
         activity_type=ActivityType.UPDATED,  # Using UPDATED as we don't have DELETED
         description=f"Startup '{partner['nom_entreprise']}' supprimée du sourcing",
         details={"action": "deleted"},
-        user_name="System"
+        user_id=current_user.id,
+        user_name=current_user.full_name
     )
     
     return {"message": "Partner deleted successfully"}
