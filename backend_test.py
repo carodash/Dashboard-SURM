@@ -553,6 +553,235 @@ def test_phase1_transition_inheritance():
         print(f"❌ Failed to transition partner: {response.status_code} - {response.text}")
         return None
 
+def test_phase2_monthly_evolution():
+    """Test Phase 2 - Monthly Evolution Analytics"""
+    print("\n=== TESTING PHASE 2 - MONTHLY EVOLUTION ANALYTICS ===")
+    
+    # Test 1: Basic monthly evolution endpoint
+    print("\n1. Testing GET /api/analytics/monthly-evolution (basic)")
+    response = requests.get(f"{API_URL}/analytics/monthly-evolution")
+    if response.status_code == 200:
+        data = response.json()
+        print("✅ Monthly evolution endpoint working:")
+        print(f"   - Period: {data.get('period', {}).get('start')} to {data.get('period', {}).get('end')}")
+        print(f"   - Monthly data points: {len(data.get('monthly_evolution', []))}")
+        
+        # Verify data structure
+        if 'period' in data and 'monthly_evolution' in data:
+            print("✅ Response has correct structure (period, monthly_evolution)")
+            
+            # Check monthly evolution data structure
+            monthly_data = data['monthly_evolution']
+            if monthly_data:
+                first_month = monthly_data[0]
+                if len(first_month) == 2:  # [month, stats]
+                    month_key, stats = first_month
+                    expected_keys = ['sourcing_created', 'dealflow_created', 'sourcing_closed', 'dealflow_closed', 'transitions']
+                    if all(key in stats for key in expected_keys):
+                        print("✅ Monthly evolution data has correct structure")
+                        print(f"   Sample month {month_key}: {stats}")
+                    else:
+                        print(f"❌ Missing expected keys in monthly stats: {list(stats.keys())}")
+                else:
+                    print(f"❌ Incorrect monthly data format: {first_month}")
+            else:
+                print("⚠️ No monthly evolution data found")
+        else:
+            print(f"❌ Missing required fields in response: {list(data.keys())}")
+    else:
+        print(f"❌ Failed to get monthly evolution: {response.status_code} - {response.text}")
+    
+    # Test 2: Monthly evolution with date range
+    print("\n2. Testing GET /api/analytics/monthly-evolution with date range")
+    start_date = "2024-01-01T00:00:00"
+    end_date = "2024-12-31T23:59:59"
+    response = requests.get(f"{API_URL}/analytics/monthly-evolution?start_date={start_date}&end_date={end_date}")
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ Date range filtering working:")
+        print(f"   - Requested period: {start_date} to {end_date}")
+        print(f"   - Response period: {data.get('period', {}).get('start')} to {data.get('period', {}).get('end')}")
+        print(f"   - Monthly data points: {len(data.get('monthly_evolution', []))}")
+    else:
+        print(f"❌ Failed with date range: {response.status_code} - {response.text}")
+    
+    # Test 3: Monthly evolution with last 6 months
+    print("\n3. Testing GET /api/analytics/monthly-evolution (last 6 months)")
+    from datetime import datetime, timedelta
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=180)  # ~6 months
+    
+    response = requests.get(f"{API_URL}/analytics/monthly-evolution?start_date={start_date.isoformat()}&end_date={end_date.isoformat()}")
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ Last 6 months filtering working:")
+        print(f"   - Monthly data points: {len(data.get('monthly_evolution', []))}")
+    else:
+        print(f"❌ Failed with 6 months range: {response.status_code} - {response.text}")
+
+def test_phase2_enhanced_distribution():
+    """Test Phase 2 - Enhanced Distribution Analytics"""
+    print("\n=== TESTING PHASE 2 - ENHANCED DISTRIBUTION ANALYTICS ===")
+    
+    # Test 1: Basic distribution endpoint
+    print("\n1. Testing GET /api/analytics/distribution (basic)")
+    response = requests.get(f"{API_URL}/analytics/distribution")
+    if response.status_code == 200:
+        data = response.json()
+        print("✅ Enhanced distribution endpoint working:")
+        
+        # Check required distribution types
+        expected_distributions = ['by_status', 'by_domain', 'by_typologie', 'by_pilote', 'by_source']
+        for dist_type in expected_distributions:
+            if dist_type in data:
+                print(f"   ✅ {dist_type}: {len(data[dist_type])} categories")
+                # Show sample data
+                if data[dist_type]:
+                    sample_key = list(data[dist_type].keys())[0]
+                    print(f"      Sample: {sample_key} = {data[dist_type][sample_key]}")
+            else:
+                print(f"   ❌ Missing {dist_type}")
+        
+        # Check summary statistics
+        if 'summary' in data:
+            summary = data['summary']
+            print(f"   ✅ Summary statistics:")
+            print(f"      - Total sourcing: {summary.get('total_sourcing', 0)}")
+            print(f"      - Total dealflow: {summary.get('total_dealflow', 0)}")
+            print(f"      - Total partners: {summary.get('total_partners', 0)}")
+            
+            # Verify totals make sense
+            expected_total = summary.get('total_sourcing', 0) + summary.get('total_dealflow', 0)
+            if summary.get('total_partners', 0) == expected_total:
+                print("   ✅ Summary totals are consistent")
+            else:
+                print(f"   ❌ Summary totals inconsistent: {summary.get('total_partners')} != {expected_total}")
+        else:
+            print("   ❌ Missing summary statistics")
+    else:
+        print(f"❌ Failed to get enhanced distribution: {response.status_code} - {response.text}")
+    
+    # Test 2: Distribution with domain filtering
+    print("\n2. Testing GET /api/analytics/distribution with domain filter")
+    response = requests.get(f"{API_URL}/analytics/distribution?filter_by=domaine&filter_value=Intelligence Artificielle")
+    if response.status_code == 200:
+        data = response.json()
+        print("✅ Domain filtering working:")
+        print(f"   - Filtered total partners: {data.get('summary', {}).get('total_partners', 0)}")
+        
+        # Verify filtering worked - all domain entries should be the filter value or related
+        domain_dist = data.get('by_domain', {})
+        if 'Intelligence Artificielle' in domain_dist:
+            print(f"   ✅ Filter domain found: Intelligence Artificielle = {domain_dist['Intelligence Artificielle']}")
+        else:
+            print(f"   ⚠️ Filter domain not found in results: {list(domain_dist.keys())}")
+    else:
+        print(f"❌ Failed with domain filter: {response.status_code} - {response.text}")
+    
+    # Test 3: Distribution with pilote filtering
+    print("\n3. Testing GET /api/analytics/distribution with pilote filter")
+    response = requests.get(f"{API_URL}/analytics/distribution?filter_by=pilote&filter_value=Marie Dubois")
+    if response.status_code == 200:
+        data = response.json()
+        print("✅ Pilote filtering working:")
+        print(f"   - Filtered total partners: {data.get('summary', {}).get('total_partners', 0)}")
+        
+        # Verify filtering worked
+        pilote_dist = data.get('by_pilote', {})
+        if 'Marie Dubois' in pilote_dist:
+            print(f"   ✅ Filter pilote found: Marie Dubois = {pilote_dist['Marie Dubois']}")
+        else:
+            print(f"   ⚠️ Filter pilote not found in results: {list(pilote_dist.keys())}")
+    else:
+        print(f"❌ Failed with pilote filter: {response.status_code} - {response.text}")
+    
+    # Test 4: Distribution with date range filtering
+    print("\n4. Testing GET /api/analytics/distribution with date range")
+    start_date = "2024-01-01T00:00:00"
+    end_date = "2024-12-31T23:59:59"
+    response = requests.get(f"{API_URL}/analytics/distribution?start_date={start_date}&end_date={end_date}")
+    if response.status_code == 200:
+        data = response.json()
+        print("✅ Date range filtering working:")
+        print(f"   - Filtered total partners: {data.get('summary', {}).get('total_partners', 0)}")
+    else:
+        print(f"❌ Failed with date range: {response.status_code} - {response.text}")
+    
+    # Test 5: Combined filters (date range + domain)
+    print("\n5. Testing GET /api/analytics/distribution with combined filters")
+    response = requests.get(f"{API_URL}/analytics/distribution?filter_by=domaine&filter_value=Intelligence Artificielle&start_date={start_date}&end_date={end_date}")
+    if response.status_code == 200:
+        data = response.json()
+        print("✅ Combined filtering working:")
+        print(f"   - Filtered total partners: {data.get('summary', {}).get('total_partners', 0)}")
+    else:
+        print(f"❌ Failed with combined filters: {response.status_code} - {response.text}")
+
+def test_phase2_data_accuracy():
+    """Test Phase 2 - Data Accuracy and Edge Cases"""
+    print("\n=== TESTING PHASE 2 - DATA ACCURACY & EDGE CASES ===")
+    
+    # Test 1: Verify distribution percentages add up
+    print("\n1. Testing distribution percentage accuracy")
+    response = requests.get(f"{API_URL}/analytics/distribution")
+    if response.status_code == 200:
+        data = response.json()
+        total_partners = data.get('summary', {}).get('total_partners', 0)
+        
+        if total_partners > 0:
+            # Check status distribution adds up
+            status_dist = data.get('by_status', {})
+            status_total = sum(status_dist.values())
+            if status_total == total_partners:
+                print(f"   ✅ Status distribution adds up correctly: {status_total} = {total_partners}")
+            else:
+                print(f"   ❌ Status distribution mismatch: {status_total} != {total_partners}")
+            
+            # Check domain distribution adds up
+            domain_dist = data.get('by_domain', {})
+            domain_total = sum(domain_dist.values())
+            if domain_total == total_partners:
+                print(f"   ✅ Domain distribution adds up correctly: {domain_total} = {total_partners}")
+            else:
+                print(f"   ❌ Domain distribution mismatch: {domain_total} != {total_partners}")
+        else:
+            print("   ⚠️ No partners found to verify distribution accuracy")
+    else:
+        print(f"❌ Failed to get distribution for accuracy test: {response.status_code}")
+    
+    # Test 2: Test invalid date formats
+    print("\n2. Testing invalid date formats")
+    response = requests.get(f"{API_URL}/analytics/monthly-evolution?start_date=invalid-date")
+    if response.status_code in [400, 422]:
+        print("✅ Correctly rejected invalid date format")
+    else:
+        print(f"❌ Should have rejected invalid date: {response.status_code}")
+    
+    # Test 3: Test invalid filter values
+    print("\n3. Testing invalid filter values")
+    response = requests.get(f"{API_URL}/analytics/distribution?filter_by=invalid_field&filter_value=test")
+    if response.status_code == 200:
+        data = response.json()
+        # Should return empty results or handle gracefully
+        print(f"✅ Invalid filter handled gracefully: {data.get('summary', {}).get('total_partners', 0)} partners")
+    else:
+        print(f"❌ Failed to handle invalid filter: {response.status_code}")
+    
+    # Test 4: Test empty date range
+    print("\n4. Testing empty date range")
+    future_start = "2030-01-01T00:00:00"
+    future_end = "2030-12-31T23:59:59"
+    response = requests.get(f"{API_URL}/analytics/monthly-evolution?start_date={future_start}&end_date={future_end}")
+    if response.status_code == 200:
+        data = response.json()
+        monthly_data = data.get('monthly_evolution', [])
+        if len(monthly_data) == 0:
+            print("✅ Empty date range handled correctly (no data)")
+        else:
+            print(f"⚠️ Future date range returned data: {len(monthly_data)} months")
+    else:
+        print(f"❌ Failed to handle empty date range: {response.status_code}")
+
 def test_error_handling():
     """Test error handling for invalid data"""
     print("\n=== TESTING ERROR HANDLING ===")
