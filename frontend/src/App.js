@@ -2629,21 +2629,25 @@ const Dashboard = () => {
                         )}
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex flex-wrap gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingPartner(partner);
-                                setShowSourcingForm(true);
-                              }}
-                              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded"
-                            >
-                              Modifier
-                            </button>
-                            <button
-                              onClick={() => handleDeleteSourcing(partner.id)}
-                              className="text-red-600 hover:text-red-900 hover:bg-red-50 px-2 py-1 rounded"
-                            >
-                              Supprimer
-                            </button>
+                            {hasPermission('update') && (
+                              <button
+                                onClick={() => {
+                                  setEditingPartner(partner);
+                                  setShowSourcingForm(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded"
+                              >
+                                Modifier
+                              </button>
+                            )}
+                            {hasPermission('delete') && (
+                              <button
+                                onClick={() => handleDeleteSourcing(partner.id)}
+                                className="text-red-600 hover:text-red-900 hover:bg-red-50 px-2 py-1 rounded"
+                              >
+                                Supprimer
+                              </button>
+                            )}
                             <button
                               onClick={() => handleEnrichData(partner.id, "sourcing")}
                               disabled={loading}
@@ -2662,9 +2666,10 @@ const Dashboard = () => {
                             {partner.statut !== "Dealflow" && (
                               <button
                                 onClick={() => handleTransitionToDealflow(partner.id)}
-                                className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 px-2 py-1 rounded"
+                                className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 px-2 py-1 rounded font-medium"
+                                title="Transition rapide vers Dealflow"
                               >
-                                → Dealflow
+                                🔄 → Dealflow
                               </button>
                             )}
                           </div>
