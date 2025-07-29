@@ -290,7 +290,10 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Phase 2 - Enhanced Statistics Backend"
+    - "Phase 2 - Chart.js Integration Frontend"
+    - "Phase 2 - Advanced Period Filtering"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
