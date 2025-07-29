@@ -835,6 +835,8 @@ async def transition_to_dealflow(sourcing_id: str, dealflow_data: Dict[str, Any]
         "interet": sourcing_partner["interet"],
         "enriched_data": sourcing_partner.get("enriched_data", {}),
         "custom_fields": sourcing_partner.get("custom_fields", {}),
+        # Inherit Phase 1 fields
+        "date_prochaine_action": sourcing_partner.get("date_prochaine_action"),
         # Required dealflow fields from the request
         **dealflow_data
     }
@@ -853,6 +855,26 @@ async def transition_to_dealflow(sourcing_id: str, dealflow_data: Dict[str, Any]
     await db.sourcing_partners.update_one(
         {"id": sourcing_id},
         {"$set": {"statut": SourcingStatus.DEALFLOW, "updated_at": datetime.utcnow()}}
+    )
+    
+    # Log transition activity
+    await log_activity(
+        partner_id=sourcing_id,
+        partner_type="sourcing",
+        activity_type=ActivityType.TRANSITIONED,
+        description=f"Startup '{sourcing_partner['nom_entreprise']}' transférée vers dealflow",
+        details={"new_dealflow_id": dealflow_partner.id, "new_status": "dealflow"},
+        user_name="System"
+    )
+    
+    # Log creation activity for dealflow
+    await log_activity(
+        partner_id=dealflow_partner.id,
+        partner_type="dealflow",
+        activity_type=ActivityType.CREATED,
+        description=f"Startup '{dealflow_partner.nom}' créée en dealflow (transition depuis sourcing)",
+        details={"source_sourcing_id": sourcing_id, "inherited": True},
+        user_name="System"
     )
     
     return dealflow_partner
