@@ -2194,6 +2194,178 @@ const Dashboard = () => {
     setShowEnrichedData(true);
   };
 
+  const applyFilters = (data, filters) => {
+    if (!filters || Object.keys(filters).length === 0) return data;
+    
+    return data.filter(item => {
+      // Domaine filter
+      if (filters.domaine && item.domaine_activite !== filters.domaine && item.domaine !== filters.domaine) {
+        return false;
+      }
+      
+      // Statut filter  
+      if (filters.statut && item.statut !== filters.statut) {
+        return false;
+      }
+      
+      // Typologie filter
+      if (filters.typologie && item.typologie !== filters.typologie) {
+        return false;
+      }
+      
+      // Pays filter
+      if (filters.pays && item.pays_origine !== filters.pays) {
+        return false;
+      }
+      
+      // Source filter
+      if (filters.source && item.source !== filters.source) {
+        return false;
+      }
+      
+      // Pilote filter
+      if (filters.pilote && !item.pilote.toLowerCase().includes(filters.pilote.toLowerCase())) {
+        return false;
+      }
+      
+      // Date range filter
+      if (filters.date_debut || filters.date_fin) {
+        const itemDate = new Date(item.date_entree_sourcing || item.date_reception_fichier);
+        if (filters.date_debut && itemDate < new Date(filters.date_debut)) {
+          return false;
+        }
+        if (filters.date_fin && itemDate > new Date(filters.date_fin)) {
+          return false;
+        }
+      }
+      
+      // Interet filter (sourcing only)
+      if (filters.interet !== "" && String(item.interet) !== filters.interet) {
+        return false;
+      }
+      
+      return true;
+    });
+  };
+
+  const handleApplyFilters = (filters) => {
+    setActiveFilters(filters);
+    if (activeTab === 'sourcing') {
+      setFilteredSourcingPartners(applyFilters(sourcingPartners, filters));
+    } else if (activeTab === 'dealflow') {
+      setFilteredDealflowPartners(applyFilters(dealflowPartners, filters));
+    }
+  };
+
+  const handleSelectItem = (id) => {
+    setSelectedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (items) => {
+    if (selectedItems.length === items.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(items.map(item => item.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedItems.length} éléments ?`)) {
+      return;
+    }
+    
+    try {
+      const endpoint = activeTab === 'sourcing' ? '/api/sourcing' : '/api/dealflow';
+      await Promise.all(
+        selectedItems.map(id => axios.delete(`${API}${endpoint}/${id}`))
+      );
+      
+      // Refresh data
+      if (activeTab === 'sourcing') {
+        await fetchSourcingPartners();
+      } else {
+        await fetchDealflowPartners();
+      }
+      
+      setSelectedItems([]);
+      alert('Éléments supprimés avec succès');
+    } catch (error) {
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  const handleBulkTransition = async () => {
+    if (!window.confirm(`Transférer ${selectedItems.length} partenaires vers le dealflow ?`)) {
+      return;
+    }
+    
+    try {
+      await Promise.all(
+        selectedItems.map(id => 
+          axios.post(`${API}/transition/${id}`, {
+            statut: "En cours avec l'équipe inno",
+            metiers_concernes: "À définir",
+            date_reception_fichier: new Date().toISOString().split('T')[0]
+          })
+        )
+      );
+      
+      await fetchSourcingPartners();
+      await fetchDealflowPartners();
+      setSelectedItems([]);
+      alert('Partenaires transférés avec succès');
+    } catch (error) {
+      alert('Erreur lors du transfert');
+    }
+  };
+
+  const handleBulkExport = () => {
+    const data = activeTab === 'sourcing' 
+      ? sourcingPartners.filter(p => selectedItems.includes(p.id))
+      : dealflowPartners.filter(p => selectedItems.includes(p.id));
+    
+    const csv = convertToCSV(data);
+    downloadCSV(csv, `${activeTab}_export_${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
+  const convertToCSV = (data) => {
+    if (data.length === 0) return '';
+    
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => 
+        headers.map(header => {
+          const value = row[header];
+          return typeof value === 'string' && value.includes(',') 
+            ? `"${value}"` 
+            : value;
+        }).join(',')
+      )
+    ].join('\n');
+    
+    return csvContent;
+  };
+
+  const downloadCSV = (csv, filename) => {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const hasPermission = (permission) => {
+    return currentUser.permissions.includes(permission);
+  };
+
   // Update filtered data when original data changes
   useEffect(() => {
     setFilteredSourcingPartners(sourcingPartners);
