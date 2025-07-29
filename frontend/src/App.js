@@ -2,6 +2,20 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
 
+const PRIORITE_STRATEGIQUE = {
+  HAUTE: { label: "Priorité Haute", color: "bg-red-100 text-red-800", icon: "🔥" },
+  MOYENNE: { label: "Priorité Moyenne", color: "bg-yellow-100 text-yellow-800", icon: "⭐" },
+  BASSE: { label: "Priorité Basse", color: "bg-green-100 text-green-800", icon: "📌" }
+};
+
+const SCORE_MATURITE = [
+  { value: 1, label: "1 - Très faible", stars: "⭐" },
+  { value: 2, label: "2 - Faible", stars: "⭐⭐" },
+  { value: 3, label: "3 - Moyen", stars: "⭐⭐⭐" },
+  { value: 4, label: "4 - Élevé", stars: "⭐⭐⭐⭐" },
+  { value: 5, label: "5 - Très élevé", stars: "⭐⭐⭐⭐⭐" }
+];
+
 const USER_ROLES = {
   ADMIN: { 
     label: "Administrateur", 
