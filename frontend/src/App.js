@@ -242,25 +242,24 @@ const SortableTableHeader = ({ children, sortKey, currentSort, onSort }) => {
     if (currentSort.key !== sortKey) {
       return (
         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
         </svg>
       );
     }
-    
     return currentSort.direction === 'asc' ? (
       <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
       </svg>
     ) : (
       <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
       </svg>
     );
   };
 
   return (
     <th 
-      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50"
       onClick={handleSort}
     >
       <div className="flex items-center space-x-1">
@@ -268,6 +267,161 @@ const SortableTableHeader = ({ children, sortKey, currentSort, onSort }) => {
         {getSortIcon()}
       </div>
     </th>
+  );
+};
+
+// Phase 1 - Activity Timeline Modal Component
+const ActivityTimelineModal = ({ isOpen, onClose, partnerId, partnerType, partnerName }) => {
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [newActivity, setNewActivity] = useState("");
+
+  useEffect(() => {
+    if (isOpen && partnerId) {
+      loadActivities();
+    }
+  }, [isOpen, partnerId]);
+
+  const loadActivities = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/activity/${partnerId}?partner_type=${partnerType}`);
+      setActivities(response.data);
+    } catch (error) {
+      console.error("Error loading activities:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addManualActivity = async () => {
+    if (!newActivity.trim()) return;
+    
+    try {
+      await axios.post(`${API}/activity/${partnerId}?partner_type=${partnerType}&description=${encodeURIComponent(newActivity)}&user_name=User`);
+      setNewActivity("");
+      loadActivities(); // Refresh the timeline
+    } catch (error) {
+      console.error("Error adding activity:", error);
+    }
+  };
+
+  const getActivityIcon = (activityType) => {
+    switch (activityType) {
+      case 'created': return '✨';
+      case 'updated': return '📝';
+      case 'transitioned': return '🔄';
+      case 'comment_added': return '💬';
+      case 'status_changed': return '🔄';
+      case 'enriched': return '🔍';
+      default: return '📋';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Historique des actions - {partnerName}</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Add new activity */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-medium mb-2">Ajouter une action</h3>
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              value={newActivity}
+              onChange={(e) => setNewActivity(e.target.value)}
+              placeholder="Décrire l'action effectuée..."
+              className="flex-1 border rounded px-3 py-2"
+              onKeyPress={(e) => e.key === 'Enter' && addManualActivity()}
+            />
+            <button
+              onClick={addManualActivity}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Ajouter
+            </button>
+          </div>
+        </div>
+
+        {/* Activity Timeline */}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="text-center py-8">Chargement de l'historique...</div>
+          ) : activities.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">Aucune activité enregistrée</div>
+          ) : (
+            activities.map((activity, index) => (
+              <div key={activity.id} className="flex items-start space-x-4 p-4 border-l-4 border-blue-200 bg-gray-50 rounded-r-lg">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm">
+                    {getActivityIcon(activity.activity_type)}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-gray-900">{activity.description}</p>
+                    <span className="text-xs text-gray-500">{formatDate(activity.created_at)}</span>
+                  </div>
+                  {activity.user_name && (
+                    <p className="text-sm text-gray-600 mt-1">Par: {activity.user_name}</p>
+                  )}
+                  {activity.details && Object.keys(activity.details).length > 0 && (
+                    <div className="mt-2 text-xs text-gray-600">
+                      {activity.details.changes && (
+                        <div>
+                          <strong>Modifications:</strong>
+                          <ul className="list-disc list-inside ml-2">
+                            {activity.details.changes.map((change, idx) => (
+                              <li key={idx}>{change}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {activity.details.manual_entry && (
+                        <span className="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
+                          Saisie manuelle
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
