@@ -392,6 +392,46 @@ async def enrich_company_data(company_name: str, domain: str = None) -> Dict[str
     
     return enriched_data
 
+# PHASE 1 - ACTIVITY TRACKING & INACTIVITY HELPERS
+def calculate_inactivity_days(updated_at: datetime) -> int:
+    """Calculate days since last update"""
+    if isinstance(updated_at, str):
+        updated_at = datetime.fromisoformat(updated_at.replace('Z', '+00:00'))
+    
+    delta = datetime.utcnow() - updated_at
+    return delta.days
+
+def is_inactive(updated_at: datetime, threshold_days: int = 90) -> bool:
+    """Check if partner is inactive (not updated for 90+ days)"""
+    return calculate_inactivity_days(updated_at) >= threshold_days
+
+async def log_activity(partner_id: str, partner_type: str, activity_type: ActivityType, 
+                      description: str, details: Dict[str, Any] = None, 
+                      user_id: str = None, user_name: str = None):
+    """Log an activity for a partner"""
+    activity = ActivityLog(
+        partner_id=partner_id,
+        partner_type=partner_type,
+        activity_type=activity_type,
+        description=description,
+        details=details or {},
+        user_id=user_id,
+        user_name=user_name
+    )
+    
+    # Convert to dict for MongoDB storage
+    activity_dict = activity.dict()
+    activity_dict["created_at"] = activity.created_at.isoformat()
+    
+    await db.activity_logs.insert_one(activity_dict)
+    return activity
+
+def add_inactivity_status(partner_data: dict) -> dict:
+    """Add inactivity status to partner data"""
+    partner_data["is_inactive"] = is_inactive(partner_data.get("updated_at"))
+    partner_data["days_since_update"] = calculate_inactivity_days(partner_data.get("updated_at"))
+    return partner_data
+
 # COLUMN CONFIGURATION ENDPOINTS
 @api_router.post("/config/columns")
 async def save_column_config(column_config: Dict[str, Any]):
