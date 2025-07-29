@@ -441,6 +441,8 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     date_presentation_metiers: "",
     pilote: "",
     actions_commentaires: "",
+    // Phase 1 - Suivi & Relance
+    date_prochaine_action: "",
     score_maturite: "",
     priorite_strategique: "",
     score_potentiel: "",
