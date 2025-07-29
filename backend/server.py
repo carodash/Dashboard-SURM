@@ -198,6 +198,9 @@ class DealflowPartner(BaseModel):
     points_etapes_intermediaires: Optional[str] = ""
     # Phase 1 - Suivi & Relance
     date_prochaine_action: Optional[date] = None
+    # Phase 1 - Inactivity indicators (computed fields)
+    is_inactive: Optional[bool] = None
+    days_since_update: Optional[int] = None
     # Inherited from sourcing if transitioned
     sourcing_id: Optional[str] = None
     pays_origine: Optional[str] = None
