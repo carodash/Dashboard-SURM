@@ -1245,7 +1245,7 @@ async def get_enhanced_distribution(filter_by: str = None, filter_value: str = N
                     except ValueError:
                         continue  # Skip invalid dates
                 elif isinstance(created_at, datetime):
-                    if start_dt <= created_date <= end_dt:
+                    if start_dt <= created_at <= end_dt:
                         filtered_dealflow.append(p)
         
         sourcing_partners = filtered_sourcing
