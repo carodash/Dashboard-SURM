@@ -44,7 +44,9 @@ SOURCING_TEST_DATA = {
     "interet": True,
     "date_presentation_metiers": "2024-03-20",
     "pilote": "Marie Dubois",
-    "actions_commentaires": "Premier contact très prometteur"
+    "actions_commentaires": "Premier contact très prometteur",
+    # Phase 1 - Next Action Date
+    "date_prochaine_action": "2024-04-15"
 }
 
 SOURCING_TEST_DATA_2 = {
