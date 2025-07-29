@@ -163,6 +163,8 @@ class SourcingPartnerUpdate(BaseModel):
     date_presentation_metiers: Optional[date] = None
     pilote: Optional[str] = None
     actions_commentaires: Optional[str] = None
+    # Phase 1 - Suivi & Relance
+    date_prochaine_action: Optional[date] = None
     # Nouveaux champs de scoring
     score_maturite: Optional[int] = None
     priorite_strategique: Optional[str] = None
