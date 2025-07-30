@@ -4223,6 +4223,10 @@ const Dashboard = () => {
           <KanbanBoard isVisible={true} />
         )}
 
+        {activeTab === "reports" && (
+          <SyntheticReports isVisible={true} />
+        )}
+
         {activeTab === "my-startups" && (
           <PersonalDashboard isVisible={true} currentUser={currentUser} />
         )}
