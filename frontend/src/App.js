@@ -4488,7 +4488,7 @@ const Dashboard = () => {
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
-                  Pipeline
+                  📋 Kanban
                 </button>
                 <button
                   onClick={() => setActiveTab("reports")}
