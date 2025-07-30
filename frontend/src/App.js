@@ -3854,6 +3854,14 @@ const Dashboard = () => {
                             >
                               📋 Timeline
                             </button>
+                            {/* Phase 3 - Private Comments Button */}
+                            <button
+                              onClick={() => handleShowComments(partner, 'sourcing')}
+                              className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 px-2 py-1 rounded"
+                              title="Commentaires privés"
+                            >
+                              💬 Notes
+                            </button>
                           </div>
                         </td>
                       </tr>
