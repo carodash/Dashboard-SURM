@@ -1085,6 +1085,74 @@ const PersonalDashboard = ({ isVisible, currentUser }) => {
   );
 };
 
+// Phase 4 - Enhanced Table Container with top scrollbar and wheel support
+const EnhancedTableContainer = ({ children, tableId, title }) => {
+  const horizontalScrollRef = useHorizontalScroll();
+  const topScrollRef = useRef();
+  const [mainScrollElement, setMainScrollElement] = useState(null);
+
+  useEffect(() => {
+    const mainScroll = horizontalScrollRef.current;
+    if (mainScroll) {
+      setMainScrollElement(mainScroll);
+    }
+  }, [horizontalScrollRef]);
+
+  useEffect(() => {
+    if (!topScrollRef.current || !mainScrollElement) return;
+
+    const handleTopScroll = () => {
+      if (mainScrollElement) {
+        mainScrollElement.scrollLeft = topScrollRef.current.scrollLeft;
+      }
+    };
+
+    const handleMainScroll = () => {
+      if (topScrollRef.current) {
+        topScrollRef.current.scrollLeft = mainScrollElement.scrollLeft;
+      }
+    };
+
+    topScrollRef.current.addEventListener('scroll', handleTopScroll);
+    mainScrollElement.addEventListener('scroll', handleMainScroll);
+
+    return () => {
+      if (topScrollRef.current) {
+        topScrollRef.current.removeEventListener('scroll', handleTopScroll);
+      }
+      if (mainScrollElement) {
+        mainScrollElement.removeEventListener('scroll', handleMainScroll);
+      }
+    };
+  }, [mainScrollElement]);
+
+  return (
+    <div className="bg-white shadow rounded-lg overflow-hidden">
+      {/* Top scrollbar for tables */}
+      <div className="top-scrollbar-container">
+        <div className="flex items-center space-x-3 px-4">
+          <span className="text-sm font-medium text-gray-600">📜 {title}</span>
+          <div 
+            ref={topScrollRef}
+            className="top-scrollbar flex-1"
+          >
+            <div style={{ width: '1200px', height: '1px' }}></div>
+          </div>
+          <span className="text-xs text-gray-500">Molette pour scroll</span>
+        </div>
+      </div>
+      
+      {/* Main table container with wheel support */}
+      <div 
+        ref={horizontalScrollRef}
+        className="enhanced-table-scroll wheel-horizontal-scroll"
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
 // Phase 4 - Kanban Card Component
 const KanbanCard = ({ partner, index }) => {
   // Debug logging
