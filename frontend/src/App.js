@@ -1319,8 +1319,8 @@ const KanbanBoard = ({ isVisible }) => {
           </div>
         ) : kanbanData ? (
           <DragDropContext onDragEnd={handleDragEnd}>
-            {/* Improved horizontal scroll container */}
-            <div className="overflow-x-auto overflow-y-hidden pb-4">
+            {/* Enhanced horizontal scroll container */}
+            <div className="enhanced-horizontal-scroll pb-4">
               <div 
                 className="flex space-x-4 pb-4 px-2" 
                 style={{ 
@@ -1344,11 +1344,11 @@ const KanbanBoard = ({ isVisible }) => {
             </div>
             
             {/* Enhanced scroll hint */}
-            <div className="text-center text-xs text-gray-500 mt-2 bg-blue-50 p-2 rounded">
+            <div className="text-center text-xs text-gray-500 mt-2 bg-blue-50 p-3 rounded-lg">
               <div className="flex items-center justify-center space-x-4">
                 <span>💡 <strong>Desktop :</strong> Glissez-déposez les cartes entre colonnes</span>
                 <span>•</span>
-                <span>🖱️ <strong>Scroll horizontal :</strong> Utilisez la molette + Shift ou la barre de défilement</span>
+                <span>🖱️ <strong>Scroll horizontal :</strong> Barre de défilement améliorée en bas</span>
               </div>
             </div>
           </DragDropContext>
