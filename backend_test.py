@@ -2406,14 +2406,16 @@ def test_kanban_move_with_real_data():
         print(f"\n   🔄 {description}")
         print(f"      Moving {kanban_id} from {source_column} to {target_column}")
         
-        move_data = {
+        # The API expects query parameters, not JSON body
+        params = {
             "partner_id": partner_id,
             "partner_type": partner_type,
             "source_column": source_column,
-            "target_column": target_column
+            "destination_column": target_column,  # Note: API uses 'destination_column', not 'target_column'
+            "user_id": user_id
         }
         
-        response = requests.post(f"{API_URL}/kanban-move?user_id={user_id}", json=move_data)
+        response = requests.post(f"{API_URL}/kanban-move", params=params)
         
         if response.status_code == 200:
             result = response.json()
