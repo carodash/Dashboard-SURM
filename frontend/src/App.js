@@ -1,7 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+
+// Custom hook for horizontal scrolling with mouse wheel
+const useHorizontalScroll = () => {
+  const ref = useRef();
+  
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const handleWheel = (e) => {
+      // Check if the wheel event should be converted to horizontal scroll
+      if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
+        e.preventDefault();
+        element.scrollLeft += e.deltaY;
+      }
+    };
+
+    element.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      element.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
+  return ref;
+};
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import {
