@@ -1172,7 +1172,96 @@ const KanbanCard = ({ partner, index }) => {
   );
 };
 
-// Phase 4 - Kanban Column Component (Optimized for better visibility)
+// Phase 4 - Kanban Top Scrollbar Component
+const KanbanTopScrollbar = ({ kanbanData }) => {
+  const topScrollRef = useRef();
+  const [mainScrollElement, setMainScrollElement] = useState(null);
+
+  useEffect(() => {
+    const mainScroll = document.querySelector('.kanban-main-scroll');
+    if (mainScroll) {
+      setMainScrollElement(mainScroll);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!topScrollRef.current || !mainScrollElement) return;
+
+    const handleTopScroll = () => {
+      if (mainScrollElement) {
+        mainScrollElement.scrollLeft = topScrollRef.current.scrollLeft;
+      }
+    };
+
+    const handleMainScroll = () => {
+      if (topScrollRef.current) {
+        topScrollRef.current.scrollLeft = mainScrollElement.scrollLeft;
+      }
+    };
+
+    topScrollRef.current.addEventListener('scroll', handleTopScroll);
+    mainScrollElement.addEventListener('scroll', handleMainScroll);
+
+    return () => {
+      if (topScrollRef.current) {
+        topScrollRef.current.removeEventListener('scroll', handleTopScroll);
+      }
+      if (mainScrollElement) {
+        mainScrollElement.removeEventListener('scroll', handleMainScroll);
+      }
+    };
+  }, [mainScrollElement]);
+
+  const totalWidth = kanbanData.columnOrder.length * 20; // Same calculation as main container
+
+  return (
+    <div className="top-scrollbar-container mb-4">
+      <div className="flex items-center space-x-3 px-2">
+        <span className="text-sm font-medium text-gray-600">📜 Scroll horizontal</span>
+        <div 
+          ref={topScrollRef}
+          className="top-scrollbar flex-1"
+        >
+          <div style={{ width: `${totalWidth}rem`, height: '1px' }}></div>
+        </div>
+        <span className="text-xs text-gray-500">{kanbanData.columnOrder.length} colonnes</span>
+      </div>
+    </div>
+  );
+};
+
+// Phase 4 - Kanban Scroll Container with wheel support
+const KanbanScrollContainer = ({ kanbanData }) => {
+  const horizontalScrollRef = useHorizontalScroll();
+
+  return (
+    <div 
+      ref={horizontalScrollRef}
+      className="enhanced-horizontal-scroll wheel-horizontal-scroll kanban-main-scroll pb-4"
+    >
+      <div 
+        className="flex space-x-4 pb-4 px-2" 
+        style={{ 
+          minWidth: 'max-content',
+          width: `${kanbanData.columnOrder.length * 20}rem`
+        }}
+      >
+        {kanbanData.columnOrder.map(columnId => {
+          const column = kanbanData.columns[columnId];
+          const partners = column.partners;
+          
+          return (
+            <KanbanColumn
+              key={columnId}
+              column={column}
+              partners={partners}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 const KanbanColumn = ({ column, partners }) => {
   return (
     <div className="bg-gray-100 rounded-lg p-2 min-h-[600px] w-72 flex-shrink-0 lg:w-80">
