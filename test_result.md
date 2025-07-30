@@ -408,7 +408,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Phase 3 testing completed successfully - All user collaboration features working"
+    - "Phase 4 - Kanban Pipeline View"
+    - "Phase 4 - Drag & Drop Functionality"
+    - "Phase 4 - Status Update Backend"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
