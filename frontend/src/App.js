@@ -4944,6 +4944,13 @@ const Dashboard = () => {
         />
       )}
 
+      {/* Phase 4 - Quick View Results Modal */}
+      <QuickViewResults
+        isVisible={showQuickViewModal}
+        viewData={quickViewData}
+        onClose={handleCloseQuickView}
+      />
+
       {/* Phase 3 - Private Comments Modal */}
       {showCommentsModal && selectedCommentsPartner && (
         <PrivateCommentsModal
