@@ -3006,15 +3006,9 @@ const Dashboard = () => {
   const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [selectedTimelinePartner, setSelectedTimelinePartner] = useState(null);
   
-  // Phase 3 - Private Comments & Personal Dashboard state
+  // Phase 3 - Private Comments state
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [selectedCommentsPartner, setSelectedCommentsPartner] = useState(null);
-  const [currentUser, setCurrentUser] = useState({
-    id: "default_user",
-    username: "demo_user",
-    full_name: "Utilisateur Demo",
-    role: "admin"
-  });
 
   const fetchSourcingPartners = async () => {
     try {
