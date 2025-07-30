@@ -4173,6 +4173,16 @@ const Dashboard = () => {
                   Pipeline
                 </button>
                 <button
+                  onClick={() => setActiveTab("reports")}
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    activeTab === "reports"
+                      ? "bg-red-100 text-red-700"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Rapports
+                </button>
+                <button
                   onClick={() => setActiveTab("my-startups")}
                   className={`px-3 py-2 rounded-md text-sm font-medium ${
                     activeTab === "my-startups"
