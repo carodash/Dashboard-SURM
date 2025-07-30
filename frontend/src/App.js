@@ -1299,13 +1299,13 @@ const KanbanBoard = ({ isVisible }) => {
           </div>
         ) : kanbanData ? (
           <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="overflow-x-auto pb-4">
+            {/* Improved horizontal scroll container */}
+            <div className="overflow-x-auto overflow-y-hidden pb-4">
               <div 
-                className="flex space-x-3 pb-4" 
+                className="flex space-x-4 pb-4 px-2" 
                 style={{ 
                   minWidth: 'max-content',
-                  scrollbarWidth: 'thin',
-                  scrollbarColor: '#CBD5E0 #F7FAFC'
+                  width: `${kanbanData.columnOrder.length * 20}rem` // Dynamic width based on column count
                 }}
               >
                 {kanbanData.columnOrder.map(columnId => {
@@ -1323,9 +1323,13 @@ const KanbanBoard = ({ isVisible }) => {
               </div>
             </div>
             
-            {/* Scroll hint */}
-            <div className="text-center text-xs text-gray-500 mt-2">
-              💡 Tip: Scroll horizontalement pour voir toutes les colonnes • Glissez-déposez les cartes pour changer d'étape
+            {/* Enhanced scroll hint */}
+            <div className="text-center text-xs text-gray-500 mt-2 bg-blue-50 p-2 rounded">
+              <div className="flex items-center justify-center space-x-4">
+                <span>💡 <strong>Desktop :</strong> Glissez-déposez les cartes entre colonnes</span>
+                <span>•</span>
+                <span>🖱️ <strong>Scroll horizontal :</strong> Utilisez la molette + Shift ou la barre de défilement</span>
+              </div>
             </div>
           </DragDropContext>
         ) : (
