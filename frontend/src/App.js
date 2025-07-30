@@ -5248,14 +5248,13 @@ const Dashboard = () => {
                     ))}
                   </tbody>
                 </table>
-              </div>
               
               {filteredDealflowPartners.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-gray-500">Aucun partenaire dealflow trouvé.</p>
                 </div>
               )}
-            </div>
+            </EnhancedTableContainer>
           </div>
         )}
       </div>
