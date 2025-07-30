@@ -1674,7 +1674,295 @@ async def get_partners_by_pilote():
             "total_partners": sourcing_count + dealflow_count
         }
     
-    return pilotes
+# PHASE 4 - KANBAN PIPELINE ENDPOINTS
+@api_router.get("/kanban-data")
+async def get_kanban_data(user_id: str = "default_user"):
+    """Get data organized for Kanban pipeline view"""
+    current_user = await get_current_user(user_id)
+    
+    # Define Kanban columns mapping
+    kanban_columns = {
+        "sourcing": ["A traiter", "Clos", "Dealflow", "Klaxoon"],
+        "dealflow": [
+            "En cours avec l'équipe inno",
+            "En cours avec les métiers", 
+            "Présentation métiers",
+            "Go métier étude",
+            "Go experimentation",
+            "Go généralisation",
+            "Clos"
+        ]
+    }
+    
+    # Get data based on user role
+    sourcing_query = {}
+    dealflow_query = {}
+    if current_user.role == UserRole.CONTRIBUTEUR:
+        sourcing_query["pilote"] = current_user.full_name
+        dealflow_query["pilote"] = current_user.full_name
+    
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(1000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(1000)
+    
+    # Organize data by Kanban columns
+    kanban_data = {
+        "columns": {
+            # Sourcing stages
+            "sourcing_a_traiter": {
+                "id": "sourcing_a_traiter",
+                "title": "🔍 Sourcing",
+                "subtitle": "À traiter",
+                "partners": []
+            },
+            "sourcing_klaxoon": {
+                "id": "sourcing_klaxoon", 
+                "title": "📋 Sourcing",
+                "subtitle": "Klaxoon",
+                "partners": []
+            },
+            # Dealflow stages
+            "prequalification": {
+                "id": "prequalification",
+                "title": "✓ Préqualif",
+                "subtitle": "Évaluation initiale",
+                "partners": []
+            },
+            "presentation": {
+                "id": "presentation",
+                "title": "📊 Présentation",
+                "subtitle": "Aux métiers",
+                "partners": []
+            },
+            "go_metier": {
+                "id": "go_metier",
+                "title": "🎯 Go Métier",
+                "subtitle": "Étude approuvée",
+                "partners": []
+            },
+            "experimentation": {
+                "id": "experimentation",
+                "title": "🧪 Expérimentation",
+                "subtitle": "Test en cours",
+                "partners": []
+            },
+            "evaluation": {
+                "id": "evaluation",
+                "title": "📈 Évaluation",
+                "subtitle": "Résultats",
+                "partners": []
+            },
+            "generalisation": {
+                "id": "generalisation",
+                "title": "🚀 Généralisation",
+                "subtitle": "Déploiement",
+                "partners": []
+            },
+            "cloture": {
+                "id": "cloture",
+                "title": "✅ Clôture",
+                "subtitle": "Terminé",
+                "partners": []
+            }
+        },
+        "columnOrder": [
+            "sourcing_a_traiter", "sourcing_klaxoon", "prequalification", 
+            "presentation", "go_metier", "experimentation", 
+            "evaluation", "generalisation", "cloture"
+        ]
+    }
+    
+    # Process sourcing partners
+    for partner in sourcing_partners:
+        # Remove MongoDB ObjectId
+        if '_id' in partner:
+            del partner['_id']
+        
+        partner_with_status = add_inactivity_status(partner)
+        
+        # Map to Kanban columns
+        status = partner.get("statut", "A traiter")
+        if status == "A traiter":
+            kanban_data["columns"]["sourcing_a_traiter"]["partners"].append({
+                **partner_with_status,
+                "partner_type": "sourcing",
+                "kanban_id": f"sourcing_{partner['id']}"
+            })
+        elif status == "Klaxoon":
+            kanban_data["columns"]["sourcing_klaxoon"]["partners"].append({
+                **partner_with_status,
+                "partner_type": "sourcing", 
+                "kanban_id": f"sourcing_{partner['id']}"
+            })
+        elif status == "Dealflow":
+            # These will be handled by dealflow processing
+            pass
+    
+    # Process dealflow partners
+    for partner in dealflow_partners:
+        # Remove MongoDB ObjectId
+        if '_id' in partner:
+            del partner['_id']
+            
+        partner_with_status = add_inactivity_status(partner)
+        
+        # Map to Kanban columns based on dealflow status
+        status = partner.get("statut", "En cours avec l'équipe inno")
+        kanban_partner = {
+            **partner_with_status,
+            "partner_type": "dealflow",
+            "kanban_id": f"dealflow_{partner['id']}"
+        }
+        
+        if status == "En cours avec l'équipe inno":
+            kanban_data["columns"]["prequalification"]["partners"].append(kanban_partner)
+        elif status == "En cours avec les métiers":
+            kanban_data["columns"]["presentation"]["partners"].append(kanban_partner)
+        elif "go" in status.lower() and "etude" in status.lower():
+            kanban_data["columns"]["go_metier"]["partners"].append(kanban_partner)
+        elif "experimentation" in status.lower() or "go experimentation" in status.lower():
+            kanban_data["columns"]["experimentation"]["partners"].append(kanban_partner)
+        elif "generalisation" in status.lower() or "go generalisation" in status.lower():
+            kanban_data["columns"]["generalisation"]["partners"].append(kanban_partner)
+        elif status == "Clos":
+            kanban_data["columns"]["cloture"]["partners"].append(kanban_partner)
+        else:
+            # Default to evaluation for undefined statuses
+            kanban_data["columns"]["evaluation"]["partners"].append(kanban_partner)
+    
+    # Add summary statistics
+    total_partners = len(sourcing_partners) + len(dealflow_partners)
+    kanban_data["summary"] = {
+        "total_partners": total_partners,
+        "total_sourcing": len(sourcing_partners),
+        "total_dealflow": len(dealflow_partners),
+        "by_column": {
+            col_id: len(col_data["partners"]) 
+            for col_id, col_data in kanban_data["columns"].items()
+        }
+    }
+    
+    return kanban_data
+
+@api_router.post("/kanban-move")
+async def move_kanban_partner(
+    partner_id: str, 
+    partner_type: str, 
+    source_column: str, 
+    destination_column: str,
+    user_id: str = "default_user"
+):
+    """Move partner between Kanban columns (updates status)"""
+    current_user = await get_current_user(user_id)
+    
+    # Status mapping for each column
+    column_to_status = {
+        # Sourcing columns
+        "sourcing_a_traiter": {"type": "sourcing", "status": "A traiter"},
+        "sourcing_klaxoon": {"type": "sourcing", "status": "Klaxoon"},
+        
+        # Dealflow columns
+        "prequalification": {"type": "dealflow", "status": "En cours avec l'équipe inno"},
+        "presentation": {"type": "dealflow", "status": "En cours avec les métiers"},
+        "go_metier": {"type": "dealflow", "status": "Go métier étude"},
+        "experimentation": {"type": "dealflow", "status": "Go experimentation"},
+        "evaluation": {"type": "dealflow", "status": "En cours avec les métiers"},  # Temp mapping
+        "generalisation": {"type": "dealflow", "status": "Go généralisation"},
+        "cloture": {"type": "dealflow", "status": "Clos"}
+    }
+    
+    if destination_column not in column_to_status:
+        raise HTTPException(status_code=400, detail="Invalid destination column")
+    
+    new_status_info = column_to_status[destination_column]
+    new_status = new_status_info["status"]
+    target_type = new_status_info["type"]
+    
+    # Get current partner
+    collection = db.sourcing_partners if partner_type == "sourcing" else db.dealflow_partners
+    partner = await collection.find_one({"id": partner_id})
+    
+    if not partner:
+        raise HTTPException(status_code=404, detail="Partner not found")
+    
+    # Check permissions
+    if not can_edit_partner(current_user.role, partner.get("pilote"), current_user.full_name):
+        raise HTTPException(status_code=403, detail="Not authorized to move this partner")
+    
+    # Handle transition from sourcing to dealflow
+    if partner_type == "sourcing" and target_type == "dealflow":
+        # Create dealflow partner
+        dealflow_data = {
+            "nom": partner["nom_entreprise"],
+            "statut": new_status,
+            "domaine": partner["domaine_activite"],
+            "typologie": partner["typologie"],
+            "objet": partner["objet"],
+            "source": partner["source"],
+            "pilote": partner["pilote"],
+            "metiers_concernes": "À définir",  # Required field
+            "date_reception_fichier": date.today(),
+            "actions_commentaires": partner.get("actions_commentaires", ""),
+            "date_prochaine_action": partner.get("date_prochaine_action"),
+            "sourcing_id": partner_id,
+            "pays_origine": partner.get("pays_origine"),
+            "cas_usage": partner.get("cas_usage"),
+            "technologie": partner.get("technologie"),
+            "interet": partner.get("interet"),
+            "enriched_data": partner.get("enriched_data", {}),
+            "custom_fields": partner.get("custom_fields", {})
+        }
+        
+        dealflow_partner = DealflowPartner(**dealflow_data)
+        
+        # Save to dealflow
+        dealflow_data_for_db = dealflow_partner.dict()
+        for key, value in dealflow_data_for_db.items():
+            if isinstance(value, date) and not isinstance(value, datetime):
+                dealflow_data_for_db[key] = value.isoformat()
+        
+        await db.dealflow_partners.insert_one(dealflow_data_for_db)
+        
+        # Update sourcing status to Dealflow
+        await db.sourcing_partners.update_one(
+            {"id": partner_id},
+            {"$set": {"statut": "Dealflow", "updated_at": datetime.utcnow()}}
+        )
+        
+        # Log transition
+        await log_activity(
+            partner_id=partner_id,
+            partner_type="sourcing",
+            activity_type=ActivityType.TRANSITIONED,
+            description=f"Startup '{partner['nom_entreprise']}' déplacée vers dealflow via Kanban",
+            details={"kanban_move": True, "from": source_column, "to": destination_column},
+            user_id=current_user.id,
+            user_name=current_user.full_name
+        )
+        
+        return {"message": "Partner transitioned to dealflow successfully", "new_partner_id": dealflow_partner.id}
+    
+    # Handle status change within same type
+    elif partner_type == target_type:
+        await collection.update_one(
+            {"id": partner_id},
+            {"$set": {"statut": new_status, "updated_at": datetime.utcnow()}}
+        )
+        
+        # Log status change
+        await log_activity(
+            partner_id=partner_id,
+            partner_type=partner_type,
+            activity_type=ActivityType.STATUS_CHANGED,
+            description=f"Statut changé via Kanban: {new_status}",
+            details={"kanban_move": True, "from": source_column, "to": destination_column, "new_status": new_status},
+            user_id=current_user.id,
+            user_name=current_user.full_name
+        )
+        
+        return {"message": "Partner status updated successfully"}
+    
+    else:
+        raise HTTPException(status_code=400, detail="Invalid transition between partner types")
 
 # Include the router in the main app
 app.include_router(api_router)
