@@ -1300,6 +1300,300 @@ const KanbanBoard = ({ isVisible }) => {
   );
 };
 
+// Phase 4 - Synthetic Reports Component
+const SyntheticReports = ({ isVisible }) => {
+  const [reportData, setReportData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isVisible) {
+      loadReportData();
+    }
+  }, [isVisible]);
+
+  const loadReportData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/synthetic-report?user_id=default_user`);
+      setReportData(response.data);
+    } catch (error) {
+      console.error("Error loading report data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const exportToPDF = () => {
+    if (!reportData) return;
+
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString('fr-FR');
+    
+    // Title
+    doc.setFontSize(20);
+    doc.text('RAPPORT SYNTHÉTIQUE SURM', 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Généré le ${currentDate} par ${reportData.summary.generated_by}`, 20, 30);
+
+    let yPosition = 50;
+
+    // Summary
+    doc.setFontSize(16);
+    doc.text('RÉSUMÉ EXÉCUTIF', 20, yPosition);
+    yPosition += 10;
+    
+    doc.setFontSize(12);
+    doc.text(`Total Startups: ${reportData.summary.total_partners}`, 20, yPosition);
+    yPosition += 8;
+    doc.text(`Sourcing: ${reportData.summary.total_sourcing} | Dealflow: ${reportData.summary.total_dealflow}`, 20, yPosition);
+    yPosition += 15;
+
+    // Cross-table by Status
+    doc.setFontSize(14);
+    doc.text('RÉPARTITION PAR STATUT', 20, yPosition);
+    yPosition += 10;
+
+    const statusData = Object.entries(reportData.cross_tables.by_status);
+    const statusHeaders = ['Statut', 'Nombre'];
+    const statusRows = statusData.map(([status, count]) => [status, count.toString()]);
+
+    doc.autoTable({
+      head: [statusHeaders],
+      body: statusRows,
+      startY: yPosition,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [66, 139, 202] }
+    });
+
+    yPosition = doc.lastAutoTable.finalY + 15;
+
+    // Cross-table by Pilote
+    doc.setFontSize(14);
+    doc.text('RÉPARTITION PAR PILOTE', 20, yPosition);
+    yPosition += 10;
+
+    const piloteData = Object.entries(reportData.cross_tables.by_pilote);
+    const piloteHeaders = ['Pilote', 'Sourcing', 'Dealflow', 'Total'];
+    const piloteRows = piloteData.map(([pilote, data]) => [
+      pilote, 
+      data.sourcing.toString(), 
+      data.dealflow.toString(), 
+      data.total.toString()
+    ]);
+
+    doc.autoTable({
+      head: [piloteHeaders],
+      body: piloteRows,
+      startY: yPosition,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [66, 139, 202] }
+    });
+
+    // Add new page if needed
+    if (doc.lastAutoTable.finalY > 250) {
+      doc.addPage();
+      yPosition = 20;
+    } else {
+      yPosition = doc.lastAutoTable.finalY + 15;
+    }
+
+    // Cross-table by Domain
+    doc.setFontSize(14);
+    doc.text('RÉPARTITION PAR DOMAINE', 20, yPosition);
+    yPosition += 10;
+
+    const domainData = Object.entries(reportData.cross_tables.by_domain);
+    const domainHeaders = ['Domaine', 'Sourcing', 'Dealflow', 'Total'];
+    const domainRows = domainData.map(([domain, data]) => [
+      domain, 
+      data.sourcing.toString(), 
+      data.dealflow.toString(), 
+      data.total.toString()
+    ]);
+
+    doc.autoTable({
+      head: [domainHeaders],
+      body: domainRows,
+      startY: yPosition,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [66, 139, 202] }
+    });
+
+    doc.save(`SURM_Rapport_Synthetique_${currentDate.replace(/\//g, '-')}.pdf`);
+  };
+
+  const exportToCSV = () => {
+    if (!reportData) return;
+
+    const csvHeaders = [
+      'Nom', 'Type', 'Statut', 'Domaine', 'Pilote', 'Typologie', 
+      'Pays', 'Source', 'Date Entrée', 'Prochaine Action', 
+      'Intérêt', 'Inactif', 'Actions/Commentaires'
+    ];
+
+    const csvData = [
+      csvHeaders,
+      ...reportData.detailed_data.map(row => [
+        row.nom, row.type, row.statut, row.domaine, row.pilote,
+        row.typologie, row.pays, row.source, row.date_entree,
+        row.date_prochaine_action, row.interet, row.is_inactive,
+        row.actions_commentaires
+      ])
+    ];
+
+    const csvContent = csvData.map(row => 
+      row.map(field => `"${field || ''}"`).join(',')
+    ).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `SURM_Export_Detaille_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-2xl font-bold">📊 Tableaux Synthétiques</h2>
+            <p className="text-gray-600">Rapports croisés dynamiques pour comités d'innovation</p>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={exportToPDF}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center space-x-2"
+              disabled={!reportData}
+            >
+              <span>📄</span>
+              <span>Export PDF</span>
+            </button>
+            <button
+              onClick={exportToCSV}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center space-x-2"
+              disabled={!reportData}
+            >
+              <span>📊</span>
+              <span>Export CSV</span>
+            </button>
+            <button
+              onClick={loadReportData}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              🔄 Actualiser
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-2 text-gray-600">Génération des rapports...</p>
+          </div>
+        ) : reportData ? (
+          <div className="space-y-8">
+            {/* Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">{reportData.summary.total_sourcing}</div>
+                <div className="text-sm text-gray-600">Total Sourcing</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">{reportData.summary.total_dealflow}</div>
+                <div className="text-sm text-gray-600">Total Dealflow</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">{reportData.summary.total_partners}</div>
+                <div className="text-sm text-gray-600">Total Startups</div>
+              </div>
+              <div className="text-center p-4 bg-orange-50 rounded-lg">
+                <div className="text-2xl font-bold text-orange-600">
+                  {Object.keys(reportData.cross_tables.by_pilote).length}
+                </div>
+                <div className="text-sm text-gray-600">Pilotes Actifs</div>
+              </div>
+            </div>
+
+            {/* Cross-Table by Pilote */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4">📋 Répartition par Pilote</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full table-auto">
+                  <thead>
+                    <tr className="bg-blue-100">
+                      <th className="px-4 py-2 text-left font-semibold">Pilote</th>
+                      <th className="px-4 py-2 text-center font-semibold">Sourcing</th>
+                      <th className="px-4 py-2 text-center font-semibold">Dealflow</th>
+                      <th className="px-4 py-2 text-center font-semibold">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(reportData.cross_tables.by_pilote).map(([pilote, data]) => (
+                      <tr key={pilote} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-2 font-medium">{pilote}</td>
+                        <td className="px-4 py-2 text-center">{data.sourcing}</td>
+                        <td className="px-4 py-2 text-center">{data.dealflow}</td>
+                        <td className="px-4 py-2 text-center font-semibold">{data.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Cross-Table by Domain */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4">🏢 Répartition par Domaine</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full table-auto">
+                  <thead>
+                    <tr className="bg-green-100">
+                      <th className="px-4 py-2 text-left font-semibold">Domaine</th>
+                      <th className="px-4 py-2 text-center font-semibold">Sourcing</th>
+                      <th className="px-4 py-2 text-center font-semibold">Dealflow</th>
+                      <th className="px-4 py-2 text-center font-semibold">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(reportData.cross_tables.by_domain).map(([domain, data]) => (
+                      <tr key={domain} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-2 font-medium">{domain}</td>
+                        <td className="px-4 py-2 text-center">{data.sourcing}</td>
+                        <td className="px-4 py-2 text-center">{data.dealflow}</td>
+                        <td className="px-4 py-2 text-center font-semibold">{data.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Status Distribution */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4">📈 Répartition par Statut</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(reportData.cross_tables.by_status).map(([status, count]) => (
+                  <div key={status} className="flex justify-between items-center p-3 bg-white rounded border">
+                    <span className="text-sm font-medium">{status}</span>
+                    <span className="text-lg font-bold text-blue-600">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            Erreur de chargement des données de rapport
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [] }) => {
   const [formData, setFormData] = useState({
     nom_entreprise: "",
