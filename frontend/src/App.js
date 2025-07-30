@@ -5074,14 +5074,13 @@ const Dashboard = () => {
                     ))}
                   </tbody>
                 </table>
-              </div>
               
               {filteredSourcingPartners.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-gray-500">Aucun partenaire sourcing trouvé.</p>
                 </div>
               )}
-            </div>
+            </EnhancedTableContainer>
           </div>
         )}
 
