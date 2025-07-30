@@ -1136,13 +1136,17 @@ const KanbanCard = ({ partner, index }) => {
   );
 };
 
-// Phase 4 - Kanban Column Component (Optimized)
+// Phase 4 - Kanban Column Component (Optimized for better visibility)
 const KanbanColumn = ({ column, partners }) => {
   return (
-    <div className="bg-gray-100 rounded-lg p-3 min-h-[600px] w-64 flex-shrink-0">
-      <div className="mb-4">
-        <h3 className="font-bold text-gray-800 text-sm">{column.title}</h3>
-        <p className="text-xs text-gray-600">{column.subtitle}</p>
+    <div className="bg-gray-100 rounded-lg p-2 min-h-[600px] w-72 flex-shrink-0 lg:w-80">
+      <div className="mb-3">
+        <h3 className="font-bold text-gray-800 text-xs lg:text-sm truncate" title={column.title}>
+          {column.title}
+        </h3>
+        <p className="text-xs text-gray-600 truncate" title={column.subtitle}>
+          {column.subtitle}
+        </p>
         <div className="mt-2 bg-white rounded px-2 py-1 text-xs font-medium text-gray-700">
           {partners.length} startup{partners.length !== 1 ? 's' : ''}
         </div>
