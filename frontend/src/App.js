@@ -3849,6 +3849,11 @@ const Dashboard = () => {
   // Phase 4 - Quick Views state
   const [showQuickViewModal, setShowQuickViewModal] = useState(false);
   const [quickViewData, setQuickViewData] = useState(null);
+  
+  // Phase 4 - Navigation state
+  const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
+  const [showQuickMenu, setShowQuickMenu] = useState(false);
+  const [showUserRoleManager, setShowUserRoleManager] = useState(false);
 
   const fetchSourcingPartners = async () => {
     try {
