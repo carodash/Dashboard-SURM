@@ -1917,11 +1917,25 @@ def main():
         # Test Phase 3 - Enhanced Authorization
         auth_test_data = test_phase3_enhanced_authorization()
         
+        # === PHASE 4 TESTS ===
+        print("\n" + "=" * 60)
+        print("📋 PHASE 4 - KANBAN PIPELINE BACKEND TESTING")
+        print("=" * 60)
+        
+        # Test Phase 4 - Kanban Data Endpoint
+        test_phase4_kanban_data()
+        
+        # Test Phase 4 - Kanban Move Endpoint
+        kanban_move_data = test_phase4_kanban_move()
+        
+        # Test Phase 4 - Data Structure Validation
+        test_phase4_data_structure_validation()
+        
         # Test error handling
         test_error_handling()
         
         print("\n" + "=" * 60)
-        print("🎉 SURM Backend API Testing Complete - All Phases (1, 2 & 3) Included!")
+        print("🎉 SURM Backend API Testing Complete - All Phases (1, 2, 3 & 4) Included!")
         print("Check the results above for any failures.")
         
     except Exception as e:
