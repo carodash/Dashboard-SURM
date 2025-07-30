@@ -2220,6 +2220,9 @@ def main():
         # Test Phase 4 - Data Structure Validation
         test_phase4_data_structure_validation()
         
+        # Test Phase 4 - Synthetic Reports
+        test_phase4_synthetic_reports()
+        
         # Test error handling
         test_error_handling()
         
