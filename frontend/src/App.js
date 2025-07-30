@@ -1057,6 +1057,247 @@ const PersonalDashboard = ({ isVisible, currentUser }) => {
   );
 };
 
+// Phase 4 - Kanban Card Component
+const KanbanCard = ({ partner, index }) => {
+  const getCardColor = (partnerType) => {
+    return partnerType === 'sourcing' ? 'border-blue-200 bg-blue-50' : 'border-green-200 bg-green-50';
+  };
+
+  const getTypeIcon = (partnerType) => {
+    return partnerType === 'sourcing' ? '🔍' : '🚀';
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return null;
+    return new Date(dateString).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+  };
+
+  const getPartnerName = (partner) => {
+    return partner.partner_type === 'sourcing' ? partner.nom_entreprise : partner.nom;
+  };
+
+  return (
+    <Draggable draggableId={partner.kanban_id} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          className={`p-3 mb-2 rounded-lg border-2 shadow-sm cursor-move transition-all ${getCardColor(partner.partner_type)} ${
+            snapshot.isDragging ? 'shadow-lg rotate-3 scale-105' : 'hover:shadow-md'
+          }`}
+        >
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">{getTypeIcon(partner.partner_type)}</span>
+              <h4 className="font-semibold text-sm text-gray-800 leading-tight">
+                {getPartnerName(partner)}
+              </h4>
+            </div>
+            {partner.is_inactive && (
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Inactif 90j+"></div>
+            )}
+          </div>
+          
+          <div className="space-y-1 text-xs text-gray-600">
+            <div className="flex items-center space-x-1">
+              <span>👤</span>
+              <span className="truncate">{partner.pilote}</span>
+            </div>
+            
+            <div className="flex items-center space-x-1">
+              <span>🏢</span>
+              <span className="truncate">{partner.partner_type === 'sourcing' ? partner.domaine_activite : partner.domaine}</span>
+            </div>
+            
+            {partner.date_prochaine_action && (
+              <div className="flex items-center space-x-1">
+                <span>📅</span>
+                <span className={`font-medium ${
+                  new Date(partner.date_prochaine_action) < new Date() ? 'text-red-600' : 'text-green-600'
+                }`}>
+                  {formatDate(partner.date_prochaine_action)}
+                </span>
+              </div>
+            )}
+            
+            {partner.updated_at && (
+              <div className="flex items-center space-x-1 text-gray-500">
+                <span>🕒</span>
+                <span>MAJ {formatDate(partner.updated_at)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </Draggable>
+  );
+};
+
+// Phase 4 - Kanban Column Component
+const KanbanColumn = ({ column, partners }) => {
+  return (
+    <div className="bg-gray-100 rounded-lg p-4 min-h-[600px] w-72">
+      <div className="mb-4">
+        <h3 className="font-bold text-gray-800">{column.title}</h3>
+        <p className="text-sm text-gray-600">{column.subtitle}</p>
+        <div className="mt-2 bg-white rounded px-2 py-1 text-xs font-medium text-gray-700">
+          {partners.length} startup{partners.length !== 1 ? 's' : ''}
+        </div>
+      </div>
+      
+      <Droppable droppableId={column.id}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={`min-h-[500px] rounded-lg p-2 transition-colors ${
+              snapshot.isDraggingOver ? 'bg-blue-100' : 'bg-gray-50'
+            }`}
+          >
+            {partners.map((partner, index) => (
+              <KanbanCard key={partner.kanban_id} partner={partner} index={index} />
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    </div>
+  );
+};
+
+// Phase 4 - Kanban Board Component
+const KanbanBoard = ({ isVisible }) => {
+  const [kanbanData, setKanbanData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isVisible) {
+      loadKanbanData();
+    }
+  }, [isVisible]);
+
+  const loadKanbanData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/kanban-data?user_id=default_user`);
+      setKanbanData(response.data);
+    } catch (error) {
+      console.error("Error loading kanban data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDragEnd = async (result) => {
+    const { destination, source, draggableId } = result;
+
+    // If dropped outside any droppable
+    if (!destination) {
+      return;
+    }
+
+    // If dropped in the same position
+    if (destination.droppableId === source.droppableId && destination.index === source.index) {
+      return;
+    }
+
+    // Extract partner info from draggableId
+    const [partnerType, partnerId] = draggableId.split('_');
+
+    try {
+      await axios.post(`${API}/kanban-move`, {
+        partner_id: partnerId,
+        partner_type: partnerType,
+        source_column: source.droppableId,
+        destination_column: destination.droppableId,
+        user_id: 'default_user'
+      });
+
+      // Reload data to reflect changes
+      loadKanbanData();
+    } catch (error) {
+      console.error("Error moving partner:", error);
+      // Could add a toast notification here
+    }
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-2xl font-bold">📋 Pipeline Kanban</h2>
+            <p className="text-gray-600">Vue d'ensemble du cycle de vie des startups</p>
+          </div>
+          <button
+            onClick={loadKanbanData}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            🔄 Actualiser
+          </button>
+        </div>
+
+        {/* Summary Stats */}
+        {kanbanData && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <div className="text-xl font-bold text-blue-600">{kanbanData.summary.total_sourcing}</div>
+              <div className="text-sm text-gray-600">Sourcing</div>
+            </div>
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <div className="text-xl font-bold text-green-600">{kanbanData.summary.total_dealflow}</div>
+              <div className="text-sm text-gray-600">Dealflow</div>
+            </div>
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <div className="text-xl font-bold text-purple-600">{kanbanData.summary.total_partners}</div>
+              <div className="text-sm text-gray-600">Total</div>
+            </div>
+            <div className="text-center p-3 bg-orange-50 rounded-lg">
+              <div className="text-xl font-bold text-orange-600">
+                {Object.values(kanbanData.summary.by_column).reduce((sum, count) => sum + count, 0)}
+              </div>
+              <div className="text-sm text-gray-600">En pipeline</div>
+            </div>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-2 text-gray-600">Chargement du pipeline...</p>
+          </div>
+        ) : kanbanData ? (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="overflow-x-auto pb-4">
+              <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
+                {kanbanData.columnOrder.map(columnId => {
+                  const column = kanbanData.columns[columnId];
+                  const partners = column.partners;
+                  
+                  return (
+                    <KanbanColumn
+                      key={columnId}
+                      column={column}
+                      partners={partners}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </DragDropContext>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            Erreur de chargement des données
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [] }) => {
   const [formData, setFormData] = useState({
     nom_entreprise: "",
