@@ -1964,6 +1964,165 @@ async def move_kanban_partner(
     else:
         raise HTTPException(status_code=400, detail="Invalid transition between partner types")
 
+# PHASE 4 - SYNTHETIC REPORTS & EXPORTS ENDPOINTS
+@api_router.get("/synthetic-report")
+async def get_synthetic_report(user_id: str = "default_user"):
+    """Generate synthetic cross-table report for exports"""
+    current_user = await get_current_user(user_id)
+    
+    # Get data based on user role
+    sourcing_query = {}
+    dealflow_query = {}
+    if current_user.role == UserRole.CONTRIBUTEUR:
+        sourcing_query["pilote"] = current_user.full_name
+        dealflow_query["pilote"] = current_user.full_name
+    
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(1000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(1000)
+    
+    # Initialize report structure
+    report = {
+        "summary": {
+            "total_sourcing": len(sourcing_partners),
+            "total_dealflow": len(dealflow_partners),
+            "total_partners": len(sourcing_partners) + len(dealflow_partners),
+            "generated_at": datetime.utcnow().isoformat(),
+            "generated_by": current_user.full_name
+        },
+        "cross_tables": {},
+        "detailed_data": []
+    }
+    
+    # 1. Status Distribution Cross-Table
+    status_data = {}
+    for partner in sourcing_partners:
+        status = f"Sourcing - {partner.get('statut', 'Unknown')}"
+        status_data[status] = status_data.get(status, 0) + 1
+    
+    for partner in dealflow_partners:
+        status = f"Dealflow - {partner.get('statut', 'Unknown')}"
+        status_data[status] = status_data.get(status, 0) + 1
+    
+    report["cross_tables"]["by_status"] = status_data
+    
+    # 2. Pilote Distribution Cross-Table
+    pilote_data = {}
+    for partner in sourcing_partners + dealflow_partners:
+        pilote = partner.get("pilote", "Unknown")
+        if pilote not in pilote_data:
+            pilote_data[pilote] = {"sourcing": 0, "dealflow": 0, "total": 0}
+        
+        if partner in sourcing_partners:
+            pilote_data[pilote]["sourcing"] += 1
+        else:
+            pilote_data[pilote]["dealflow"] += 1
+        pilote_data[pilote]["total"] += 1
+    
+    report["cross_tables"]["by_pilote"] = pilote_data
+    
+    # 3. Domain Distribution Cross-Table
+    domain_data = {}
+    for partner in sourcing_partners:
+        domain = partner.get("domaine_activite", "Unknown")
+        if domain not in domain_data:
+            domain_data[domain] = {"sourcing": 0, "dealflow": 0, "total": 0}
+        domain_data[domain]["sourcing"] += 1
+        domain_data[domain]["total"] += 1
+    
+    for partner in dealflow_partners:
+        domain = partner.get("domaine", "Unknown")
+        if domain not in domain_data:
+            domain_data[domain] = {"sourcing": 0, "dealflow": 0, "total": 0}
+        domain_data[domain]["dealflow"] += 1
+        domain_data[domain]["total"] += 1
+    
+    report["cross_tables"]["by_domain"] = domain_data
+    
+    # 4. Type Collaboration Distribution (from custom_fields or typologie)
+    collaboration_data = {}
+    all_partners = sourcing_partners + dealflow_partners
+    
+    for partner in all_partners:
+        # Try to get collaboration type from typologie or custom fields
+        collab_type = partner.get("typologie", "Unknown")
+        if collab_type not in collaboration_data:
+            collaboration_data[collab_type] = {"count": 0, "partners": []}
+        
+        collaboration_data[collab_type]["count"] += 1
+        partner_name = partner.get("nom_entreprise") or partner.get("nom", "Unknown")
+        collaboration_data[collab_type]["partners"].append({
+            "name": partner_name,
+            "type": "sourcing" if partner in sourcing_partners else "dealflow",
+            "pilote": partner.get("pilote", "Unknown")
+        })
+    
+    report["cross_tables"]["by_collaboration_type"] = collaboration_data
+    
+    # 5. Detailed Data for CSV Export
+    for partner in sourcing_partners:
+        report["detailed_data"].append({
+            "nom": partner.get("nom_entreprise", ""),
+            "type": "Sourcing",
+            "statut": partner.get("statut", ""),
+            "domaine": partner.get("domaine_activite", ""),
+            "pilote": partner.get("pilote", ""),
+            "typologie": partner.get("typologie", ""),
+            "pays": partner.get("pays_origine", ""),
+            "source": partner.get("source", ""),
+            "date_entree": partner.get("date_entree_sourcing", ""),
+            "date_prochaine_action": partner.get("date_prochaine_action", ""),
+            "interet": "Oui" if partner.get("interet") else "Non",
+            "is_inactive": "Oui" if is_inactive(partner.get("updated_at")) else "Non",
+            "actions_commentaires": partner.get("actions_commentaires", "")[:100] + "..." if len(partner.get("actions_commentaires", "")) > 100 else partner.get("actions_commentaires", "")
+        })
+    
+    for partner in dealflow_partners:
+        report["detailed_data"].append({
+            "nom": partner.get("nom", ""),
+            "type": "Dealflow", 
+            "statut": partner.get("statut", ""),
+            "domaine": partner.get("domaine", ""),
+            "pilote": partner.get("pilote", ""),
+            "typologie": partner.get("typologie", ""),
+            "pays": partner.get("pays_origine", ""),
+            "source": partner.get("source", ""),
+            "date_entree": partner.get("date_reception_fichier", ""),
+            "date_prochaine_action": partner.get("date_prochaine_action", ""),
+            "interet": "Oui" if partner.get("interet") else "Non",
+            "is_inactive": "Oui" if is_inactive(partner.get("updated_at")) else "Non",
+            "actions_commentaires": partner.get("actions_commentaires", "")[:100] + "..." if len(partner.get("actions_commentaires", "")) > 100 else partner.get("actions_commentaires", "")
+        })
+    
+    # 6. Time-based Analysis
+    monthly_data = {}
+    for partner in sourcing_partners:
+        created_date = partner.get("created_at")
+        if isinstance(created_date, str):
+            try:
+                created_date = datetime.fromisoformat(created_date.replace('Z', '+00:00'))
+                month_key = f"{created_date.year}-{created_date.month:02d}"
+                if month_key not in monthly_data:
+                    monthly_data[month_key] = {"sourcing": 0, "dealflow": 0}
+                monthly_data[month_key]["sourcing"] += 1
+            except:
+                pass
+    
+    for partner in dealflow_partners:
+        created_date = partner.get("created_at")
+        if isinstance(created_date, str):
+            try:
+                created_date = datetime.fromisoformat(created_date.replace('Z', '+00:00'))
+                month_key = f"{created_date.year}-{created_date.month:02d}"
+                if month_key not in monthly_data:
+                    monthly_data[month_key] = {"sourcing": 0, "dealflow": 0}
+                monthly_data[month_key]["dealflow"] += 1
+            except:
+                pass
+    
+    report["cross_tables"]["by_month"] = dict(sorted(monthly_data.items()))
+    
+    return report
+
 # Include the router in the main app
 app.include_router(api_router)
 
