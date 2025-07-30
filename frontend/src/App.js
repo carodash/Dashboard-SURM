@@ -1136,13 +1136,13 @@ const KanbanCard = ({ partner, index }) => {
   );
 };
 
-// Phase 4 - Kanban Column Component
+// Phase 4 - Kanban Column Component (Optimized)
 const KanbanColumn = ({ column, partners }) => {
   return (
-    <div className="bg-gray-100 rounded-lg p-4 min-h-[600px] w-72">
+    <div className="bg-gray-100 rounded-lg p-3 min-h-[600px] w-64 flex-shrink-0">
       <div className="mb-4">
-        <h3 className="font-bold text-gray-800">{column.title}</h3>
-        <p className="text-sm text-gray-600">{column.subtitle}</p>
+        <h3 className="font-bold text-gray-800 text-sm">{column.title}</h3>
+        <p className="text-xs text-gray-600">{column.subtitle}</p>
         <div className="mt-2 bg-white rounded px-2 py-1 text-xs font-medium text-gray-700">
           {partners.length} startup{partners.length !== 1 ? 's' : ''}
         </div>
@@ -1154,7 +1154,7 @@ const KanbanColumn = ({ column, partners }) => {
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={`min-h-[500px] rounded-lg p-2 transition-colors ${
-              snapshot.isDraggingOver ? 'bg-blue-100' : 'bg-gray-50'
+              snapshot.isDraggingOver ? 'bg-blue-100 border-2 border-blue-300' : 'bg-gray-50'
             }`}
           >
             {partners.map((partner, index) => (
