@@ -1187,6 +1187,16 @@ const KanbanBoard = ({ isVisible }) => {
     setLoading(true);
     try {
       const response = await axios.get(`${API}/kanban-data?user_id=default_user`);
+      console.log('🔍 DEBUG Kanban data received:', response.data);
+      
+      // Debug first partner in first column
+      if (response.data?.columns) {
+        const firstColumn = Object.values(response.data.columns)[0];
+        if (firstColumn?.partners?.length > 0) {
+          console.log('🔍 DEBUG First partner:', firstColumn.partners[0]);
+        }
+      }
+      
       setKanbanData(response.data);
     } catch (error) {
       console.error("Error loading kanban data:", error);
