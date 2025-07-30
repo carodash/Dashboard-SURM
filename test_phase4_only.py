@@ -311,14 +311,14 @@ def test_phase4_kanban_move():
     print(f"\n5. Testing invalid moves and error handling")
     
     # Test invalid destination column
-    invalid_move_data = {
+    invalid_move_params = {
         "partner_id": sourcing_id,
         "partner_type": "sourcing",
         "source_column": "sourcing_a_traiter",
         "destination_column": "invalid_column"
     }
     
-    response = requests.post(f"{API_URL}/kanban-move", json=invalid_move_data)
+    response = requests.post(f"{API_URL}/kanban-move", params=invalid_move_params)
     if response.status_code == 400:
         print("✅ Correctly rejected invalid destination column")
     else:
