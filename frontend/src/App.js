@@ -3225,13 +3225,19 @@ const Dashboard = () => {
     setSelectedTimelinePartner(null);
   };
 
-  // Phase 1 - Update partner after next action date change
-  const handlePartnerUpdate = (updatedPartner, partnerType) => {
-    if (partnerType === 'sourcing') {
-      setSourcingPartners(prev => prev.map(p => p.id === updatedPartner.id ? updatedPartner : p));
-    } else {
-      setDealflowPartners(prev => prev.map(p => p.id === updatedPartner.id ? updatedPartner : p));
-    }
+  // Phase 3 - Comments functions
+  const handleShowComments = (partner, partnerType) => {
+    setSelectedCommentsPartner({
+      id: partner.id,
+      name: partnerType === 'sourcing' ? partner.nom_entreprise : partner.nom,
+      type: partnerType
+    });
+    setShowCommentsModal(true);
+  };
+
+  const handleCloseComments = () => {
+    setShowCommentsModal(false);
+    setSelectedCommentsPartner(null);
   };
 
   const handleTransitionToDealflow = async (sourcingId) => {
