@@ -475,6 +475,51 @@ frontend:
         agent: "testing"
         comment: "✅ PHASE 4 QUICK NAVIGATION & TARGETED VIEWS FRONTEND FULLY WORKING: (1) Global Search Bar - Visible and functional in header (lines 4388-4391), minimum 2-character validation working correctly, search button enable/disable logic working, fixed backend 500 error (NoneType.lower() issue), search modal opens with proper results display (found 10 FinTech results: 1 sourcing, 9 dealflow). (2) Quick View Shortcuts - All 4 buttons working perfectly: '👨‍💼 Mes Startups' (lines 1649-1652), '⏰ À Relancer' (lines 1655-1658), '📄 Avec Docs' (lines 1661-1664), '🧪 En Expé' (lines 1667-1670). (3) Quick View Results Modal - QuickViewResults component (lines 1678-1800+) opens with correct data structure, summary statistics cards displayed (3-6 cards), partner cards display correctly, close functionality working. (4) Integration Testing - Quick views work from all tabs (Dashboard, Sourcing, Dealflow), multiple quick view operations work in sequence, no interference with existing functionality (local table search still works). (5) Responsive Layout - All features work correctly across desktop (1920x1080), tablet (768x1024), and mobile (390x844) viewports. All Phase 4 quick navigation features are production-ready for daily startup management use."
 
+  - task: "Phase 4 - Kanban Drag & Drop Frontend Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User feedback: Drag & drop non-fonctionnel dans la vue Kanban. Interface présente mais les cartes ne peuvent pas être déplacées par glisser-déposer."
+      - working: true
+        agent: "main"
+        comment: "Fixed critical drag & drop bug: Frontend was sending JSON body data but backend expects query parameters. Changed from POST with JSON body to POST with URLSearchParams. Fixed parameter name from 'target_column' to 'destination_column'. Added success feedback alerts. Drag & drop should now work correctly with proper authorization checks based on user roles."
+
+  - task: "Phase 4 - Navigation UX Improvements"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User feedback: Barre de navigation dense avec boutons de vue rapide qui encombrent l'interface."
+      - working: true
+        agent: "main"
+        comment: "Improved navigation UX: Compacted quick view dropdown button with responsive design (shows only icon on mobile, full text on desktop). Made dropdown more compact (w-48 instead of w-56, smaller padding). Improved hover states and accessibility."
+
+  - task: "Phase 4 - Kanban Display Optimization"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User feedback: Problème de défilement horizontal sur le Kanban sur les écrans standards."
+      - working: true
+        agent: "main"
+        comment: "Optimized Kanban horizontal scrolling: Increased column width (w-72 to w-80 on large screens), improved spacing (space-x-4), added dynamic width calculation based on column count. Enhanced scroll hints with better user guidance. Improved column title truncation with tooltips."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
