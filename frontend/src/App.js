@@ -1061,6 +1061,13 @@ const PersonalDashboard = ({ isVisible, currentUser }) => {
 
 // Phase 4 - Kanban Card Component
 const KanbanCard = ({ partner, index }) => {
+  // Debug logging
+  console.log(`🔍 DEBUG KanbanCard rendering:`, { 
+    kanban_id: partner.kanban_id, 
+    index, 
+    partner_type: partner.partner_type 
+  });
+  
   const getCardColor = (partnerType) => {
     return partnerType === 'sourcing' ? 'border-blue-200 bg-blue-50' : 'border-green-200 bg-green-50';
   };
@@ -1078,8 +1085,11 @@ const KanbanCard = ({ partner, index }) => {
     return partner.partner_type === 'sourcing' ? partner.nom_entreprise : partner.nom;
   };
 
+  // Ensure kanban_id is a string
+  const draggableId = String(partner.kanban_id);
+
   return (
-    <Draggable draggableId={partner.kanban_id} index={index}>
+    <Draggable draggableId={draggableId} index={index}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
