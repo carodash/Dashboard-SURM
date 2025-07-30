@@ -172,6 +172,73 @@
   }
 }
 
+/* Enhanced horizontal scrollbar for better UX */
+.enhanced-horizontal-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Custom scrollbar styling */
+  scrollbar-width: auto; /* Firefox */
+  scrollbar-color: #CBD5E0 #F7FAFC; /* Firefox: thumb track */
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.enhanced-horizontal-scroll::-webkit-scrollbar {
+  height: 12px; /* Make horizontal scrollbar thicker/more visible */
+}
+
+.enhanced-horizontal-scroll::-webkit-scrollbar-track {
+  background: #F7FAFC; /* Light gray track */
+  border-radius: 6px;
+  border: 1px solid #E2E8F0;
+}
+
+.enhanced-horizontal-scroll::-webkit-scrollbar-thumb {
+  background: #CBD5E0; /* Gray thumb */
+  border-radius: 6px;
+  border: 1px solid #A0AEC0;
+  min-width: 50px; /* Minimum thumb size for better visibility */
+}
+
+.enhanced-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #A0AEC0; /* Darker on hover */
+}
+
+.enhanced-horizontal-scroll::-webkit-scrollbar-thumb:active {
+  background: #718096; /* Even darker when dragging */
+}
+
+/* Smooth scrolling */
+.enhanced-horizontal-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced table scroll */
+.enhanced-table-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+}
+
+.enhanced-table-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.enhanced-table-scroll::-webkit-scrollbar-track {
+  background: #F8FAFC;
+  border-radius: 5px;
+}
+
+.enhanced-table-scroll::-webkit-scrollbar-thumb {
+  background: #94A3B8;
+  border-radius: 5px;
+  min-width: 40px;
+}
+
+.enhanced-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748B;
+}
+
 /* Print styles */
 @media print {
   .no-print {
