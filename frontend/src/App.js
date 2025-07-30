@@ -1345,36 +1345,20 @@ const KanbanBoard = ({ isVisible }) => {
           </div>
         ) : kanbanData ? (
           <DragDropContext onDragEnd={handleDragEnd}>
-            {/* Enhanced horizontal scroll container */}
-            <div className="enhanced-horizontal-scroll pb-4">
-              <div 
-                className="flex space-x-4 pb-4 px-2" 
-                style={{ 
-                  minWidth: 'max-content',
-                  width: `${kanbanData.columnOrder.length * 20}rem` // Dynamic width based on column count
-                }}
-              >
-                {kanbanData.columnOrder.map(columnId => {
-                  const column = kanbanData.columns[columnId];
-                  const partners = column.partners;
-                  
-                  return (
-                    <KanbanColumn
-                      key={columnId}
-                      column={column}
-                      partners={partners}
-                    />
-                  );
-                })}
-              </div>
-            </div>
+            {/* Top horizontal scrollbar for better accessibility */}
+            <KanbanTopScrollbar kanbanData={kanbanData} />
+            
+            {/* Enhanced horizontal scroll container with wheel support */}
+            <KanbanScrollContainer kanbanData={kanbanData} />
             
             {/* Enhanced scroll hint */}
             <div className="text-center text-xs text-gray-500 mt-2 bg-blue-50 p-3 rounded-lg">
-              <div className="flex items-center justify-center space-x-4">
-                <span>💡 <strong>Desktop :</strong> Glissez-déposez les cartes entre colonnes</span>
+              <div className="flex items-center justify-center space-x-4 flex-wrap gap-2">
+                <span>💡 <strong>Glisser-déposer :</strong> Déplacez les cartes entre colonnes</span>
                 <span>•</span>
-                <span>🖱️ <strong>Scroll horizontal :</strong> Barre de défilement améliorée en bas</span>
+                <span>🖱️ <strong>Molette :</strong> Scroll horizontal en survolant le tableau</span>
+                <span>•</span>
+                <span>📜 <strong>Barres :</strong> Scroll accessible en haut et en bas</span>
               </div>
             </div>
           </DragDropContext>
