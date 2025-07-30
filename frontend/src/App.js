@@ -1661,6 +1661,7 @@ const GlobalSearchBar = ({ onSearch, onQuickView }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
+  const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
 
   const handleSearch = async (e) => {
     e.preventDefault();
