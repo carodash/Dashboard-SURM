@@ -1625,14 +1625,14 @@ def test_phase4_kanban_move():
         print(f"❌ Should have rejected invalid column: {response.status_code}")
     
     # Test invalid partner ID
-    invalid_partner_move = {
+    invalid_partner_params = {
         "partner_id": "invalid-id",
         "partner_type": "sourcing",
         "source_column": "sourcing_a_traiter",
         "destination_column": "sourcing_klaxoon"
     }
     
-    response = requests.post(f"{API_URL}/kanban-move", json=invalid_partner_move)
+    response = requests.post(f"{API_URL}/kanban-move", params=invalid_partner_params)
     if response.status_code == 404:
         print("✅ Correctly rejected invalid partner ID")
     else:
