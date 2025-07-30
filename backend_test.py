@@ -1505,14 +1505,14 @@ def test_phase4_kanban_move():
     
     # Test 3: Move dealflow partner within dealflow columns
     print(f"\n3. Testing dealflow partner move within dealflow columns")
-    move_data = {
+    move_params = {
         "partner_id": dealflow_id,
         "partner_type": "dealflow",
         "source_column": "prequalification",
         "destination_column": "presentation"
     }
     
-    response = requests.post(f"{API_URL}/kanban-move", json=move_data)
+    response = requests.post(f"{API_URL}/kanban-move", params=move_params)
     if response.status_code == 200:
         result = response.json()
         print(f"✅ Dealflow partner moved successfully: {result['message']}")
