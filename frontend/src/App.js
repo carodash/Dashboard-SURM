@@ -1594,6 +1594,227 @@ const SyntheticReports = ({ isVisible }) => {
   );
 };
 
+// Phase 4 - Global Search Component
+const GlobalSearchBar = ({ onSearch, onQuickView }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (searchQuery.trim().length < 2) return;
+    
+    setIsSearching(true);
+    try {
+      await onSearch(searchQuery.trim());
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center space-x-4">
+      {/* Global Search */}
+      <form onSubmit={handleSearch} className="flex items-center">
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Recherche globale (nom, domaine, pilote...)"
+            className="w-96 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            {isSearching ? (
+              <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+            ) : (
+              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            )}
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={searchQuery.trim().length < 2 || isSearching}
+          className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Rechercher
+        </button>
+      </form>
+
+      {/* Quick View Shortcuts */}
+      <div className="flex items-center space-x-2">
+        <span className="text-sm text-gray-600">Vues rapides:</span>
+        <button
+          onClick={() => onQuickView('mes-startups')}
+          className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm hover:bg-purple-200"
+        >
+          👨‍💼 Mes Startups
+        </button>
+        <button
+          onClick={() => onQuickView('a-relancer')}
+          className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm hover:bg-red-200"
+        >
+          ⏰ À Relancer
+        </button>
+        <button
+          onClick={() => onQuickView('avec-documents')}
+          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200"
+        >
+          📄 Avec Docs
+        </button>
+        <button
+          onClick={() => onQuickView('en-experimentation')}
+          className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm hover:bg-green-200"
+        >
+          🧪 En Expé
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Phase 4 - Quick Views Component
+const QuickViewResults = ({ isVisible, viewData, onClose }) => {
+  if (!isVisible || !viewData) return null;
+
+  const renderPartnerCard = (partner, type) => {
+    const name = type === 'sourcing' ? partner.nom_entreprise : partner.nom;
+    const domain = type === 'sourcing' ? partner.domaine_activite : partner.domaine;
+    
+    return (
+      <div key={partner.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex-1">
+            <h4 className="font-semibold text-gray-800">{name}</h4>
+            <p className="text-sm text-gray-600">{domain}</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            {partner.is_inactive && (
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Inactif"></span>
+            )}
+            <span className={`text-xs px-2 py-1 rounded ${type === 'sourcing' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+              {type === 'sourcing' ? '🔍 Sourcing' : '🚀 Dealflow'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="text-xs text-gray-600 space-y-1">
+          <div className="flex items-center space-x-2">
+            <span>👤 {partner.pilote}</span>
+            <span>📊 {partner.statut}</span>
+          </div>
+          
+          {partner.date_prochaine_action && (
+            <div className="flex items-center space-x-1">
+              <span>📅</span>
+              <span className={`font-medium ${
+                new Date(partner.date_prochaine_action) < new Date() ? 'text-red-600' : 'text-green-600'
+              }`}>
+                {new Date(partner.date_prochaine_action).toLocaleDateString('fr-FR')}
+              </span>
+            </div>
+          )}
+          
+          {partner.followup_reasons && (
+            <div className="mt-2 text-red-600">
+              <strong>À relancer:</strong>
+              <ul className="list-disc list-inside ml-2">
+                {partner.followup_reasons.map((reason, idx) => (
+                  <li key={idx}>{reason}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {partner.document_types && (
+            <div className="mt-2 text-blue-600">
+              <strong>Documents:</strong> {partner.document_types.join(', ')}
+            </div>
+          )}
+          
+          {partner.experimentation_stage && (
+            <div className="mt-2 text-green-600">
+              <strong>Expérimentation:</strong> {partner.experimentation_stage}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-2xl font-bold">{viewData.view_name}</h2>
+            <p className="text-gray-600">{viewData.description}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">{viewData.summary.sourcing_count}</div>
+            <div className="text-sm text-gray-600">Sourcing</div>
+          </div>
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">{viewData.summary.dealflow_count}</div>
+            <div className="text-sm text-gray-600">Dealflow</div>
+          </div>
+          <div className="text-center p-4 bg-purple-50 rounded-lg">
+            <div className="text-2xl font-bold text-purple-600">{viewData.summary.total}</div>
+            <div className="text-sm text-gray-600">Total</div>
+          </div>
+        </div>
+
+        {/* Results */}
+        <div className="space-y-6">
+          {viewData.sourcing.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4">🔍 Sourcing ({viewData.sourcing.length})</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {viewData.sourcing.map(partner => renderPartnerCard(partner, 'sourcing'))}
+              </div>
+            </div>
+          )}
+          
+          {viewData.dealflow.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4">🚀 Dealflow ({viewData.dealflow.length})</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {viewData.dealflow.map(partner => renderPartnerCard(partner, 'dealflow'))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {viewData.summary.total === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            Aucun résultat trouvé pour cette vue
+          </div>
+        )}
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [] }) => {
   const [formData, setFormData] = useState({
     nom_entreprise: "",
