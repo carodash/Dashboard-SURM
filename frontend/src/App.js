@@ -3768,6 +3768,10 @@ const Dashboard = () => {
   // Phase 3 - Private Comments state
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [selectedCommentsPartner, setSelectedCommentsPartner] = useState(null);
+  
+  // Phase 4 - Quick Views state
+  const [showQuickViewModal, setShowQuickViewModal] = useState(false);
+  const [quickViewData, setQuickViewData] = useState(null);
 
   const fetchSourcingPartners = async () => {
     try {
