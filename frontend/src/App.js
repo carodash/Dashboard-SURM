@@ -4116,6 +4116,17 @@ const Dashboard = () => {
         />
       )}
 
+      {/* Phase 3 - Private Comments Modal */}
+      {showCommentsModal && selectedCommentsPartner && (
+        <PrivateCommentsModal
+          isOpen={showCommentsModal}
+          onClose={handleCloseComments}
+          partnerId={selectedCommentsPartner.id}
+          partnerType={selectedCommentsPartner.type}
+          partnerName={selectedCommentsPartner.name}
+        />
+      )}
+
       {/* Phase 1 - Activity Timeline Modal */}
       {showTimelineModal && selectedTimelinePartner && (
         <ActivityTimelineModal
