@@ -3861,6 +3861,12 @@ const Dashboard = () => {
     { id: 'avec-documents', label: '📄 Avec Docs', color: 'blue' },
     { id: 'en-experimentation', label: '🧪 En Expé', color: 'green' }
   ];
+  
+  const handleQuickViewSelect = (viewType) => {
+    handleQuickView(viewType);
+    setShowQuickMenu(false);
+    setShowHamburgerMenu(false);
+  };
 
   const fetchSourcingPartners = async () => {
     try {
