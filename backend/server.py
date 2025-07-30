@@ -2393,13 +2393,13 @@ async def global_search(query: str, user_id: str = "default_user"):
     # Search function
     def matches_query(partner, partner_type):
         searchable_fields = [
-            partner.get("nom_entreprise" if partner_type == "sourcing" else "nom", "").lower(),
-            partner.get("domaine_activite" if partner_type == "sourcing" else "domaine", "").lower(),
-            partner.get("pilote", "").lower(),
-            partner.get("typologie", "").lower(),
-            partner.get("source", "").lower(),
-            partner.get("technologie", "").lower(),
-            partner.get("pays_origine", "").lower()
+            (partner.get("nom_entreprise" if partner_type == "sourcing" else "nom") or "").lower(),
+            (partner.get("domaine_activite" if partner_type == "sourcing" else "domaine") or "").lower(),
+            (partner.get("pilote") or "").lower(),
+            (partner.get("typologie") or "").lower(),
+            (partner.get("source") or "").lower(),
+            (partner.get("technologie") or "").lower(),
+            (partner.get("pays_origine") or "").lower()
         ]
         
         return any(query in field for field in searchable_fields if field)
