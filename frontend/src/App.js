@@ -1208,7 +1208,9 @@ const KanbanBoard = ({ isVisible }) => {
     const [partnerType, partnerId] = draggableId.split('_');
 
     try {
-      await axios.post(`${API}/kanban-move`, {
+      console.log(`🔄 Moving ${partnerType}_${partnerId} from ${source.droppableId} to ${destination.droppableId}`);
+      
+      const response = await axios.post(`${API}/kanban-move`, {
         partner_id: partnerId,
         partner_type: partnerType,
         source_column: source.droppableId,
@@ -1216,11 +1218,28 @@ const KanbanBoard = ({ isVisible }) => {
         user_id: 'default_user'
       });
 
+      console.log('✅ Move successful:', response.data);
+      
       // Reload data to reflect changes
       loadKanbanData();
+      
+      // Show success feedback
+      // TODO: Add toast notification
+      
     } catch (error) {
-      console.error("Error moving partner:", error);
-      // Could add a toast notification here
+      console.error("❌ Error moving partner:", error);
+      
+      // Show error feedback
+      if (error.response?.status === 403) {
+        alert("⚠️ Vous n'avez pas l'autorisation de déplacer cette startup.\nSeuls les pilotes et admins peuvent modifier leurs startups.");
+      } else if (error.response?.status === 400) {
+        alert("⚠️ Déplacement invalide. Vérifiez que la transition est autorisée.");
+      } else {
+        alert("❌ Erreur lors du déplacement. Veuillez réessayer.");
+      }
+      
+      // Reload data to reset any visual changes
+      loadKanbanData();
     }
   };
 
