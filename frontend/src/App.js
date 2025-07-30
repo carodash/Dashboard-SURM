@@ -1689,26 +1689,27 @@ const GlobalSearchBar = ({ onSearch, onQuickView }) => {
         </button>
       </form>
 
-      {/* Quick Views Dropdown */}
+      {/* Quick Views Dropdown - More Compact */}
       <div className="relative">
         <button
           onClick={() => setShowQuickMenu(!showQuickMenu)}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center space-x-2"
+          className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center space-x-1 text-sm"
         >
-          <span>⚡ Vues rapides</span>
+          <span>⚡</span>
+          <span className="hidden md:inline">Vues</span>
           <svg className={`w-4 h-4 transition-transform ${showQuickMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
         
         {showQuickMenu && (
-          <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border z-50">
-            <div className="py-2">
+          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+            <div className="py-1">
               {quickViews.map(view => (
                 <button
                   key={view.id}
                   onClick={() => handleQuickViewSelect(view.id)}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                  className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-sm"
                 >
                   <span>{view.label}</span>
                 </button>
