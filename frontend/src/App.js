@@ -4012,6 +4012,36 @@ const Dashboard = () => {
     setSelectedCommentsPartner(null);
   };
 
+  // Phase 4 - Quick view functions
+  const handleGlobalSearch = async (query) => {
+    try {
+      const response = await axios.get(`${API}/global-search?query=${encodeURIComponent(query)}&user_id=default_user`);
+      setQuickViewData({
+        view_name: `Recherche: "${query}"`,
+        description: `Résultats de recherche pour "${query}"`,
+        ...response.data
+      });
+      setShowQuickViewModal(true);
+    } catch (error) {
+      console.error("Error during global search:", error);
+    }
+  };
+
+  const handleQuickView = async (viewType) => {
+    try {
+      const response = await axios.get(`${API}/quick-views/${viewType}?user_id=default_user`);
+      setQuickViewData(response.data);
+      setShowQuickViewModal(true);
+    } catch (error) {
+      console.error("Error loading quick view:", error);
+    }
+  };
+
+  const handleCloseQuickView = () => {
+    setShowQuickViewModal(false);
+    setQuickViewData(null);
+  };
+
   const handleTransitionToDealflow = async (sourcingId) => {
     const dealflowData = {
       statut: "En cours avec l'équipe inno",
