@@ -268,14 +268,14 @@ def test_phase4_kanban_move():
         transition_id = transition_partner['id']
         
         # Move from sourcing to dealflow
-        transition_move_data = {
+        transition_move_params = {
             "partner_id": transition_id,
             "partner_type": "sourcing",
             "source_column": "sourcing_a_traiter",
             "destination_column": "prequalification"
         }
         
-        response = requests.post(f"{API_URL}/kanban-move", json=transition_move_data)
+        response = requests.post(f"{API_URL}/kanban-move", params=transition_move_params)
         if response.status_code == 200:
             result = response.json()
             print(f"✅ Sourcing to dealflow transition successful: {result['message']}")
