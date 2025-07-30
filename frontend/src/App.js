@@ -1594,10 +1594,11 @@ const SyntheticReports = ({ isVisible }) => {
   );
 };
 
-// Phase 4 - Global Search Component
+// Phase 4 - Global Search Component (Streamlined)
 const GlobalSearchBar = ({ onSearch, onQuickView }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [showQuickMenu, setShowQuickMenu] = useState(false);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -1611,8 +1612,20 @@ const GlobalSearchBar = ({ onSearch, onQuickView }) => {
     }
   };
 
+  const quickViews = [
+    { id: 'mes-startups', label: '👨‍💼 Mes Startups', color: 'purple' },
+    { id: 'a-relancer', label: '⏰ À Relancer', color: 'red' },
+    { id: 'avec-documents', label: '📄 Avec Docs', color: 'blue' },
+    { id: 'en-experimentation', label: '🧪 En Expé', color: 'green' }
+  ];
+
+  const handleQuickViewSelect = (viewType) => {
+    onQuickView(viewType);
+    setShowQuickMenu(false);
+  };
+
   return (
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center space-x-3">
       {/* Global Search */}
       <form onSubmit={handleSearch} className="flex items-center">
         <div className="relative">
@@ -1620,14 +1633,14 @@ const GlobalSearchBar = ({ onSearch, onQuickView }) => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Recherche globale (nom, domaine, pilote...)"
-            className="w-96 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Recherche globale..."
+            className="w-72 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             {isSearching ? (
-              <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+              <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
             ) : (
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             )}
@@ -1636,39 +1649,39 @@ const GlobalSearchBar = ({ onSearch, onQuickView }) => {
         <button
           type="submit"
           disabled={searchQuery.trim().length < 2 || isSearching}
-          className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="ml-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
         >
-          Rechercher
+          🔍
         </button>
       </form>
 
-      {/* Quick View Shortcuts */}
-      <div className="flex items-center space-x-2">
-        <span className="text-sm text-gray-600">Vues rapides:</span>
+      {/* Quick Views Dropdown */}
+      <div className="relative">
         <button
-          onClick={() => onQuickView('mes-startups')}
-          className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm hover:bg-purple-200"
+          onClick={() => setShowQuickMenu(!showQuickMenu)}
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center space-x-2"
         >
-          👨‍💼 Mes Startups
+          <span>⚡ Vues rapides</span>
+          <svg className={`w-4 h-4 transition-transform ${showQuickMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </button>
-        <button
-          onClick={() => onQuickView('a-relancer')}
-          className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm hover:bg-red-200"
-        >
-          ⏰ À Relancer
-        </button>
-        <button
-          onClick={() => onQuickView('avec-documents')}
-          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200"
-        >
-          📄 Avec Docs
-        </button>
-        <button
-          onClick={() => onQuickView('en-experimentation')}
-          className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm hover:bg-green-200"
-        >
-          🧪 En Expé
-        </button>
+        
+        {showQuickMenu && (
+          <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border z-50">
+            <div className="py-2">
+              {quickViews.map(view => (
+                <button
+                  key={view.id}
+                  onClick={() => handleQuickViewSelect(view.id)}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                >
+                  <span>{view.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
