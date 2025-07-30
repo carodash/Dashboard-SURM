@@ -1210,21 +1210,24 @@ const KanbanBoard = ({ isVisible }) => {
     try {
       console.log(`🔄 Moving ${partnerType}_${partnerId} from ${source.droppableId} to ${destination.droppableId}`);
       
-      const response = await axios.post(`${API}/kanban-move`, {
+      // Fixed: Use query parameters instead of JSON body, and correct parameter name
+      const params = new URLSearchParams({
         partner_id: partnerId,
         partner_type: partnerType,
         source_column: source.droppableId,
-        destination_column: destination.droppableId,
+        destination_column: destination.droppableId, // Fixed: was target_column, now destination_column
         user_id: 'default_user'
       });
+      
+      const response = await axios.post(`${API}/kanban-move?${params}`);
 
       console.log('✅ Move successful:', response.data);
       
+      // Show success feedback
+      alert(`✅ Startup déplacée avec succès vers "${destination.droppableId}"`);
+      
       // Reload data to reflect changes
       loadKanbanData();
-      
-      // Show success feedback
-      // TODO: Add toast notification
       
     } catch (error) {
       console.error("❌ Error moving partner:", error);
