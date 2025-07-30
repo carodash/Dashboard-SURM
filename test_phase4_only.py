@@ -202,14 +202,14 @@ def test_phase4_kanban_move():
     
     # Test 2: Move sourcing partner within sourcing columns
     print(f"\n2. Testing sourcing partner move within sourcing columns")
-    move_data = {
+    move_params = {
         "partner_id": sourcing_id,
         "partner_type": "sourcing",
         "source_column": "sourcing_a_traiter",
         "destination_column": "sourcing_klaxoon"
     }
     
-    response = requests.post(f"{API_URL}/kanban-move", json=move_data)
+    response = requests.post(f"{API_URL}/kanban-move", params=move_params)
     if response.status_code == 200:
         result = response.json()
         print(f"✅ Sourcing partner moved successfully: {result['message']}")
