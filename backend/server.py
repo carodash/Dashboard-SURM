@@ -2123,6 +2123,312 @@ async def get_synthetic_report(user_id: str = "default_user"):
     
     return report
 
+# PHASE 4 - QUICK NAVIGATION & TARGETED VIEWS ENDPOINTS
+@api_router.get("/quick-views/mes-startups")
+async def get_my_startups_quick_view(user_id: str = "default_user"):
+    """Quick view: My assigned startups"""
+    current_user = await get_current_user(user_id)
+    
+    # Get startups assigned to current user
+    sourcing_query = {"pilote": current_user.full_name}
+    dealflow_query = {"pilote": current_user.full_name}
+    
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(1000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(1000)
+    
+    # Clean and add status
+    sourcing_clean = []
+    for p in sourcing_partners:
+        if '_id' in p: del p['_id']
+        sourcing_clean.append(add_inactivity_status(p))
+    
+    dealflow_clean = []
+    for p in dealflow_partners:
+        if '_id' in p: del p['_id']
+        dealflow_clean.append(add_inactivity_status(p))
+    
+    return {
+        "view_name": "Mes Startups",
+        "description": f"Startups pilotées par {current_user.full_name}",
+        "sourcing": sourcing_clean,
+        "dealflow": dealflow_clean,
+        "summary": {
+            "total": len(sourcing_clean) + len(dealflow_clean),
+            "sourcing_count": len(sourcing_clean),
+            "dealflow_count": len(dealflow_clean)
+        }
+    }
+
+@api_router.get("/quick-views/a-relancer")
+async def get_startups_to_follow_up(threshold_days: int = 90, user_id: str = "default_user"):
+    """Quick view: Startups to follow up (inactive or overdue actions)"""
+    current_user = await get_current_user(user_id)
+    
+    # Get data based on user role
+    sourcing_query = {}
+    dealflow_query = {}
+    if current_user.role == UserRole.CONTRIBUTEUR:
+        sourcing_query["pilote"] = current_user.full_name
+        dealflow_query["pilote"] = current_user.full_name
+    
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(1000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(1000)
+    
+    today = datetime.utcnow()
+    threshold_date = today - timedelta(days=threshold_days)
+    
+    # Filter partners that need follow-up
+    sourcing_to_follow = []
+    dealflow_to_follow = []
+    
+    for partner in sourcing_partners:
+        if '_id' in partner: del partner['_id']
+        partner_with_status = add_inactivity_status(partner)
+        
+        needs_followup = False
+        followup_reasons = []
+        
+        # Check inactivity
+        if partner_with_status.get("is_inactive"):
+            needs_followup = True
+            followup_reasons.append(f"Inactif depuis {partner_with_status.get('days_since_update')} jours")
+        
+        # Check overdue next action
+        if partner.get("date_prochaine_action"):
+            try:
+                action_date = datetime.fromisoformat(partner["date_prochaine_action"])
+                if action_date < today:
+                    needs_followup = True
+                    days_overdue = (today - action_date).days
+                    followup_reasons.append(f"Action en retard de {days_overdue} jours")
+            except:
+                pass
+        
+        if needs_followup:
+            partner_with_status["followup_reasons"] = followup_reasons
+            sourcing_to_follow.append(partner_with_status)
+    
+    for partner in dealflow_partners:
+        if '_id' in partner: del partner['_id']
+        partner_with_status = add_inactivity_status(partner)
+        
+        needs_followup = False
+        followup_reasons = []
+        
+        # Check inactivity
+        if partner_with_status.get("is_inactive"):
+            needs_followup = True
+            followup_reasons.append(f"Inactif depuis {partner_with_status.get('days_since_update')} jours")
+        
+        # Check overdue next action
+        if partner.get("date_prochaine_action"):
+            try:
+                action_date = datetime.fromisoformat(partner["date_prochaine_action"])
+                if action_date < today:
+                    needs_followup = True
+                    days_overdue = (today - action_date).days
+                    followup_reasons.append(f"Action en retard de {days_overdue} jours")
+            except:
+                pass
+        
+        if needs_followup:
+            partner_with_status["followup_reasons"] = followup_reasons
+            dealflow_to_follow.append(partner_with_status)
+    
+    return {
+        "view_name": "À Relancer",
+        "description": f"Startups inactives ({threshold_days}j+) ou actions en retard",
+        "sourcing": sourcing_to_follow,
+        "dealflow": dealflow_to_follow,
+        "summary": {
+            "total": len(sourcing_to_follow) + len(dealflow_to_follow),
+            "sourcing_count": len(sourcing_to_follow),
+            "dealflow_count": len(dealflow_to_follow),
+            "threshold_days": threshold_days
+        }
+    }
+
+@api_router.get("/quick-views/avec-documents")
+async def get_startups_with_documents(user_id: str = "default_user"):
+    """Quick view: Startups with documents/enriched data"""
+    current_user = await get_current_user(user_id)
+    
+    # Get data based on user role
+    sourcing_query = {}
+    dealflow_query = {}
+    if current_user.role == UserRole.CONTRIBUTEUR:
+        sourcing_query["pilote"] = current_user.full_name
+        dealflow_query["pilote"] = current_user.full_name
+    
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(1000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(1000)
+    
+    # Filter partners with documents/enriched data
+    sourcing_with_docs = []
+    dealflow_with_docs = []
+    
+    for partner in sourcing_partners:
+        if '_id' in partner: del partner['_id']
+        partner_with_status = add_inactivity_status(partner)
+        
+        has_docs = False
+        doc_types = []
+        
+        # Check enriched data
+        if partner.get("enriched_data") and len(partner["enriched_data"]) > 0:
+            has_docs = True
+            doc_types.append("Données enrichies")
+        
+        # Check custom fields
+        if partner.get("custom_fields") and len(partner["custom_fields"]) > 0:
+            has_docs = True
+            doc_types.append("Champs personnalisés")
+        
+        if has_docs:
+            partner_with_status["document_types"] = doc_types
+            sourcing_with_docs.append(partner_with_status)
+    
+    for partner in dealflow_partners:
+        if '_id' in partner: del partner['_id']
+        partner_with_status = add_inactivity_status(partner)
+        
+        has_docs = False
+        doc_types = []
+        
+        # Check enriched data
+        if partner.get("enriched_data") and len(partner["enriched_data"]) > 0:
+            has_docs = True
+            doc_types.append("Données enrichies")
+        
+        # Check custom fields
+        if partner.get("custom_fields") and len(partner["custom_fields"]) > 0:
+            has_docs = True
+            doc_types.append("Champs personnalisés")
+        
+        if has_docs:
+            partner_with_status["document_types"] = doc_types
+            dealflow_with_docs.append(partner_with_status)
+    
+    return {
+        "view_name": "Avec Documents",
+        "description": "Startups avec données enrichies ou documents",
+        "sourcing": sourcing_with_docs,
+        "dealflow": dealflow_with_docs,
+        "summary": {
+            "total": len(sourcing_with_docs) + len(dealflow_with_docs),
+            "sourcing_count": len(sourcing_with_docs),
+            "dealflow_count": len(dealflow_with_docs)
+        }
+    }
+
+@api_router.get("/quick-views/en-experimentation")
+async def get_startups_in_experimentation(user_id: str = "default_user"):
+    """Quick view: Startups in experimentation phase"""
+    current_user = await get_current_user(user_id)
+    
+    # Get data based on user role
+    dealflow_query = {}
+    if current_user.role == UserRole.CONTRIBUTEUR:
+        dealflow_query["pilote"] = current_user.full_name
+    
+    # Only dealflow partners can be in experimentation
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(1000)
+    
+    # Filter partners in experimentation phase
+    experimentation_statuses = [
+        "Go experimentation",
+        "Go généralisation",
+        "En cours avec les métiers"  # Can be considered as experimentation prep
+    ]
+    
+    dealflow_in_exp = []
+    
+    for partner in dealflow_partners:
+        if '_id' in partner: del partner['_id']
+        partner_with_status = add_inactivity_status(partner)
+        
+        status = partner.get("statut", "")
+        if any(exp_status.lower() in status.lower() for exp_status in experimentation_statuses):
+            # Add experimentation context
+            if "experimentation" in status.lower():
+                partner_with_status["experimentation_stage"] = "En cours"
+            elif "generalisation" in status.lower():
+                partner_with_status["experimentation_stage"] = "Généralisation"
+            else:
+                partner_with_status["experimentation_stage"] = "Préparation"
+            
+            dealflow_in_exp.append(partner_with_status)
+    
+    return {
+        "view_name": "En Expérimentation",
+        "description": "Startups en phase d'expérimentation ou généralisation",
+        "sourcing": [],  # No sourcing in experimentation
+        "dealflow": dealflow_in_exp,
+        "summary": {
+            "total": len(dealflow_in_exp),
+            "sourcing_count": 0,
+            "dealflow_count": len(dealflow_in_exp)
+        }
+    }
+
+@api_router.get("/global-search")
+async def global_search(query: str, user_id: str = "default_user"):
+    """Global search across all partners (name, domain, pilote)"""
+    if not query or len(query.strip()) < 2:
+        raise HTTPException(status_code=400, detail="Query must be at least 2 characters")
+    
+    current_user = await get_current_user(user_id)
+    query = query.strip().lower()
+    
+    # Get data based on user role
+    sourcing_query = {}
+    dealflow_query = {}
+    if current_user.role == UserRole.CONTRIBUTEUR:
+        sourcing_query["pilote"] = current_user.full_name
+        dealflow_query["pilote"] = current_user.full_name
+    
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(1000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(1000)
+    
+    # Search function
+    def matches_query(partner, partner_type):
+        searchable_fields = [
+            partner.get("nom_entreprise" if partner_type == "sourcing" else "nom", "").lower(),
+            partner.get("domaine_activite" if partner_type == "sourcing" else "domaine", "").lower(),
+            partner.get("pilote", "").lower(),
+            partner.get("typologie", "").lower(),
+            partner.get("source", "").lower(),
+            partner.get("technologie", "").lower(),
+            partner.get("pays_origine", "").lower()
+        ]
+        
+        return any(query in field for field in searchable_fields if field)
+    
+    # Filter matching partners
+    sourcing_matches = []
+    dealflow_matches = []
+    
+    for partner in sourcing_partners:
+        if matches_query(partner, "sourcing"):
+            if '_id' in partner: del partner['_id']
+            sourcing_matches.append(add_inactivity_status(partner))
+    
+    for partner in dealflow_partners:
+        if matches_query(partner, "dealflow"):
+            if '_id' in partner: del partner['_id']
+            dealflow_matches.append(add_inactivity_status(partner))
+    
+    return {
+        "query": query,
+        "sourcing": sourcing_matches,
+        "dealflow": dealflow_matches,
+        "summary": {
+            "total": len(sourcing_matches) + len(dealflow_matches),
+            "sourcing_count": len(sourcing_matches),
+            "dealflow_count": len(dealflow_matches)
+        }
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
