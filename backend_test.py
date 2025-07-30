@@ -2235,5 +2235,372 @@ def main():
         import traceback
         traceback.print_exc()
 
+def test_kanban_data_structure_detailed():
+    """Detailed test of Kanban data structure for drag & drop debugging"""
+    print("\n=== TESTING KANBAN DATA STRUCTURE - DETAILED ANALYSIS ===")
+    
+    # Test with default_user as specified by the user
+    user_id = "default_user"
+    
+    print(f"\n1. Testing GET /api/kanban-data with user_id={user_id}")
+    response = requests.get(f"{API_URL}/kanban-data?user_id={user_id}")
+    
+    if response.status_code != 200:
+        print(f"❌ Failed to get kanban data: {response.status_code} - {response.text}")
+        return
+    
+    kanban_data = response.json()
+    print("✅ Kanban data retrieved successfully")
+    
+    # Analyze the complete structure
+    print(f"\n2. KANBAN DATA STRUCTURE ANALYSIS:")
+    print(f"   - Top-level keys: {list(kanban_data.keys())}")
+    
+    if "columns" in kanban_data:
+        columns = kanban_data["columns"]
+        print(f"   - Number of columns: {len(columns)}")
+        print(f"   - Column IDs: {list(columns.keys())}")
+        
+        # Check column order
+        if "columnOrder" in kanban_data:
+            column_order = kanban_data["columnOrder"]
+            print(f"   - Column order: {column_order}")
+        
+        # Analyze each column and its partners
+        total_partners_found = 0
+        for column_id, column_data in columns.items():
+            partners = column_data.get("partners", [])
+            partner_count = len(partners)
+            total_partners_found += partner_count
+            
+            print(f"\n   📋 COLUMN: {column_id}")
+            print(f"      - Title: {column_data.get('title', 'N/A')}")
+            print(f"      - Subtitle: {column_data.get('subtitle', 'N/A')}")
+            print(f"      - Partners count: {partner_count}")
+            
+            # Analyze first few partners in detail
+            if partners:
+                print(f"      - Sample partners:")
+                for i, partner in enumerate(partners[:3]):  # Show first 3 partners
+                    print(f"        [{i+1}] kanban_id: {partner.get('kanban_id', 'MISSING')}")
+                    print(f"            partner_type: {partner.get('partner_type', 'MISSING')}")
+                    print(f"            name: {partner.get('nom_entreprise', partner.get('nom', 'MISSING'))}")
+                    print(f"            statut: {partner.get('statut', 'MISSING')}")
+                    print(f"            is_inactive: {partner.get('is_inactive', 'MISSING')}")
+                    print(f"            days_since_update: {partner.get('days_since_update', 'MISSING')}")
+                    
+                    # Check for all available fields
+                    all_fields = list(partner.keys())
+                    print(f"            all_fields: {all_fields}")
+                    print()
+        
+        print(f"\n   📊 SUMMARY:")
+        print(f"      - Total partners across all columns: {total_partners_found}")
+        
+        if "summary" in kanban_data:
+            summary = kanban_data["summary"]
+            print(f"      - Summary total_partners: {summary.get('total_partners', 'N/A')}")
+            print(f"      - Summary total_sourcing: {summary.get('total_sourcing', 'N/A')}")
+            print(f"      - Summary total_dealflow: {summary.get('total_dealflow', 'N/A')}")
+            
+            if "by_column" in summary:
+                by_column = summary["by_column"]
+                print(f"      - By column breakdown: {by_column}")
+    
+    # Test specific partner data format
+    print(f"\n3. TESTING KANBAN_ID FORMAT:")
+    sample_partners = []
+    if "columns" in kanban_data:
+        for column_data in kanban_data["columns"].values():
+            partners = column_data.get("partners", [])
+            if partners:
+                sample_partners.extend(partners[:2])  # Take 2 from each column
+                if len(sample_partners) >= 10:  # Limit to 10 samples
+                    break
+    
+    if sample_partners:
+        print(f"   Found {len(sample_partners)} sample partners:")
+        for i, partner in enumerate(sample_partners):
+            kanban_id = partner.get('kanban_id', 'MISSING')
+            partner_type = partner.get('partner_type', 'MISSING')
+            name = partner.get('nom_entreprise', partner.get('nom', 'MISSING'))
+            
+            print(f"   [{i+1}] {kanban_id} | {partner_type} | {name}")
+            
+            # Validate kanban_id format
+            if kanban_id != 'MISSING':
+                expected_format = f"{partner_type}_{partner.get('id', 'unknown')}"
+                if kanban_id == expected_format:
+                    print(f"       ✅ kanban_id format correct")
+                else:
+                    print(f"       ❌ kanban_id format issue: expected {expected_format}, got {kanban_id}")
+    else:
+        print("   ⚠️ No partners found to analyze kanban_id format")
+    
+    return kanban_data
+
+def test_kanban_move_with_real_data():
+    """Test Kanban move functionality with real partner IDs"""
+    print("\n=== TESTING KANBAN MOVE WITH REAL DATA ===")
+    
+    user_id = "default_user"
+    
+    # First get kanban data to find real partner IDs
+    print(f"\n1. Getting real partner data for move testing")
+    response = requests.get(f"{API_URL}/kanban-data?user_id={user_id}")
+    
+    if response.status_code != 200:
+        print(f"❌ Failed to get kanban data: {response.status_code}")
+        return
+    
+    kanban_data = response.json()
+    
+    # Find a partner to test moving
+    test_partner = None
+    source_column = None
+    
+    for column_id, column_data in kanban_data["columns"].items():
+        partners = column_data.get("partners", [])
+        if partners:
+            test_partner = partners[0]
+            source_column = column_id
+            break
+    
+    if not test_partner:
+        print("❌ No partners found to test move functionality")
+        return
+    
+    partner_id = test_partner.get('id')
+    partner_type = test_partner.get('partner_type')
+    kanban_id = test_partner.get('kanban_id')
+    partner_name = test_partner.get('nom_entreprise', test_partner.get('nom', 'Unknown'))
+    
+    print(f"✅ Found test partner:")
+    print(f"   - ID: {partner_id}")
+    print(f"   - Kanban ID: {kanban_id}")
+    print(f"   - Type: {partner_type}")
+    print(f"   - Name: {partner_name}")
+    print(f"   - Current column: {source_column}")
+    
+    # Test different move scenarios
+    move_tests = []
+    
+    # Define valid moves based on partner type and current status
+    if partner_type == "sourcing":
+        if source_column == "sourcing_a_traiter":
+            move_tests.append(("sourcing_klaxoon", "Move sourcing from A traiter to Klaxoon"))
+        elif source_column == "sourcing_klaxoon":
+            move_tests.append(("prequalification", "Transition sourcing to dealflow prequalification"))
+    elif partner_type == "dealflow":
+        if source_column == "prequalification":
+            move_tests.append(("presentation", "Move dealflow from prequalification to presentation"))
+        elif source_column == "presentation":
+            move_tests.append(("go_metier", "Move dealflow from presentation to go_metier"))
+    
+    # Add a test to move back to original position
+    move_tests.append((source_column, f"Move back to original column {source_column}"))
+    
+    print(f"\n2. Testing {len(move_tests)} move scenarios:")
+    
+    for target_column, description in move_tests:
+        print(f"\n   🔄 {description}")
+        print(f"      Moving {kanban_id} from {source_column} to {target_column}")
+        
+        move_data = {
+            "partner_id": partner_id,
+            "partner_type": partner_type,
+            "source_column": source_column,
+            "target_column": target_column
+        }
+        
+        response = requests.post(f"{API_URL}/kanban-move?user_id={user_id}", json=move_data)
+        
+        if response.status_code == 200:
+            result = response.json()
+            print(f"      ✅ Move successful:")
+            print(f"         - Message: {result.get('message', 'N/A')}")
+            print(f"         - New status: {result.get('new_status', 'N/A')}")
+            print(f"         - Partner type: {result.get('partner_type', 'N/A')}")
+            
+            # Update source column for next test
+            source_column = target_column
+            
+        elif response.status_code == 400:
+            print(f"      ⚠️ Move rejected (expected for invalid moves): {response.text}")
+        elif response.status_code == 403:
+            print(f"      ⚠️ Move unauthorized: {response.text}")
+        elif response.status_code == 404:
+            print(f"      ❌ Partner not found: {response.text}")
+        else:
+            print(f"      ❌ Move failed: {response.status_code} - {response.text}")
+    
+    # Test invalid moves
+    print(f"\n3. Testing invalid move scenarios:")
+    
+    invalid_moves = [
+        ("invalid_column", "Move to non-existent column"),
+        ("", "Move to empty column"),
+        (None, "Move to null column")
+    ]
+    
+    for target_column, description in invalid_moves:
+        print(f"\n   ❌ {description}")
+        
+        move_data = {
+            "partner_id": partner_id,
+            "partner_type": partner_type,
+            "source_column": source_column,
+            "target_column": target_column
+        }
+        
+        response = requests.post(f"{API_URL}/kanban-move?user_id={user_id}", json=move_data)
+        
+        if response.status_code == 400:
+            print(f"      ✅ Correctly rejected invalid move: {response.status_code}")
+        else:
+            print(f"      ❌ Should have rejected invalid move: {response.status_code}")
+
+def test_kanban_frontend_compatibility():
+    """Test Kanban data compatibility with frontend drag & drop expectations"""
+    print("\n=== TESTING KANBAN FRONTEND COMPATIBILITY ===")
+    
+    user_id = "default_user"
+    
+    print(f"\n1. Analyzing data structure for frontend compatibility")
+    response = requests.get(f"{API_URL}/kanban-data?user_id={user_id}")
+    
+    if response.status_code != 200:
+        print(f"❌ Failed to get kanban data: {response.status_code}")
+        return
+    
+    kanban_data = response.json()
+    
+    # Check for common drag & drop library requirements
+    print(f"\n2. FRONTEND DRAG & DROP COMPATIBILITY CHECKS:")
+    
+    # Check if data structure matches react-beautiful-dnd format
+    required_top_level = ["columns", "columnOrder"]
+    missing_top_level = [key for key in required_top_level if key not in kanban_data]
+    
+    if not missing_top_level:
+        print("   ✅ Top-level structure compatible with react-beautiful-dnd")
+    else:
+        print(f"   ❌ Missing top-level keys for drag & drop: {missing_top_level}")
+    
+    # Check column structure
+    if "columns" in kanban_data:
+        columns = kanban_data["columns"]
+        sample_column_id = list(columns.keys())[0] if columns else None
+        
+        if sample_column_id:
+            sample_column = columns[sample_column_id]
+            required_column_keys = ["id", "title", "partners"]
+            missing_column_keys = [key for key in required_column_keys if key not in sample_column]
+            
+            if not missing_column_keys:
+                print("   ✅ Column structure compatible with drag & drop")
+            else:
+                print(f"   ❌ Missing column keys: {missing_column_keys}")
+            
+            # Check partner structure within columns
+            partners = sample_column.get("partners", [])
+            if partners:
+                sample_partner = partners[0]
+                
+                # Check for unique identifier
+                if "kanban_id" in sample_partner:
+                    print("   ✅ Partners have kanban_id for drag & drop identification")
+                else:
+                    print("   ❌ Partners missing kanban_id for drag & drop")
+                
+                # Check for required display fields
+                display_fields = ["nom_entreprise", "nom"]  # Either should be present
+                has_display_field = any(field in sample_partner for field in display_fields)
+                
+                if has_display_field:
+                    print("   ✅ Partners have display name fields")
+                else:
+                    print("   ❌ Partners missing display name fields")
+                
+                # Check for status information
+                if "statut" in sample_partner:
+                    print("   ✅ Partners have status information")
+                else:
+                    print("   ❌ Partners missing status information")
+                
+                print(f"\n   📋 SAMPLE PARTNER STRUCTURE:")
+                for key, value in sample_partner.items():
+                    print(f"      - {key}: {value}")
+            else:
+                print("   ⚠️ No partners found in sample column")
+    
+    # Check columnOrder
+    if "columnOrder" in kanban_data:
+        column_order = kanban_data["columnOrder"]
+        if isinstance(column_order, list) and len(column_order) > 0:
+            print(f"   ✅ Column order is properly formatted list with {len(column_order)} columns")
+        else:
+            print(f"   ❌ Column order format issue: {type(column_order)}, length: {len(column_order) if isinstance(column_order, list) else 'N/A'}")
+    
+    # Test JSON serialization (important for frontend)
+    print(f"\n3. JSON SERIALIZATION TEST:")
+    try:
+        json_str = json.dumps(kanban_data)
+        parsed_back = json.loads(json_str)
+        print("   ✅ Data properly serializes to/from JSON")
+    except Exception as e:
+        print(f"   ❌ JSON serialization error: {e}")
+    
+    # Check for MongoDB ObjectId issues
+    print(f"\n4. MONGODB OBJECTID CHECK:")
+    def check_for_objectid(obj, path=""):
+        issues = []
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                current_path = f"{path}.{key}" if path else key
+                if key == "_id" or (isinstance(value, dict) and "$oid" in value):
+                    issues.append(current_path)
+                else:
+                    issues.extend(check_for_objectid(value, current_path))
+        elif isinstance(obj, list):
+            for i, item in enumerate(obj):
+                current_path = f"{path}[{i}]"
+                issues.extend(check_for_objectid(item, current_path))
+        return issues
+    
+    objectid_issues = check_for_objectid(kanban_data)
+    if not objectid_issues:
+        print("   ✅ No MongoDB ObjectId serialization issues found")
+    else:
+        print(f"   ❌ MongoDB ObjectId issues found at: {objectid_issues}")
+    
+    return kanban_data
+
+def run_kanban_focused_tests():
+    """Run focused Kanban tests for drag & drop debugging"""
+    print("🚀 Starting SURM Kanban Endpoint Detailed Testing")
+    print("=" * 60)
+    
+    # Focus on Kanban testing as requested by user
+    print("\n🎯 FOCUSED KANBAN TESTING FOR DRAG & DROP DEBUGGING")
+    
+    # Detailed structure analysis
+    kanban_data = test_kanban_data_structure_detailed()
+    
+    # Test move functionality with real data
+    test_kanban_move_with_real_data()
+    
+    # Test frontend compatibility
+    test_kanban_frontend_compatibility()
+    
+    print("\n" + "=" * 60)
+    print("🎉 Kanban Endpoint Testing Completed!")
+    print("Data structure and move functionality analyzed for drag & drop debugging.")
+
 if __name__ == "__main__":
-    main()
+    # Check if we want to run focused Kanban tests
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "kanban":
+        run_kanban_focused_tests()
+    else:
+        main()
