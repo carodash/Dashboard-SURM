@@ -1274,7 +1274,14 @@ const KanbanBoard = ({ isVisible }) => {
         ) : kanbanData ? (
           <DragDropContext onDragEnd={handleDragEnd}>
             <div className="overflow-x-auto pb-4">
-              <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
+              <div 
+                className="flex space-x-3 pb-4" 
+                style={{ 
+                  minWidth: 'max-content',
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#CBD5E0 #F7FAFC'
+                }}
+              >
                 {kanbanData.columnOrder.map(columnId => {
                   const column = kanbanData.columns[columnId];
                   const partners = column.partners;
@@ -1288,6 +1295,11 @@ const KanbanBoard = ({ isVisible }) => {
                   );
                 })}
               </div>
+            </div>
+            
+            {/* Scroll hint */}
+            <div className="text-center text-xs text-gray-500 mt-2">
+              💡 Tip: Scroll horizontalement pour voir toutes les colonnes • Glissez-déposez les cartes pour changer d'étape
             </div>
           </DragDropContext>
         ) : (
