@@ -3853,7 +3853,6 @@ const Dashboard = () => {
   // Phase 4 - Navigation state
   const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
-  const [showUserRoleManager, setShowUserRoleManager] = useState(false);
 
   const fetchSourcingPartners = async () => {
     try {
