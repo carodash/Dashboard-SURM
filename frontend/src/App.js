@@ -3853,6 +3853,14 @@ const Dashboard = () => {
   // Phase 4 - Navigation state
   const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
+  
+  // Phase 4 - Quick Views configuration
+  const quickViews = [
+    { id: 'mes-startups', label: '👨‍💼 Mes Startups', color: 'purple' },
+    { id: 'a-relancer', label: '⏰ À Relancer', color: 'red' },
+    { id: 'avec-documents', label: '📄 Avec Docs', color: 'blue' },
+    { id: 'en-experimentation', label: '🧪 En Expé', color: 'green' }
+  ];
 
   const fetchSourcingPartners = async () => {
     try {
