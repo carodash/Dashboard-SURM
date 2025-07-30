@@ -212,6 +212,11 @@
   scroll-behavior: smooth;
 }
 
+/* Mouse wheel horizontal scroll capability */
+.wheel-horizontal-scroll {
+  /* This class will enable horizontal scrolling with mouse wheel */
+}
+
 /* Enhanced table scroll */
 .enhanced-table-scroll {
   overflow-x: auto;
@@ -237,6 +242,44 @@
 
 .enhanced-table-scroll::-webkit-scrollbar-thumb:hover {
   background: #64748B;
+}
+
+/* Top scrollbar container */
+.top-scrollbar-container {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(249, 250, 251, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #E5E7EB;
+  padding: 8px 0;
+}
+
+.top-scrollbar {
+  height: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 6px;
+  border: 1px solid #D1D5DB;
+}
+
+.top-scrollbar::-webkit-scrollbar {
+  height: 10px;
+}
+
+.top-scrollbar::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 5px;
+}
+
+.top-scrollbar::-webkit-scrollbar-thumb {
+  background: #9CA3AF;
+  border-radius: 5px;
+  min-width: 40px;
+}
+
+.top-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6B7280;
 }
 
 /* Print styles */
