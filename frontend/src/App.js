@@ -3076,12 +3076,14 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
       // Save column configurations
       await axios.post(`${API}/config/columns`, columnConfig);
       
-      // Save permissions with correct structure
-      await axios.post(`${API}/config/permissions`, {
+      // Save permissions with correct structure and valid enum values
+      const permissionData = {
         user_id: "current_user",
-        role: "contributeur", // Default role
-        permissions: permissions
-      });
+        role: "contributeur", // Use valid backend enum value
+        permissions: permissions.permissions || {} // Ensure it's a Dict[str, bool]
+      };
+      
+      await axios.post(`${API}/config/permissions`, permissionData);
       
       // Save enrichment settings
       await axios.post(`${API}/config/enrichment`, enrichmentSettings);
