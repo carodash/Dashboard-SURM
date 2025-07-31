@@ -2148,7 +2148,9 @@ def test_document_management_system():
     
     # Create test file content (Base64 encoded PDF-like content)
     import base64
-    test_content = "JVBERi0xLjQKJcOkw7zDtsOgCjIgMCBvYmoKPDwKL0xlbmd0aCAzIDAgUgo+PgpzdHJlYW0KQNC0xLjQKJcOkw7zDtsOgCjIgMCBvYmoKPDwKL0xlbmd0aCAzIDAgUgo+PgpzdHJlYW0K"  # Sample PDF-like base64
+    # Create a simple test content and encode it properly
+    test_content_raw = b"This is a test PDF document content for validation purposes."
+    test_content = base64.b64encode(test_content_raw).decode('utf-8')
     
     upload_data = {
         "partner_id": partner_id,
