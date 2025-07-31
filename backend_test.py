@@ -2104,6 +2104,294 @@ def test_phase4_synthetic_reports():
     
     print("\n✅ PHASE 4 - SYNTHETIC REPORTS TESTING COMPLETED")
 
+# DOCUMENT MANAGEMENT SYSTEM TESTS
+def test_document_management_system():
+    """Test the complete document management system"""
+    print("\n=== TESTING DOCUMENT MANAGEMENT SYSTEM ===")
+    
+    # First create a test partner to associate documents with
+    print("\n0. Creating test partner for document association")
+    test_partner_data = SOURCING_TEST_DATA.copy()
+    test_partner_data["nom_entreprise"] = "Document Test Partner"
+    partner_response = requests.post(f"{API_URL}/sourcing", json=test_partner_data)
+    
+    if partner_response.status_code != 200:
+        print("❌ Failed to create test partner for documents")
+        return
+    
+    partner = partner_response.json()
+    partner_id = partner['id']
+    print(f"✅ Created test partner: {partner_id}")
+    
+    # Test 1: GET /api/documents/types - List available document types
+    print("\n1. Testing GET /api/documents/types (List document types)")
+    response = requests.get(f"{API_URL}/documents/types")
+    if response.status_code == 200:
+        doc_types = response.json()
+        expected_types = ["Convention", "Présentation", "Compte-rendu", "Contrat", "Document technique", "Autre"]
+        print(f"✅ Retrieved {len(doc_types)} document types:")
+        for doc_type in doc_types:
+            print(f"   - {doc_type}")
+        
+        # Verify all expected types are present
+        missing_types = [t for t in expected_types if t not in doc_types]
+        if not missing_types:
+            print("✅ All expected document types present")
+        else:
+            print(f"❌ Missing document types: {missing_types}")
+    else:
+        print(f"❌ Failed to get document types: {response.status_code} - {response.text}")
+        return
+    
+    # Test 2: POST /api/documents/upload - Upload a document
+    print("\n2. Testing POST /api/documents/upload (Upload document)")
+    
+    # Create test file content (Base64 encoded PDF-like content)
+    import base64
+    test_content = "JVBERi0xLjQKJcOkw7zDtsOgCjIgMCBvYmoKPDwKL0xlbmd0aCAzIDAgUgo+PgpzdHJlYW0KQNC0xLjQKJcOkw7zDtsOgCjIgMCBvYmoKPDwKL0xlbmd0aCAzIDAgUgo+PgpzdHJlYW0K"  # Sample PDF-like base64
+    
+    upload_data = {
+        "partner_id": partner_id,
+        "partner_type": "sourcing",
+        "filename": "test_document.pdf",
+        "document_type": "Convention",
+        "content": test_content,
+        "description": "Test document for validation",
+        "uploaded_by": "test_user"
+    }
+    
+    response = requests.post(f"{API_URL}/documents/upload", params=upload_data)
+    if response.status_code == 200:
+        document = response.json()
+        document_id = document['id']
+        print(f"✅ Uploaded document successfully:")
+        print(f"   - ID: {document_id}")
+        print(f"   - Filename: {document['filename']}")
+        print(f"   - Original filename: {document['original_filename']}")
+        print(f"   - File type: {document['file_type']}")
+        print(f"   - Document type: {document['document_type']}")
+        print(f"   - Version: {document['version']}")
+        print(f"   - File size: {document['file_size']} bytes")
+        
+        # Verify MIME type detection
+        if document['file_type'] == 'application/pdf':
+            print("✅ MIME type correctly detected as PDF")
+        else:
+            print(f"❌ MIME type incorrect: expected 'application/pdf', got '{document['file_type']}'")
+            
+        # Verify version is 1 for first upload
+        if document['version'] == 1:
+            print("✅ Version correctly set to 1 for first upload")
+        else:
+            print(f"❌ Version incorrect: expected 1, got {document['version']}")
+            
+    else:
+        print(f"❌ Failed to upload document: {response.status_code} - {response.text}")
+        return
+    
+    # Test 3: Upload second document with same filename (test versioning)
+    print("\n3. Testing document versioning (same filename)")
+    
+    # Upload another document with the same filename
+    upload_data_v2 = upload_data.copy()
+    upload_data_v2["description"] = "Second version of test document"
+    upload_data_v2["content"] = base64.b64encode(b"Updated content for version 2").decode('utf-8')
+    
+    response = requests.post(f"{API_URL}/documents/upload", params=upload_data_v2)
+    if response.status_code == 200:
+        document_v2 = response.json()
+        document_v2_id = document_v2['id']
+        print(f"✅ Uploaded second version successfully:")
+        print(f"   - ID: {document_v2_id}")
+        print(f"   - Filename: {document_v2['filename']}")
+        print(f"   - Version: {document_v2['version']}")
+        
+        # Verify version increment
+        if document_v2['version'] == 2:
+            print("✅ Version correctly incremented to 2")
+        else:
+            print(f"❌ Version incorrect: expected 2, got {document_v2['version']}")
+            
+        # Verify filename includes version
+        if "_v2" in document_v2['filename']:
+            print("✅ Filename correctly includes version suffix")
+        else:
+            print(f"❌ Filename should include version: {document_v2['filename']}")
+            
+    else:
+        print(f"❌ Failed to upload second version: {response.status_code} - {response.text}")
+        return
+    
+    # Test 4: GET /api/documents/{partner_id} - Get documents for partner
+    print(f"\n4. Testing GET /api/documents/{partner_id} (Get partner documents)")
+    response = requests.get(f"{API_URL}/documents/{partner_id}")
+    if response.status_code == 200:
+        documents = response.json()
+        print(f"✅ Retrieved {len(documents)} documents for partner:")
+        for doc in documents:
+            print(f"   - {doc['filename']} (v{doc['version']}) - {doc['document_type']}")
+        
+        # Verify we have both versions
+        if len(documents) >= 2:
+            print("✅ Both document versions retrieved")
+            
+            # Verify different versions have different IDs
+            doc_ids = [doc['id'] for doc in documents]
+            if len(set(doc_ids)) == len(doc_ids):
+                print("✅ All documents have unique IDs")
+            else:
+                print("❌ Duplicate document IDs found")
+        else:
+            print(f"❌ Expected at least 2 documents, got {len(documents)}")
+    else:
+        print(f"❌ Failed to get partner documents: {response.status_code} - {response.text}")
+        return
+    
+    # Test 5: GET /api/documents/download/{document_id} - Download document
+    print(f"\n5. Testing GET /api/documents/download/{document_id} (Download document)")
+    response = requests.get(f"{API_URL}/documents/download/{document_id}")
+    if response.status_code == 200:
+        print("✅ Document download successful:")
+        print(f"   - Content-Type: {response.headers.get('content-type', 'Not set')}")
+        print(f"   - Content-Disposition: {response.headers.get('content-disposition', 'Not set')}")
+        print(f"   - Content length: {len(response.content)} bytes")
+        
+        # Verify content integrity by decoding and comparing
+        try:
+            downloaded_content = base64.b64encode(response.content).decode('utf-8')
+            if downloaded_content == test_content:
+                print("✅ Downloaded content matches uploaded content")
+            else:
+                print("❌ Downloaded content differs from uploaded content")
+        except Exception as e:
+            print(f"⚠️ Could not verify content integrity: {e}")
+            
+    else:
+        print(f"❌ Failed to download document: {response.status_code} - {response.text}")
+    
+    # Test 6: Test different file types and MIME type detection
+    print("\n6. Testing different file types and MIME type detection")
+    
+    file_type_tests = [
+        ("test.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "Document technique"),
+        ("test.pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "Présentation"),
+        ("test.txt", "text/plain", "Autre"),
+        ("test.jpg", "image/jpeg", "Autre"),
+        ("test.png", "image/png", "Autre")
+    ]
+    
+    uploaded_test_docs = []
+    for filename, expected_mime, doc_type in file_type_tests:
+        test_file_content = base64.b64encode(f"Test content for {filename}".encode()).decode('utf-8')
+        
+        upload_data_test = {
+            "partner_id": partner_id,
+            "partner_type": "sourcing", 
+            "filename": filename,
+            "document_type": doc_type,
+            "content": test_file_content,
+            "uploaded_by": "test_user"
+        }
+        
+        response = requests.post(f"{API_URL}/documents/upload", params=upload_data_test)
+        if response.status_code == 200:
+            doc = response.json()
+            uploaded_test_docs.append(doc)
+            if doc['file_type'] == expected_mime:
+                print(f"✅ {filename}: MIME type correctly detected as {expected_mime}")
+            else:
+                print(f"❌ {filename}: Expected {expected_mime}, got {doc['file_type']}")
+        else:
+            print(f"❌ Failed to upload {filename}: {response.status_code}")
+    
+    # Test 7: DELETE /api/documents/{document_id} - Delete document
+    print(f"\n7. Testing DELETE /api/documents/{document_id} (Delete document)")
+    response = requests.delete(f"{API_URL}/documents/{document_id}")
+    if response.status_code == 200:
+        print("✅ Document deleted successfully")
+        
+        # Verify document is actually deleted
+        response = requests.get(f"{API_URL}/documents/download/{document_id}")
+        if response.status_code == 404:
+            print("✅ Deleted document no longer accessible")
+        else:
+            print(f"❌ Deleted document still accessible: {response.status_code}")
+    else:
+        print(f"❌ Failed to delete document: {response.status_code} - {response.text}")
+    
+    # Test 8: Verify document list after deletion
+    print(f"\n8. Testing document list after deletion")
+    response = requests.get(f"{API_URL}/documents/{partner_id}")
+    if response.status_code == 200:
+        documents_after_delete = response.json()
+        print(f"✅ Retrieved {len(documents_after_delete)} documents after deletion")
+        
+        # Should have one less document now
+        if len(documents_after_delete) == len(documents) - 1:
+            print("✅ Document count correctly reduced after deletion")
+        else:
+            print(f"❌ Expected {len(documents) - 1} documents, got {len(documents_after_delete)}")
+    else:
+        print(f"❌ Failed to get documents after deletion: {response.status_code}")
+    
+    # Test 9: Test error cases
+    print("\n9. Testing error cases")
+    
+    # Test invalid Base64 content
+    print("   9.1 Testing invalid Base64 content")
+    invalid_upload = {
+        "partner_id": partner_id,
+        "partner_type": "sourcing",
+        "filename": "invalid.pdf",
+        "document_type": "Convention",
+        "content": "invalid-base64-content!@#$",
+        "uploaded_by": "test_user"
+    }
+    response = requests.post(f"{API_URL}/documents/upload", params=invalid_upload)
+    if response.status_code == 400:
+        print("   ✅ Correctly rejected invalid Base64 content")
+    else:
+        print(f"   ❌ Should have rejected invalid Base64: {response.status_code}")
+    
+    # Test invalid document type
+    print("   9.2 Testing invalid document type")
+    invalid_type_upload = {
+        "partner_id": partner_id,
+        "partner_type": "sourcing",
+        "filename": "test.pdf",
+        "document_type": "InvalidType",
+        "content": test_content,
+        "uploaded_by": "test_user"
+    }
+    response = requests.post(f"{API_URL}/documents/upload", params=invalid_type_upload)
+    if response.status_code == 422:
+        print("   ✅ Correctly rejected invalid document type")
+    else:
+        print(f"   ❌ Should have rejected invalid document type: {response.status_code}")
+    
+    # Test download non-existent document
+    print("   9.3 Testing download non-existent document")
+    response = requests.get(f"{API_URL}/documents/download/non-existent-id")
+    if response.status_code == 404:
+        print("   ✅ Correctly returned 404 for non-existent document")
+    else:
+        print(f"   ❌ Should have returned 404: {response.status_code}")
+    
+    # Test delete non-existent document
+    print("   9.4 Testing delete non-existent document")
+    response = requests.delete(f"{API_URL}/documents/non-existent-id")
+    if response.status_code == 404:
+        print("   ✅ Correctly returned 404 for non-existent document deletion")
+    else:
+        print(f"   ❌ Should have returned 404: {response.status_code}")
+    
+    print("\n✅ DOCUMENT MANAGEMENT SYSTEM TESTING COMPLETED")
+    return {
+        'partner_id': partner_id,
+        'uploaded_documents': uploaded_test_docs,
+        'remaining_document_id': document_v2_id
+    }
+
 def test_error_handling():
     """Test error handling for invalid data"""
     print("\n=== TESTING ERROR HANDLING ===")
