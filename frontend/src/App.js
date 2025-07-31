@@ -4385,6 +4385,10 @@ const Dashboard = () => {
   const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
   
+  // Document Management state
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedPartnerForDocs, setSelectedPartnerForDocs] = useState(null);
+  
   // Phase 4 - Quick Views configuration
   const quickViews = [
     { id: 'mes-startups', label: '👨‍💼 Mes Startups', color: 'purple' },
