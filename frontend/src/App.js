@@ -4403,6 +4403,22 @@ const Dashboard = () => {
     setShowHamburgerMenu(false);
   };
 
+  // Document management functions
+  const handleOpenDocuments = (partner, partnerType) => {
+    const partnerName = partnerType === 'sourcing' ? partner.nom_entreprise : partner.nom;
+    setSelectedPartnerForDocs({
+      id: partner.id,
+      name: partnerName,
+      type: partnerType
+    });
+    setShowDocumentModal(true);
+  };
+
+  const handleCloseDocuments = () => {
+    setShowDocumentModal(false);
+    setSelectedPartnerForDocs(null);
+  };
+
   const fetchSourcingPartners = async () => {
     try {
       const response = await axios.get(`${API}/sourcing`);
