@@ -101,6 +101,22 @@ class EnrichmentSettings(BaseModel):
     fields_to_enrich: List[str] = ["founding_year", "employee_count", "funding_rounds", "contact_emails"]
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+class Document(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    partner_id: str  # ID of the startup (sourcing or dealflow)
+    partner_type: str  # "sourcing" or "dealflow"
+    filename: str
+    original_filename: str
+    file_size: int  # in bytes
+    file_type: str  # MIME type
+    document_type: DocumentType
+    content: str  # Base64 encoded file content
+    version: int = 1
+    description: Optional[str] = None
+    uploaded_by: str
+    uploaded_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 # Models for Sourcing (with dynamic fields support)
 class SourcingPartner(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
