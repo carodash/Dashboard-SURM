@@ -3076,10 +3076,11 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
       // Save column configurations
       await axios.post(`${API}/config/columns`, columnConfig);
       
-      // Save permissions
+      // Save permissions with correct structure
       await axios.post(`${API}/config/permissions`, {
         user_id: "current_user",
-        ...permissions
+        role: "contributeur", // Default role
+        permissions: permissions
       });
       
       // Save enrichment settings
