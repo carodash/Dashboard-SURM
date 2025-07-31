@@ -5452,6 +5452,13 @@ const Dashboard = () => {
                             >
                               💬 Notes
                             </button>
+                            <button
+                              onClick={() => handleOpenDocuments(partner, 'sourcing')}
+                              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded"
+                              title="Documents et pièces jointes"
+                            >
+                              📎 Documents
+                            </button>
                           </div>
                         </td>
                       </tr>
