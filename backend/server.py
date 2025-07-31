@@ -1251,6 +1251,112 @@ async def get_inactive_partners(threshold_days: int = 90):
         "total_inactive": len(inactive_sourcing) + len(inactive_dealflow)
     }
 
+# DOCUMENT MANAGEMENT ENDPOINTS
+@api_router.post("/documents/upload", response_model=Document)
+async def upload_document(
+    partner_id: str,
+    partner_type: str,
+    filename: str,
+    document_type: DocumentType,
+    content: str,  # Base64 encoded content
+    description: Optional[str] = None,
+    uploaded_by: str = "default_user"
+):
+    """Upload a document for a startup"""
+    import base64
+    
+    try:
+        # Validate base64 content
+        decoded_content = base64.b64decode(content)
+        file_size = len(decoded_content)
+        
+        # Determine MIME type based on file extension
+        file_ext = filename.lower().split('.')[-1]
+        mime_types = {
+            'pdf': 'application/pdf',
+            'doc': 'application/msword',
+            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'ppt': 'application/vnd.ms-powerpoint',
+            'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'txt': 'text/plain',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png'
+        }
+        file_type = mime_types.get(file_ext, 'application/octet-stream')
+        
+        # Check for existing documents to determine version
+        existing_docs = await db.documents.find({
+            "partner_id": partner_id,
+            "original_filename": filename
+        }).to_list(100)
+        
+        version = max([doc["version"] for doc in existing_docs], default=0) + 1
+        
+        # Create document
+        document = Document(
+            partner_id=partner_id,
+            partner_type=partner_type,
+            filename=f"{filename.rsplit('.', 1)[0]}_v{version}.{filename.rsplit('.', 1)[1]}",
+            original_filename=filename,
+            file_size=file_size,
+            file_type=file_type,
+            document_type=document_type,
+            content=content,
+            version=version,
+            description=description,
+            uploaded_by=uploaded_by
+        )
+        
+        # Save to database
+        result = await db.documents.insert_one(document.dict())
+        return document
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error uploading document: {str(e)}")
+
+@api_router.get("/documents/{partner_id}", response_model=List[Document])
+async def get_partner_documents(partner_id: str):
+    """Get all documents for a partner"""
+    documents = await db.documents.find({"partner_id": partner_id}).to_list(100)
+    return [Document(**doc) for doc in documents]
+
+@api_router.get("/documents/download/{document_id}")
+async def download_document(document_id: str):
+    """Download a document by ID"""
+    document = await db.documents.find_one({"id": document_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    import base64
+    from fastapi.responses import Response
+    
+    try:
+        content = base64.b64decode(document["content"])
+        return Response(
+            content=content,
+            media_type=document["file_type"],
+            headers={
+                "Content-Disposition": f'attachment; filename="{document["filename"]}"'
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error downloading document: {str(e)}")
+
+@api_router.delete("/documents/{document_id}")
+async def delete_document(document_id: str):
+    """Delete a document"""
+    result = await db.documents.delete_one({"id": document_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    return {"message": "Document deleted successfully"}
+
+@api_router.get("/documents/types", response_model=List[str])
+async def get_document_types():
+    """Get available document types"""
+    return [doc_type.value for doc_type in DocumentType]
+
 # PHASE 2 - ENHANCED ANALYTICS ENDPOINTS
 @api_router.get("/analytics/monthly-evolution")
 async def get_monthly_evolution(start_date: str = None, end_date: str = None):
