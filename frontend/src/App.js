@@ -1940,6 +1940,345 @@ const GlobalSearchBar = ({ onSearch, onQuickView }) => {
   );
 };
 
+// Document Management Components
+const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [documentType, setDocumentType] = useState('AUTRE');
+  const [description, setDescription] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
+  const documentTypes = [
+    { value: 'CONVENTION', label: '📄 Convention' },
+    { value: 'PRESENTATION', label: '📊 Présentation' },
+    { value: 'COMPTE_RENDU', label: '📝 Compte-rendu' },
+    { value: 'CONTRAT', label: '📋 Contrat' },
+    { value: 'DOCUMENT_TECHNIQUE', label: '🔧 Document technique' },
+    { value: 'AUTRE', label: '📎 Autre' }
+  ];
+
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = reader.result.split(',')[1]; // Remove data:mime;base64, prefix
+        resolve(base64);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleFileUpload(files[0]);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+  };
+
+  const handleFileUpload = async (file) => {
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 
+                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                          'application/vnd.ms-powerpoint',
+                          'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                          'text/plain', 'image/jpeg', 'image/png'];
+    
+    if (!allowedTypes.includes(file.type)) {
+      alert('Type de fichier non supporté. Utilisez PDF, DOC, DOCX, PPT, PPTX, TXT, JPG ou PNG.');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Fichier trop volumineux. Taille maximum: 10MB');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 100);
+
+      // Convert to base64
+      const base64Content = await convertToBase64(file);
+
+      // Upload to backend
+      const response = await axios.post(`${API}/documents/upload`, {
+        partner_id: partnerId,
+        partner_type: partnerType,
+        filename: file.name,
+        document_type: documentType,
+        content: base64Content,
+        description: description.trim() || null,
+        uploaded_by: 'current_user'
+      });
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      
+      // Reset form
+      setDescription('');
+      setDocumentType('AUTRE');
+      
+      // Callback to parent component
+      onDocumentUploaded && onDocumentUploaded(response.data);
+      
+      setTimeout(() => {
+        setUploadProgress(0);
+        setIsUploading(false);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      alert('Erreur lors de l\'upload du document. Veuillez réessayer.');
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  return (
+    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Type de document
+        </label>
+        <select
+          value={documentType}
+          onChange={(e) => setDocumentType(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {documentTypes.map(type => (
+            <option key={type.value} value={type.value}>
+              {type.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Description (optionnel)
+        </label>
+        <input
+          type="text"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Description du document..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      
+      <div
+        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+          isDragOver 
+            ? 'border-blue-400 bg-blue-50' 
+            : 'border-gray-400 hover:border-gray-500'
+        } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onClick={() => document.getElementById(`file-upload-${partnerId}`).click()}
+      >
+        {isUploading ? (
+          <div className="space-y-3">
+            <div className="text-lg">📤 Upload en cours...</div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+            <div className="text-sm text-gray-600">{uploadProgress}%</div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="text-4xl mb-2">📎</div>
+            <div className="text-lg font-medium text-gray-700">
+              Glissez-déposez vos fichiers ici
+            </div>
+            <div className="text-sm text-gray-500">
+              ou cliquez pour sélectionner
+            </div>
+            <div className="text-xs text-gray-400">
+              PDF, DOC, DOCX, PPT, PPTX, TXT, JPG, PNG (max 10MB)
+            </div>
+          </div>
+        )}
+        
+        <input
+          id={`file-upload-${partnerId}`}
+          type="file"
+          className="hidden"
+          accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+          onChange={handleFileSelect}
+        />
+      </div>
+    </div>
+  );
+};
+
+const DocumentList = ({ partnerId, documents, onDeleteDocument, onRefreshDocuments }) => {
+  const handleDownload = async (documentId, filename) => {
+    try {
+      const response = await axios.get(`${API}/documents/download/${documentId}`, {
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      alert('Erreur lors du téléchargement du document.');
+    }
+  };
+
+  const handleDelete = async (documentId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/documents/${documentId}`);
+      onDeleteDocument && onDeleteDocument(documentId);
+      onRefreshDocuments && onRefreshDocuments();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      alert('Erreur lors de la suppression du document.');
+    }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getDocumentIcon = (fileType) => {
+    if (fileType.includes('pdf')) return '📄';
+    if (fileType.includes('word') || fileType.includes('document')) return '📝';
+    if (fileType.includes('powerpoint') || fileType.includes('presentation')) return '📊';
+    if (fileType.includes('image')) return '🖼️';
+    return '📎';
+  };
+
+  if (!documents || documents.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <div className="text-4xl mb-2">📁</div>
+        <div>Aucun document attaché</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {documents.map((doc) => (
+        <div key={doc.id} className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start space-x-3 flex-1">
+              <div className="text-2xl">
+                {getDocumentIcon(doc.file_type)}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2 mb-1">
+                  <h4 className="font-medium text-gray-900 truncate">
+                    {doc.original_filename}
+                  </h4>
+                  {doc.version > 1 && (
+                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                      v{doc.version}
+                    </span>
+                  )}
+                </div>
+                
+                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                  <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+                    {doc.document_type}
+                  </span>
+                  <span>{formatFileSize(doc.file_size)}</span>
+                  <span>{new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}</span>
+                </div>
+                
+                {doc.description && (
+                  <p className="text-sm text-gray-600 mt-2 italic">
+                    {doc.description}
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2 ml-4">
+              <button
+                onClick={() => handleDownload(doc.id, doc.filename)}
+                className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50"
+                title="Télécharger"
+              >
+                📥
+              </button>
+              <button
+                onClick={() => handleDelete(doc.id)}
+                className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50"
+                title="Supprimer"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 // Phase 4 - Quick Views Component
 const QuickViewResults = ({ isVisible, viewData, onClose }) => {
   if (!isVisible || !viewData) return null;
