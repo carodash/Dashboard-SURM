@@ -47,6 +47,14 @@ class UserRole(str, Enum):
     CONTRIBUTEUR = "contributeur" 
     OBSERVATEUR = "observateur"
 
+class DocumentType(str, Enum):
+    CONVENTION = "Convention"
+    PRESENTATION = "Présentation"
+    COMPTE_RENDU = "Compte-rendu"
+    CONTRAT = "Contrat"
+    DOCUMENT_TECHNIQUE = "Document technique"
+    AUTRE = "Autre"
+
 class FieldType(str, Enum):
     TEXT = "text"
     DATE = "date"
