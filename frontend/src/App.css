@@ -179,6 +179,9 @@
   /* Custom scrollbar styling */
   scrollbar-width: auto; /* Firefox */
   scrollbar-color: #CBD5E0 #F7FAFC; /* Firefox: thumb track */
+  /* Performance optimizations */
+  -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
+  scroll-behavior: auto; /* Disable smooth scrolling for performance */
 }
 
 /* Webkit browsers (Chrome, Safari, Edge) */
@@ -207,14 +210,11 @@
   background: #718096; /* Even darker when dragging */
 }
 
-/* Smooth scrolling */
-.enhanced-horizontal-scroll {
-  scroll-behavior: smooth;
-}
-
-/* Mouse wheel horizontal scroll capability */
+/* Mouse wheel horizontal scroll capability - optimized */
 .wheel-horizontal-scroll {
-  /* This class will enable horizontal scrolling with mouse wheel */
+  /* Performance optimizations for wheel scrolling */
+  will-change: scroll-position;
+  transform: translateZ(0); /* Force hardware acceleration */
 }
 
 /* Enhanced table scroll */
@@ -223,6 +223,8 @@
   overflow-y: visible;
   border-radius: 8px;
   border: 1px solid #E2E8F0;
+  scroll-behavior: auto; /* Performance: disable smooth scrolling */
+  -webkit-overflow-scrolling: touch; /* iOS optimization */
 }
 
 .enhanced-table-scroll::-webkit-scrollbar {
@@ -261,6 +263,8 @@
   overflow-y: hidden;
   border-radius: 6px;
   border: 1px solid #D1D5DB;
+  scroll-behavior: auto; /* Performance: disable smooth scrolling */
+  -webkit-overflow-scrolling: touch; /* iOS optimization */
 }
 
 .top-scrollbar::-webkit-scrollbar {
