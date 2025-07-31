@@ -1355,7 +1355,14 @@ async def delete_document(document_id: str):
 @api_router.get("/documents/types", response_model=List[str])
 async def get_document_types():
     """Get available document types"""
-    return [doc_type.value for doc_type in DocumentType]
+    # Debug: Let's see what's happening
+    try:
+        enum_values = [doc_type.value for doc_type in DocumentType]
+        print(f"DEBUG: enum_values = {enum_values}")
+        return enum_values
+    except Exception as e:
+        print(f"DEBUG: Error getting enum values: {e}")
+        return ["Convention", "Présentation", "Compte-rendu", "Contrat", "Document technique", "Autre"]
 
 # PHASE 2 - ENHANCED ANALYTICS ENDPOINTS
 @api_router.get("/analytics/monthly-evolution")
