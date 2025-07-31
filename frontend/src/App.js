@@ -1246,10 +1246,11 @@ const KanbanCard = ({ partner, index }) => {
   );
 };
 
-// Phase 4 - Kanban Top Scrollbar Component
+// Phase 4 - Kanban Top Scrollbar Component (Performance Optimized)
 const KanbanTopScrollbar = ({ kanbanData }) => {
   const topScrollRef = useRef();
   const [mainScrollElement, setMainScrollElement] = useState(null);
+  const syncInProgress = useRef(false); // Prevent sync loops
 
   useEffect(() => {
     const mainScroll = document.querySelector('.kanban-main-scroll');
@@ -1261,24 +1262,38 @@ const KanbanTopScrollbar = ({ kanbanData }) => {
   useEffect(() => {
     if (!topScrollRef.current || !mainScrollElement) return;
 
+    // Throttled scroll handlers for better performance
     const handleTopScroll = () => {
-      if (mainScrollElement) {
-        mainScrollElement.scrollLeft = topScrollRef.current.scrollLeft;
-      }
+      if (syncInProgress.current) return;
+      syncInProgress.current = true;
+      
+      requestAnimationFrame(() => {
+        if (mainScrollElement && topScrollRef.current) {
+          mainScrollElement.scrollLeft = topScrollRef.current.scrollLeft;
+        }
+        syncInProgress.current = false;
+      });
     };
 
     const handleMainScroll = () => {
-      if (topScrollRef.current) {
-        topScrollRef.current.scrollLeft = mainScrollElement.scrollLeft;
-      }
+      if (syncInProgress.current) return;
+      syncInProgress.current = true;
+      
+      requestAnimationFrame(() => {
+        if (topScrollRef.current && mainScrollElement) {
+          topScrollRef.current.scrollLeft = mainScrollElement.scrollLeft;
+        }
+        syncInProgress.current = false;
+      });
     };
 
-    topScrollRef.current.addEventListener('scroll', handleTopScroll);
-    mainScrollElement.addEventListener('scroll', handleMainScroll);
+    const topElement = topScrollRef.current;
+    topElement.addEventListener('scroll', handleTopScroll, { passive: true });
+    mainScrollElement.addEventListener('scroll', handleMainScroll, { passive: true });
 
     return () => {
-      if (topScrollRef.current) {
-        topScrollRef.current.removeEventListener('scroll', handleTopScroll);
+      if (topElement) {
+        topElement.removeEventListener('scroll', handleTopScroll);
       }
       if (mainScrollElement) {
         mainScrollElement.removeEventListener('scroll', handleMainScroll);
@@ -1295,6 +1310,7 @@ const KanbanTopScrollbar = ({ kanbanData }) => {
         <div 
           ref={topScrollRef}
           className="top-scrollbar flex-1"
+          style={{ scrollBehavior: 'auto' }} // Disable smooth scrolling for performance
         >
           <div style={{ width: `${totalWidth}rem`, height: '1px' }}></div>
         </div>
