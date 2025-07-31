@@ -2511,6 +2511,13 @@ def main():
         # Test Phase 4 - Synthetic Reports
         test_phase4_synthetic_reports()
         
+        # DOCUMENT MANAGEMENT SYSTEM TESTS
+        print("\n" + "=" * 60)
+        print("📄 DOCUMENT MANAGEMENT SYSTEM TESTS")
+        print("=" * 60)
+        
+        test_document_management_system()
+        
         # Test error handling
         test_error_handling()
         
