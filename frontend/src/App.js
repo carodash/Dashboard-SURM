@@ -5744,6 +5744,17 @@ const Dashboard = () => {
           partnerName={selectedTimelinePartner.name}
         />
       )}
+
+      {/* Document Management Modal */}
+      {showDocumentModal && selectedPartnerForDocs && (
+        <DocumentModal
+          isOpen={showDocumentModal}
+          onClose={handleCloseDocuments}
+          partnerId={selectedPartnerForDocs.id}
+          partnerType={selectedPartnerForDocs.type}
+          partnerName={selectedPartnerForDocs.name}
+        />
+      )}
     </div>
   );
 };
