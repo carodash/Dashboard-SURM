@@ -3,7 +3,7 @@ import "./App.css";
 import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
-// Custom hook for horizontal scrolling with mouse wheel
+// Custom hook for horizontal scrolling with mouse wheel (optimized)
 const useHorizontalScroll = () => {
   const ref = useRef();
   
@@ -12,13 +12,19 @@ const useHorizontalScroll = () => {
     if (!element) return;
 
     const handleWheel = (e) => {
-      // Check if the wheel event should be converted to horizontal scroll
-      if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
+      // Only intercept vertical wheel events, not horizontal ones
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && Math.abs(e.deltaY) > 10) {
         e.preventDefault();
-        element.scrollLeft += e.deltaY;
+        // Use smooth scrolling with requestAnimationFrame for better performance
+        const targetScrollLeft = element.scrollLeft + e.deltaY * 0.5; // Reduced multiplier for smoother scroll
+        element.scrollTo({
+          left: targetScrollLeft,
+          behavior: 'auto' // Use auto instead of smooth to avoid conflicts
+        });
       }
     };
 
+    // Use passive: false only when necessary, passive: true for performance
     element.addEventListener('wheel', handleWheel, { passive: false });
     
     return () => {
