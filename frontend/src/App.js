@@ -5714,6 +5714,149 @@ const Dashboard = () => {
   );
 };
 
+const DocumentModal = ({ isOpen, onClose, partnerId, partnerType, partnerName }) => {
+  const [activeTab, setActiveTab] = useState('upload');
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadDocuments = async () => {
+    if (!partnerId) return;
+    
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/documents/${partnerId}`);
+      setDocuments(response.data);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && partnerId) {
+      loadDocuments();
+    }
+  }, [isOpen, partnerId]);
+
+  const handleDocumentUploaded = (newDocument) => {
+    setDocuments(prev => [newDocument, ...prev]);
+    setActiveTab('list'); // Switch to list view after upload
+  };
+
+  const handleDocumentDeleted = (deletedId) => {
+    setDocuments(prev => prev.filter(doc => doc.id !== deletedId));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              📂 Documents - {partnerName}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Gestion des documents et pièces jointes
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b">
+          <button
+            onClick={() => setActiveTab('upload')}
+            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
+              activeTab === 'upload'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            📤 Ajouter un document
+          </button>
+          <button
+            onClick={() => setActiveTab('list')}
+            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
+              activeTab === 'list'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            📋 Documents ({documents.length})
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 max-h-[70vh] overflow-y-auto">
+          {activeTab === 'upload' && (
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Ajouter un nouveau document
+              </h3>
+              <DocumentUpload
+                partnerId={partnerId}
+                partnerType={partnerType}
+                onDocumentUploaded={handleDocumentUploaded}
+              />
+            </div>
+          )}
+
+          {activeTab === 'list' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Documents attachés ({documents.length})
+                </h3>
+                <button
+                  onClick={loadDocuments}
+                  className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1"
+                  disabled={loading}
+                >
+                  <span>🔄</span>
+                  <span>{loading ? 'Actualisation...' : 'Actualiser'}</span>
+                </button>
+              </div>
+              
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="text-2xl mb-2">⏳</div>
+                  <div className="text-gray-500">Chargement des documents...</div>
+                </div>
+              ) : (
+                <DocumentList
+                  partnerId={partnerId}
+                  documents={documents}
+                  onDeleteDocument={handleDocumentDeleted}
+                  onRefreshDocuments={loadDocuments}
+                />
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end p-6 border-t bg-gray-50">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   return (
     <div className="App">
