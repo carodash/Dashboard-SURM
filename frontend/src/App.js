@@ -2449,13 +2449,42 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
   const handleSubmit = (e) => {
     e.preventDefault();
     
+    console.log("🔍 SOURCING FORM - Starting submission...");
+    console.log("📋 Form data:", formData);
+    
+    // Check each required field individually for debugging
+    const requiredFields = {
+      nom_entreprise: formData.nom_entreprise,
+      statut: formData.statut,
+      pays_origine: formData.pays_origine,
+      domaine_activite: formData.domaine_activite,
+      typologie: formData.typologie,
+      objet: formData.objet,
+      cas_usage: formData.cas_usage,
+      technologie: formData.technologie,
+      source: formData.source,
+      date_entree_sourcing: formData.date_entree_sourcing,
+      pilote: formData.pilote
+    };
+    
+    console.log("🔎 Required fields check:", requiredFields);
+    
+    // Find missing fields
+    const missingFields = Object.entries(requiredFields)
+      .filter(([key, value]) => !value || value === "")
+      .map(([key]) => key);
+    
+    console.log("❌ Missing fields:", missingFields);
+    
     // Ensure all required fields are filled
-    if (!formData.nom_entreprise || !formData.statut || !formData.pays_origine || !formData.domaine_activite || 
-        !formData.typologie || !formData.objet || !formData.cas_usage || !formData.technologie || 
-        !formData.source || !formData.date_entree_sourcing || !formData.pilote) {
-      alert("Veuillez remplir tous les champs requis marqués d'un *");
+    if (missingFields.length > 0) {
+      const message = `Veuillez remplir tous les champs requis marqués d'un *:\n- ${missingFields.join('\n- ')}`;
+      console.log("⚠️ VALIDATION FAILED:", message);
+      alert(message);
       return;
     }
+    
+    console.log("✅ All required fields filled, proceeding with submission...");
     
     // Convert date strings to proper format
     const processedData = { ...formData };
@@ -2473,7 +2502,8 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
       }
     });
     
-    console.log("Submitting sourcing data:", processedData);
+    console.log("📤 Processed data for API:", processedData);
+    console.log("🚀 Calling onSubmit...");
     onSubmit(processedData);
   };
 
