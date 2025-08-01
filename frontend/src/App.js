@@ -2689,8 +2689,82 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
             />
           </div>
 
-          {/* Champs optionnels */}
-          <div className="border-t pt-4">
+          {/* Évaluation stratégique complète */}
+          <div className="border-t pt-6">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-blue-800 mb-4">🎯 Évaluation Stratégique</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Score de Maturité */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Score de Maturité</label>
+                  <select
+                    name="score_maturite"
+                    value={formData.score_maturite}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Non évalué</option>
+                    {SCORE_MATURITE.map(score => (
+                      <option key={score.value} value={score.value}>
+                        {score.label} {score.stars}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Priorité Stratégique */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Priorité Stratégique</label>
+                  <select
+                    name="priorite_strategique"
+                    value={formData.priorite_strategique}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Non définie</option>
+                    {Object.entries(PRIORITE_STRATEGIQUE).map(([key, priorite]) => (
+                      <option key={key} value={key}>
+                        {priorite.icon} {priorite.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Score Potentiel */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Score Potentiel (1-10)</label>
+                  <select
+                    name="score_potentiel"
+                    value={formData.score_potentiel}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Non évalué</option>
+                    {[...Array(10)].map((_, i) => (
+                      <option key={i+1} value={i+1}>
+                        {i+1}/10 {"⭐".repeat(Math.ceil((i+1)/2))}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {/* Tags Stratégiques */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium mb-2">Tags Stratégiques</label>
+                <input
+                  type="text"
+                  name="tags_strategiques"
+                  value={Array.isArray(formData.tags_strategiques) ? formData.tags_strategiques.join(', ') : formData.tags_strategiques}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ex: Innovation, Partenariat, B2B, Scaling..."
+                />
+                <p className="text-xs text-gray-500 mt-1">Séparez les tags par des virgules</p>
+              </div>
+            </div>
+          </div>
             <h3 className="text-lg font-medium mb-3">Informations complémentaires</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
