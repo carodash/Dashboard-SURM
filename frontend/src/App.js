@@ -2445,13 +2445,23 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     tags_strategiques: initialData?.tags_strategiques || []
   });
 
-  // Gestion simple des changements
+  // Gestion simple des changements + tags stratégiques
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    
+    if (name === 'tags_strategiques') {
+      // Gestion spéciale pour les tags (conversion string vers array)
+      const tags = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+      setFormData(prev => ({
+        ...prev,
+        [name]: tags
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
 
   // Soumission simple et robuste
