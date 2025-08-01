@@ -2896,6 +2896,286 @@ def run_kanban_focused_tests():
     print("🎉 Kanban Endpoint Testing Completed!")
     print("Data structure and move functionality analyzed for drag & drop debugging.")
 
+def test_critical_partner_creation_bug():
+    """Test CRITICAL BUG - Partner Creation Not Working"""
+    print("\n=== TESTING CRITICAL BUG - PARTNER CREATION NOT WORKING ===")
+    print("Testing direct backend API to isolate frontend vs backend issues")
+    
+    # Test 1: POST /api/sourcing with complete and valid data
+    print("\n1. Testing POST /api/sourcing (Create sourcing partner)")
+    print("   Using realistic French innovation data matching frontend requirements...")
+    
+    # Complete sourcing data with all required fields
+    sourcing_creation_data = {
+        "nom_entreprise": "InnovTech Solutions",
+        "statut": "A traiter",
+        "pays_origine": "France", 
+        "domaine_activite": "Intelligence Artificielle",
+        "typologie": "Startup",
+        "objet": "Plateforme IA pour optimisation énergétique industrielle",
+        "cas_usage": "Réduction consommation énergétique usines manufacturières",
+        "technologie": "Machine Learning, IoT",
+        "source": "Salon VivaTech 2024",
+        "date_entree_sourcing": "2024-03-15",
+        "interet": True,
+        "date_presentation_metiers": "2024-03-25",
+        "pilote": "Marie Dubois",
+        "actions_commentaires": "Premier contact très prometteur, équipe technique solide",
+        "date_prochaine_action": "2024-04-15"
+    }
+    
+    response = requests.post(f"{API_URL}/sourcing", json=sourcing_creation_data)
+    print(f"   Response Status: {response.status_code}")
+    
+    if response.status_code == 200:
+        sourcing_partner = response.json()
+        sourcing_id = sourcing_partner['id']
+        print(f"✅ SOURCING CREATION SUCCESSFUL")
+        print(f"   - Partner ID: {sourcing_id}")
+        print(f"   - Company: {sourcing_partner['nom_entreprise']}")
+        print(f"   - Status: {sourcing_partner['statut']}")
+        print(f"   - Domain: {sourcing_partner['domaine_activite']}")
+        print(f"   - Pilot: {sourcing_partner['pilote']}")
+        
+        # Verify all fields were saved correctly
+        field_verification = []
+        for key, expected_value in sourcing_creation_data.items():
+            actual_value = sourcing_partner.get(key)
+            if actual_value == expected_value:
+                field_verification.append(f"✅ {key}")
+            else:
+                field_verification.append(f"❌ {key}: expected '{expected_value}', got '{actual_value}'")
+        
+        print("   Field Verification:")
+        for verification in field_verification[:5]:  # Show first 5
+            print(f"     {verification}")
+        
+    else:
+        print(f"❌ SOURCING CREATION FAILED")
+        print(f"   Status Code: {response.status_code}")
+        print(f"   Error Response: {response.text}")
+        try:
+            error_detail = response.json()
+            print(f"   Error Detail: {error_detail}")
+        except:
+            pass
+        sourcing_id = None
+    
+    # Test 2: POST /api/dealflow with complete and valid data
+    print("\n2. Testing POST /api/dealflow (Create dealflow partner)")
+    print("   Using realistic dealflow data with all required fields...")
+    
+    # Complete dealflow data with all required fields
+    dealflow_creation_data = {
+        "nom": "SecureFinTech Pro",
+        "statut": "En cours avec les métiers",
+        "domaine": "Services Financiers",
+        "typologie": "Scale-up",
+        "objet": "Solution blockchain pour sécurisation transactions bancaires",
+        "source": "Réseau partenaires bancaires",
+        "pilote": "Sophie Laurent",
+        "metiers_concernes": "DSI, Risk Management, Compliance",
+        "date_reception_fichier": "2024-02-01",
+        "date_pre_qualification": "2024-02-15",
+        "date_presentation_meetup_referents": "2024-02-28",
+        "date_presentation_metiers": "2024-03-10",
+        "actions_commentaires": "Très bon potentiel commercial, équipe expérimentée",
+        "points_etapes_intermediaires": "Validation technique en cours, POC prévu Q2",
+        "date_prochaine_action": "2024-04-20"
+    }
+    
+    response = requests.post(f"{API_URL}/dealflow", json=dealflow_creation_data)
+    print(f"   Response Status: {response.status_code}")
+    
+    if response.status_code == 200:
+        dealflow_partner = response.json()
+        dealflow_id = dealflow_partner['id']
+        print(f"✅ DEALFLOW CREATION SUCCESSFUL")
+        print(f"   - Partner ID: {dealflow_id}")
+        print(f"   - Company: {dealflow_partner['nom']}")
+        print(f"   - Status: {dealflow_partner['statut']}")
+        print(f"   - Domain: {dealflow_partner['domaine']}")
+        print(f"   - Pilot: {dealflow_partner['pilote']}")
+        
+        # Verify all fields were saved correctly
+        field_verification = []
+        for key, expected_value in dealflow_creation_data.items():
+            actual_value = dealflow_partner.get(key)
+            if actual_value == expected_value:
+                field_verification.append(f"✅ {key}")
+            else:
+                field_verification.append(f"❌ {key}: expected '{expected_value}', got '{actual_value}'")
+        
+        print("   Field Verification:")
+        for verification in field_verification[:5]:  # Show first 5
+            print(f"     {verification}")
+            
+    else:
+        print(f"❌ DEALFLOW CREATION FAILED")
+        print(f"   Status Code: {response.status_code}")
+        print(f"   Error Response: {response.text}")
+        try:
+            error_detail = response.json()
+            print(f"   Error Detail: {error_detail}")
+        except:
+            pass
+        dealflow_id = None
+    
+    # Test 3: Verify new partners appear in GET endpoints
+    print("\n3. Testing GET endpoints to verify new partners are retrievable")
+    
+    if sourcing_id:
+        print("   3a. Verifying sourcing partner in GET /api/sourcing")
+        response = requests.get(f"{API_URL}/sourcing")
+        if response.status_code == 200:
+            partners = response.json()
+            found_partner = next((p for p in partners if p['id'] == sourcing_id), None)
+            if found_partner:
+                print(f"✅ New sourcing partner found in list: {found_partner['nom_entreprise']}")
+            else:
+                print(f"❌ New sourcing partner NOT found in list (ID: {sourcing_id})")
+        else:
+            print(f"❌ Failed to get sourcing partners: {response.status_code}")
+        
+        print(f"   3b. Verifying specific sourcing partner GET /api/sourcing/{sourcing_id}")
+        response = requests.get(f"{API_URL}/sourcing/{sourcing_id}")
+        if response.status_code == 200:
+            partner = response.json()
+            print(f"✅ Specific sourcing partner retrievable: {partner['nom_entreprise']}")
+        else:
+            print(f"❌ Failed to get specific sourcing partner: {response.status_code}")
+    
+    if dealflow_id:
+        print("   3c. Verifying dealflow partner in GET /api/dealflow")
+        response = requests.get(f"{API_URL}/dealflow")
+        if response.status_code == 200:
+            partners = response.json()
+            found_partner = next((p for p in partners if p['id'] == dealflow_id), None)
+            if found_partner:
+                print(f"✅ New dealflow partner found in list: {found_partner['nom']}")
+            else:
+                print(f"❌ New dealflow partner NOT found in list (ID: {dealflow_id})")
+        else:
+            print(f"❌ Failed to get dealflow partners: {response.status_code}")
+        
+        print(f"   3d. Verifying specific dealflow partner GET /api/dealflow/{dealflow_id}")
+        response = requests.get(f"{API_URL}/dealflow/{dealflow_id}")
+        if response.status_code == 200:
+            partner = response.json()
+            print(f"✅ Specific dealflow partner retrievable: {partner['nom']}")
+        else:
+            print(f"❌ Failed to get specific dealflow partner: {response.status_code}")
+    
+    # Test 4: Test document functionality with new partners
+    print("\n4. Testing document functionality with newly created partners")
+    
+    if sourcing_id:
+        print("   4a. Testing document upload for sourcing partner")
+        
+        # Create a simple test document (base64 encoded text)
+        import base64
+        test_content = "Test document for sourcing partner - SURM system validation"
+        encoded_content = base64.b64encode(test_content.encode()).decode()
+        
+        upload_data = {
+            "partner_id": sourcing_id,
+            "partner_type": "sourcing",
+            "filename": "test_sourcing_doc.txt",
+            "document_type": "Autre",
+            "content": encoded_content,
+            "description": "Test document for sourcing partner creation validation",
+            "uploaded_by": "test_user"
+        }
+        
+        response = requests.post(f"{API_URL}/documents/upload", params=upload_data)
+        if response.status_code == 200:
+            document = response.json()
+            print(f"✅ Document uploaded for sourcing partner: {document['filename']}")
+            
+            # Verify document can be retrieved
+            response = requests.get(f"{API_URL}/documents/{sourcing_id}")
+            if response.status_code == 200:
+                documents = response.json()
+                if documents:
+                    print(f"✅ Document retrievable: {len(documents)} documents found")
+                else:
+                    print("❌ No documents found after upload")
+            else:
+                print(f"❌ Failed to retrieve documents: {response.status_code}")
+        else:
+            print(f"❌ Failed to upload document for sourcing: {response.status_code} - {response.text}")
+    
+    if dealflow_id:
+        print("   4b. Testing document upload for dealflow partner")
+        
+        test_content = "Test document for dealflow partner - SURM system validation"
+        encoded_content = base64.b64encode(test_content.encode()).decode()
+        
+        upload_data = {
+            "partner_id": dealflow_id,
+            "partner_type": "dealflow",
+            "filename": "test_dealflow_doc.txt",
+            "document_type": "Présentation",
+            "content": encoded_content,
+            "description": "Test document for dealflow partner creation validation",
+            "uploaded_by": "test_user"
+        }
+        
+        response = requests.post(f"{API_URL}/documents/upload", params=upload_data)
+        if response.status_code == 200:
+            document = response.json()
+            print(f"✅ Document uploaded for dealflow partner: {document['filename']}")
+            
+            # Verify document can be retrieved
+            response = requests.get(f"{API_URL}/documents/{dealflow_id}")
+            if response.status_code == 200:
+                documents = response.json()
+                if documents:
+                    print(f"✅ Document retrievable: {len(documents)} documents found")
+                else:
+                    print("❌ No documents found after upload")
+            else:
+                print(f"❌ Failed to retrieve documents: {response.status_code}")
+        else:
+            print(f"❌ Failed to upload document for dealflow: {response.status_code} - {response.text}")
+    
+    # Test 5: Summary and diagnosis
+    print("\n5. CRITICAL BUG DIAGNOSIS SUMMARY")
+    
+    sourcing_success = sourcing_id is not None
+    dealflow_success = dealflow_id is not None
+    
+    if sourcing_success and dealflow_success:
+        print("✅ BACKEND API WORKING CORRECTLY")
+        print("   - Both sourcing and dealflow partner creation successful")
+        print("   - Partners are retrievable via GET endpoints")
+        print("   - Document functionality working with new partners")
+        print("   - CONCLUSION: Issue is likely in FRONTEND, not backend")
+        print("   - Recommendation: Check frontend form validation, API calls, error handling")
+    elif sourcing_success or dealflow_success:
+        print("⚠️ PARTIAL BACKEND FUNCTIONALITY")
+        if sourcing_success:
+            print("   - Sourcing creation: ✅ Working")
+        else:
+            print("   - Sourcing creation: ❌ Failed")
+        if dealflow_success:
+            print("   - Dealflow creation: ✅ Working")
+        else:
+            print("   - Dealflow creation: ❌ Failed")
+        print("   - CONCLUSION: Mixed results - investigate specific endpoint issues")
+    else:
+        print("❌ BACKEND API NOT WORKING")
+        print("   - Both sourcing and dealflow creation failed")
+        print("   - CONCLUSION: Issue is in BACKEND API")
+        print("   - Recommendation: Check backend server, database connection, model validation")
+    
+    return {
+        'sourcing_success': sourcing_success,
+        'dealflow_success': dealflow_success,
+        'sourcing_id': sourcing_id,
+        'dealflow_id': dealflow_id
+    }
+
 def test_critical_partner_creation():
     """CRITICAL BUG TEST - Partner Creation Backend Testing"""
     print("\n" + "=" * 80)
