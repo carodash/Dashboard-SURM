@@ -2450,33 +2450,32 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     e.preventDefault();
     
     console.log("🔍 SOURCING FORM - Starting submission...");
-    console.log("📋 Form data:", formData);
     
-    // Check each required field individually for debugging
-    const requiredFields = {
-      nom_entreprise: formData.nom_entreprise,
-      statut: formData.statut,
-      pays_origine: formData.pays_origine,
-      domaine_activite: formData.domaine_activite,
-      typologie: formData.typologie,
-      objet: formData.objet,
-      cas_usage: formData.cas_usage,
-      technologie: formData.technologie,
-      source: formData.source,
-      date_entree_sourcing: formData.date_entree_sourcing,
-      pilote: formData.pilote
-    };
+    // Get form data directly from the form elements instead of state
+    const form = e.target;
+    const formDataDirect = new FormData(form);
     
-    console.log("🔎 Required fields check:", requiredFields);
+    // Convert FormData to object
+    const formObject = {};
+    for (let [key, value] of formDataDirect.entries()) {
+      formObject[key] = value;
+    }
     
-    // Find missing fields
-    const missingFields = Object.entries(requiredFields)
-      .filter(([key, value]) => !value || value === "")
-      .map(([key]) => key);
+    // Handle checkbox separately (interet)
+    const interetCheckbox = form.querySelector('input[name="interet"]');
+    formObject.interet = interetCheckbox ? interetCheckbox.checked : false;
     
-    console.log("❌ Missing fields:", missingFields);
+    console.log("📋 Direct form data:", formObject);
     
-    // Ensure all required fields are filled
+    // Check required fields
+    const requiredFields = [
+      'nom_entreprise', 'statut', 'pays_origine', 'domaine_activite', 
+      'typologie', 'objet', 'cas_usage', 'technologie', 
+      'source', 'date_entree_sourcing', 'pilote'
+    ];
+    
+    const missingFields = requiredFields.filter(field => !formObject[field] || formObject[field] === "");
+    
     if (missingFields.length > 0) {
       const message = `Veuillez remplir tous les champs requis marqués d'un *:\n- ${missingFields.join('\n- ')}`;
       console.log("⚠️ VALIDATION FAILED:", message);
@@ -2486,25 +2485,16 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     
     console.log("✅ All required fields filled, proceeding with submission...");
     
-    // Convert date strings to proper format
-    const processedData = { ...formData };
-    if (processedData.date_entree_sourcing) {
-      processedData.date_entree_sourcing = processedData.date_entree_sourcing;
-    }
-    if (processedData.date_presentation_metiers) {
-      processedData.date_presentation_metiers = processedData.date_presentation_metiers;
-    }
-    
     // Convert empty date strings to null
-    Object.keys(processedData).forEach(key => {
-      if (key.includes('date') && processedData[key] === '') {
-        processedData[key] = null;
+    Object.keys(formObject).forEach(key => {
+      if (key.includes('date') && formObject[key] === '') {
+        formObject[key] = null;
       }
     });
     
-    console.log("📤 Processed data for API:", processedData);
+    console.log("📤 Final data for API:", formObject);
     console.log("🚀 Calling onSubmit...");
-    onSubmit(processedData);
+    onSubmit(formObject);
   };
 
   const handleChange = (e) => {
