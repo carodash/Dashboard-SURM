@@ -2432,12 +2432,208 @@ def test_error_handling():
     else:
         print(f"❌ Unexpected response for invalid transition: {response.status_code}")
 
+def test_document_download_urgent():
+    """URGENT: Test document download functionality after URL correction"""
+    print("\n=== URGENT DOCUMENT DOWNLOAD TEST POST-CORRECTION ===")
+    print("Testing document download after backend URL correction from preview.emergentagent.com to localhost:8001")
+    
+    # First, create a test partner
+    print("\n1. Creating test partner for document testing")
+    test_partner_data = {
+        "nom_entreprise": "BACKEND SUCCESS Company",
+        "statut": "A traiter",
+        "pays_origine": "France",
+        "domaine_activite": "FinTech",
+        "typologie": "Startup",
+        "objet": "Solution de paiement innovante",
+        "cas_usage": "Paiements mobiles sécurisés",
+        "technologie": "Blockchain",
+        "source": "VivaTech 2025",
+        "date_entree_sourcing": "2024-12-20",
+        "interet": True,
+        "pilote": "Marie Backend",
+        "actions_commentaires": "Test urgent pour téléchargement documents"
+    }
+    
+    partner_response = requests.post(f"{API_URL}/sourcing", json=test_partner_data)
+    if partner_response.status_code != 200:
+        print(f"❌ Failed to create test partner: {partner_response.status_code} - {partner_response.text}")
+        return
+    
+    partner = partner_response.json()
+    partner_id = partner['id']
+    print(f"✅ Created test partner: {partner['nom_entreprise']} (ID: {partner_id})")
+    
+    # Test 2: Upload a test document
+    print("\n2. Uploading test document 'test_document.txt'")
+    import base64
+    
+    # Create test content matching user's scenario
+    test_content_raw = b"Ceci est le contenu du document test_document.txt pour validation du telechargement."
+    test_content_b64 = base64.b64encode(test_content_raw).decode('utf-8')
+    
+    upload_data = {
+        "partner_id": partner_id,
+        "partner_type": "sourcing",
+        "filename": "test_document.txt",
+        "document_type": "Autre",
+        "content": test_content_b64,
+        "description": "Document test pour validation téléchargement",
+        "uploaded_by": "test_user"
+    }
+    
+    response = requests.post(f"{API_URL}/documents/upload", params=upload_data)
+    if response.status_code != 200:
+        print(f"❌ Failed to upload document: {response.status_code} - {response.text}")
+        return
+    
+    document = response.json()
+    document_id = document['id']
+    print(f"✅ Uploaded document successfully:")
+    print(f"   - ID: {document_id}")
+    print(f"   - Filename: {document['filename']}")
+    print(f"   - File type: {document['file_type']}")
+    print(f"   - File size: {document['file_size']} bytes")
+    
+    # Test 3: List documents for partner (GET /api/documents/{partner_id})
+    print(f"\n3. Testing GET /api/documents/{partner_id} (List partner documents)")
+    response = requests.get(f"{API_URL}/documents/{partner_id}")
+    if response.status_code == 200:
+        documents = response.json()
+        print(f"✅ Retrieved {len(documents)} documents for partner:")
+        for doc in documents:
+            print(f"   - {doc['filename']} (ID: {doc['id']}) - Type: {doc['document_type']}")
+        
+        # Verify our test document is in the list
+        test_doc_found = any(doc['filename'] == 'test_document.txt' for doc in documents)
+        if test_doc_found:
+            print("✅ test_document.txt found in partner documents list")
+        else:
+            print("❌ test_document.txt NOT found in partner documents list")
+    else:
+        print(f"❌ Failed to list partner documents: {response.status_code} - {response.text}")
+        return
+    
+    # Test 4: Direct download test (GET /api/documents/download/{document_id})
+    print(f"\n4. Testing GET /api/documents/download/{document_id} (Direct download)")
+    response = requests.get(f"{API_URL}/documents/download/{document_id}")
+    if response.status_code == 200:
+        print("✅ Document download successful!")
+        print(f"   - Status Code: {response.status_code}")
+        print(f"   - Content-Type: {response.headers.get('content-type', 'Not set')}")
+        print(f"   - Content-Disposition: {response.headers.get('content-disposition', 'Not set')}")
+        print(f"   - Content Length: {len(response.content)} bytes")
+        
+        # Test 5: Verify Base64 format and conversion
+        print("\n5. Testing Base64 format and content integrity")
+        try:
+            # The response should be the raw file content (decoded from Base64)
+            downloaded_content = response.content
+            expected_content = test_content_raw
+            
+            if downloaded_content == expected_content:
+                print("✅ Downloaded content matches original content perfectly")
+                print(f"   - Original: {expected_content}")
+                print(f"   - Downloaded: {downloaded_content}")
+            else:
+                print("❌ Downloaded content differs from original")
+                print(f"   - Original: {expected_content}")
+                print(f"   - Downloaded: {downloaded_content}")
+                
+            # Verify content can be re-encoded to Base64
+            re_encoded = base64.b64encode(downloaded_content).decode('utf-8')
+            if re_encoded == test_content_b64:
+                print("✅ Content can be correctly re-encoded to Base64")
+            else:
+                print("❌ Content cannot be correctly re-encoded to Base64")
+                
+        except Exception as e:
+            print(f"❌ Error during content verification: {e}")
+    else:
+        print(f"❌ Document download FAILED!")
+        print(f"   - Status Code: {response.status_code}")
+        print(f"   - Response: {response.text}")
+        return
+    
+    # Test 6: Test with different document types
+    print("\n6. Testing download with different document types")
+    
+    # Upload a PDF document
+    pdf_content = base64.b64encode(b"PDF test content for download validation").decode('utf-8')
+    pdf_upload = {
+        "partner_id": partner_id,
+        "partner_type": "sourcing",
+        "filename": "test_document.pdf",
+        "document_type": "Convention",
+        "content": pdf_content,
+        "uploaded_by": "test_user"
+    }
+    
+    pdf_response = requests.post(f"{API_URL}/documents/upload", params=pdf_upload)
+    if pdf_response.status_code == 200:
+        pdf_doc = pdf_response.json()
+        pdf_doc_id = pdf_doc['id']
+        print(f"✅ Uploaded PDF document: {pdf_doc['filename']}")
+        
+        # Test PDF download
+        pdf_download_response = requests.get(f"{API_URL}/documents/download/{pdf_doc_id}")
+        if pdf_download_response.status_code == 200:
+            print("✅ PDF document download successful")
+            print(f"   - Content-Type: {pdf_download_response.headers.get('content-type')}")
+            
+            # Verify PDF MIME type
+            if pdf_download_response.headers.get('content-type') == 'application/pdf':
+                print("✅ PDF MIME type correctly set")
+            else:
+                print(f"❌ PDF MIME type incorrect: {pdf_download_response.headers.get('content-type')}")
+        else:
+            print(f"❌ PDF download failed: {pdf_download_response.status_code}")
+    else:
+        print(f"❌ Failed to upload PDF: {pdf_response.status_code}")
+    
+    # Test 7: Verify endpoint responds correctly with proper headers
+    print("\n7. Testing endpoint response headers and format")
+    response = requests.get(f"{API_URL}/documents/download/{document_id}")
+    if response.status_code == 200:
+        headers = response.headers
+        print("✅ Endpoint responding correctly with headers:")
+        print(f"   - Content-Type: {headers.get('content-type', 'Missing')}")
+        print(f"   - Content-Disposition: {headers.get('content-disposition', 'Missing')}")
+        print(f"   - Content-Length: {headers.get('content-length', 'Missing')}")
+        
+        # Verify Content-Disposition header format
+        content_disp = headers.get('content-disposition', '')
+        if 'attachment' in content_disp and 'filename=' in content_disp:
+            print("✅ Content-Disposition header correctly formatted for download")
+        else:
+            print(f"❌ Content-Disposition header incorrect: {content_disp}")
+            
+        # Verify response is binary content, not JSON
+        try:
+            json.loads(response.text)
+            print("❌ Response is JSON, should be binary file content")
+        except:
+            print("✅ Response is binary content (not JSON)")
+            
+    print("\n🎯 URGENT DOCUMENT DOWNLOAD TEST COMPLETED")
+    print("=" * 60)
+    
+    return {
+        'partner_id': partner_id,
+        'document_id': document_id,
+        'test_passed': response.status_code == 200
+    }
+
 def main():
     """Run all tests"""
     print("🚀 Starting SURM Backend API Tests - Including Phase 1, Phase 2 & Phase 3 Features")
     print("=" * 60)
     
     try:
+        # URGENT: Test document download functionality first
+        print("🚨 RUNNING URGENT DOCUMENT DOWNLOAD TEST FIRST")
+        urgent_result = test_document_download_urgent()
+        
         # Test CRUD operations
         sourcing_id = test_sourcing_crud()
         dealflow_id = test_dealflow_crud()
