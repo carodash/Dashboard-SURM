@@ -2421,7 +2421,7 @@ const QuickViewResults = ({ isVisible, viewData, onClose }) => {
 };
 
 const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [] }) => {
-  // État simple avec tous les champs requis
+  // État simple avec tous les champs requis + évaluation stratégique complète
   const [formData, setFormData] = useState({
     nom_entreprise: initialData?.nom_entreprise || "",
     statut: initialData?.statut || "A traiter",
@@ -2437,7 +2437,12 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     interet: initialData?.interet || true,
     date_presentation_metiers: initialData?.date_presentation_metiers || "",
     actions_commentaires: initialData?.actions_commentaires || "",
-    date_prochaine_action: initialData?.date_prochaine_action || ""
+    date_prochaine_action: initialData?.date_prochaine_action || "",
+    // Évaluation stratégique complète
+    score_maturite: initialData?.score_maturite || "",
+    priorite_strategique: initialData?.priorite_strategique || "",
+    score_potentiel: initialData?.score_potentiel || "",
+    tags_strategiques: initialData?.tags_strategiques || []
   });
 
   // Gestion simple des changements
