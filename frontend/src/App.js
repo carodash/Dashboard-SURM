@@ -2451,21 +2451,37 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     
     console.log("🔍 SOURCING FORM - Starting submission...");
     
-    // Get form data directly from the form elements instead of state
+    // Get values directly from form elements by name
     const form = e.target;
-    const formDataDirect = new FormData(form);
+    const getFieldValue = (name) => {
+      const field = form.querySelector(`[name="${name}"]`);
+      if (!field) return "";
+      return field.type === 'checkbox' ? field.checked : field.value;
+    };
     
-    // Convert FormData to object
-    const formObject = {};
-    for (let [key, value] of formDataDirect.entries()) {
-      formObject[key] = value;
-    }
+    // Build data object with all required fields
+    const formObject = {
+      nom_entreprise: getFieldValue('nom_entreprise'),
+      statut: getFieldValue('statut'),
+      pays_origine: getFieldValue('pays_origine'),
+      domaine_activite: getFieldValue('domaine_activite'),
+      typologie: getFieldValue('typologie'),
+      objet: getFieldValue('objet'),
+      cas_usage: getFieldValue('cas_usage'),
+      technologie: getFieldValue('technologie'),
+      source: getFieldValue('source'),
+      date_entree_sourcing: getFieldValue('date_entree_sourcing'),
+      pilote: getFieldValue('pilote'),
+      interet: getFieldValue('interet'),
+      date_presentation_metiers: getFieldValue('date_presentation_metiers'),
+      actions_commentaires: getFieldValue('actions_commentaires'),
+      date_prochaine_action: getFieldValue('date_prochaine_action'),
+      score_maturite: getFieldValue('score_maturite'),
+      priorite_strategique: getFieldValue('priorite_strategique'),
+      score_potentiel: getFieldValue('score_potentiel')
+    };
     
-    // Handle checkbox separately (interet)
-    const interetCheckbox = form.querySelector('input[name="interet"]');
-    formObject.interet = interetCheckbox ? interetCheckbox.checked : false;
-    
-    console.log("📋 Direct form data:", formObject);
+    console.log("📋 Complete form data:", formObject);
     
     // Check required fields
     const requiredFields = [
