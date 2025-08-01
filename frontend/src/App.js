@@ -2448,6 +2448,15 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Ensure all required fields are filled
+    if (!formData.nom_entreprise || !formData.statut || !formData.pays_origine || !formData.domaine_activite || 
+        !formData.typologie || !formData.objet || !formData.cas_usage || !formData.technologie || 
+        !formData.source || !formData.date_entree_sourcing || !formData.pilote) {
+      alert("Veuillez remplir tous les champs requis marqués d'un *");
+      return;
+    }
+    
     // Convert date strings to proper format
     const processedData = { ...formData };
     if (processedData.date_entree_sourcing) {
@@ -2456,6 +2465,15 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     if (processedData.date_presentation_metiers) {
       processedData.date_presentation_metiers = processedData.date_presentation_metiers;
     }
+    
+    // Convert empty date strings to null
+    Object.keys(processedData).forEach(key => {
+      if (key.includes('date') && processedData[key] === '') {
+        processedData[key] = null;
+      }
+    });
+    
+    console.log("Submitting sourcing data:", processedData);
     onSubmit(processedData);
   };
 
