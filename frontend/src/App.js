@@ -2536,12 +2536,15 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
         return newData;
       });
     } else {
+      // Simplified logic - just store the value directly
+      const finalValue = type === 'checkbox' ? checked : value;
       setFormData(prev => {
         const newData = {
           ...prev,
-          [name]: type === 'checkbox' ? checked : (value === '' ? null : value)
+          [name]: finalValue
         };
-        console.log(`📝 Updated formData (regular field):`, newData);
+        console.log(`📝 Updated formData (${name}):`, finalValue);
+        console.log(`📝 Full formData keys:`, Object.keys(newData));
         return newData;
       });
     }
