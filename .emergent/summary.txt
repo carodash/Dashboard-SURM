@@ -1,110 +1,82 @@
 <analysis>
-The previous AI engineer successfully transformed an Excel-based system into a full-fledged Start-Up Relationship Management (SURM) dashboard, progressing from MVP to a feature-rich application. The development adhered to a React-FastAPI-MongoDB stack, emphasizing an iterative approach and direct user feedback. Key architectural decisions included using environment variables for URLs, strictly '/api' prefix for backend routes, and structured data models.
-
-The work was systematically broken into phases:
-*   **Phase 1 (Tracking & Follow-up)**: Implemented inactivity indicators, next action dates, and an activity timeline.
-*   **Phase 2 (Period/Typology Analysis)**: Integrated dynamic charts for statistics and filtering options.
-*   **Phase 3 (Collaboration & User Management)**: Introduced advanced user roles (Observer, Contributor, Admin) and private, timestamped internal comments.
-*   **Phase 4 (UX, Navigation & Visual Reporting)**: Developed a Kanban pipeline view with drag-and-drop, synthetic reports with export capabilities, global search, and quick navigation shortcuts. Mobile optimization was also initiated.
-
-The current state reflects significant progress through Phase 4, with most features implemented and backend tests passed. However, the latest user feedback identified critical frontend issues in Phase 4, specifically regarding Kanban display, navigation density, and non-functional drag-and-drop. The AI engineer is actively working on these fixes.
+The previous AI engineer successfully brought the SURM dashboard from MVP to a feature-rich application using a React-FastAPI-MongoDB stack. The development involved iterative phases, addressing user feedback directly. Key architectural decisions included strict environment variable usage for URLs and API routes prefixed with . Throughout the trajectory, the engineer focused on critical bug fixes and new feature implementation. Initially, major effort went into fixing Kanban's drag-and-drop, which failed multiple times due to API payload mismatches and a crucial  incompatibility. Subsequently, navigation density and horizontal scrolling UX were greatly improved, followed by a fix for a non-functional settings save button due to an incorrect API payload. Most recently, a comprehensive document management system with drag & drop and versioning was implemented. The current work halted at a new critical bug: the inability to create new Sourcing partners, which the engineer began to investigate. This trajectory demonstrates robust debugging, especially with the use of the , and a clear focus on user-reported issues.
 </analysis>
+
 <product_requirements>
-The primary objective was to replace an inefficient Excel-based system with a comprehensive Start-Up Relationship Management (SURM) dashboard. The core problem revolved around fragmented data, manual duplication, and a lack of analytical capabilities.
+The primary objective was to replace an inefficient Excel-based system with a comprehensive Start-Up Relationship Management (SURM) dashboard, addressing fragmented data and lack of analytical capabilities. Initial requirements covered Sourcing & Dealflow management, workflow automation, and statistics. Subsequent enhancements added dashboard customization, automated data enrichment, advanced search/filtering, user roles, and scoring.
 
-**Initial Core Requirements:**
-*   **Sourcing & Dealflow Management:** Detailed capture of partner information, including company name, status, country, domain, typology, object, use case, technology, source, dates (entry, presentation, pilot), and comments.
-*   **Workflow Automation:** Seamless transition of pre-qualified startups from Sourcing to Dealflow to prevent data re-entry.
-*   **Statistics & Reporting:** Generation of key metrics such as quarterly entries by domain, monthly pre-qualifications, 'Go for study' counts, and distribution analysis by domain, typology, technology, and relevant departments.
+**New Feature Requests & Implementations (during this trajectory):**
+*   **Kanban View:** Visual pipeline with stages and drag-and-drop. This was implemented, and the drag-and-drop functionality was debugged multiple times, finally resolved by removing  and correcting API payload.
+*   **Header Refactor:** Redesigned main navigation to keep key tabs (Search, Dashboard, Kanban, Sourcing, Dealflow) always visible, grouping others into a hamburger menu to reduce density.
+*   **Horizontal Scroll Accessibility:** Improved scroll experience on Kanban, Sourcing, and Dealflow tables by adding a synchronized top scrollbar and enabling mouse wheel/trackpad scrolling. Performance issues on Kanban scroll were resolved.
+*   **Document Management System:** Implemented functionality to upload documents (PDF, PPT, contracts) on each startup fiche with a drag & drop interface, versioning, and document type selection (Convention, Presentation, etc.).
 
-**Subsequent Feature Enhancements (Implemented):**
-*   **Dashboard Customization:** User-configurable fields and parameters.
-*   **Automated Data Enrichment:** Web scraping for company details (LinkedIn, funding, contacts).
-*   **Search & Sorting:** Global search and sortable table columns.
-*   **Column Customization:** User-selected column visibility.
-*   **Advanced Features:** Quick transition buttons, granular user roles (Admin, Manager, User), and advanced filtering.
-*   **Scoring & Prioritization:** Maturity score (1-5 stars), strategic priority tags, potential score, and free-text strategic tags.
-*   **Predefined Domains:** Enforced consistency with 23 specific domains plus Other.
-
-**New Feature Requests (Current Phase - UX, Navigation & Visual Reporting):**
-*   **Kanban View:** Visual pipeline with stages (Sourcing to Closure), showing key info, and supporting drag-and-drop.
-*   **Synthetic Tables & Exports:** Cross-tabulations (by status, pilot, collaboration type) with PDF/CSV export.
-*   **Quick Navigation:** Fixed tabs/shortcuts for My Startups, To Follow-up, With Docs, In Experimentation, and a global search.
-*   **Mobile Experience:** Optimized responsive design, compact columns, reordered action buttons, card-based display.
-*   **Future Customization:** Provision for custom fields, free tags, and strategic groups.
-
-**Current Issues Reported by User:**
-*   Kanban horizontal scrolling issue on standard screens.
-*   Dense navigation bar with quick view buttons.
-*   Non-functional Drag & Drop in Kanban.
+**Current Critical Issues Reported by User:**
+*   Inability to create new partners in the Sourcing section.
 </product_requirements>
+
 <key_technical_concepts>
-- **Full-stack Development**: React (frontend), FastAPI (backend), MongoDB (database).
-- **UI/UX**: Tailwind CSS, Modal forms, Dynamic tables, Chart.js (data visualization), react-beautiful-dnd (Kanban drag & drop), jsPDF (PDF export).
-- **Data Management**: CRUD operations, Pydantic models, UUIDs for IDs.
-- **Web Scraping**:  and .
-- **User Management**: Role-based Access Control (RBAC) - Admin, Manager, User. Authentication (JWT based).
-- **Deployment**: Kubernetes-compatible (FastAPI on 0.0.0.0:8001 with  prefix, React on 3000).
-- **State Management**: React's  and .
+-   **Full-stack Development**: React (frontend), FastAPI (backend), MongoDB (database).
+-   **UI/UX**: Tailwind CSS, Chart.js, react-beautiful-dnd, custom React hooks (), Base64 encoding for file storage.
+-   **Data Management**: Pydantic models, CRUD operations, auto-versioning for documents.
+-   **User Management**: Role-based Access Control (RBAC), JWT authentication.
+-   **Performance Optimization**: ,  event listeners, CSS .
 </key_technical_concepts>
+
 <code_architecture>
-The application follows a standard full-stack architecture, utilizing a React frontend, a FastAPI backend, and a MongoDB database.
+The application follows a standard full-stack architecture: React frontend, FastAPI backend, and MongoDB database.
 
 Directory Structure:
 
 
--   **/app/backend/server.py**:
-    -   **Summary of importance**: This file defines the core backend logic, including FastAPI application setup, MongoDB connection, API routes ( prefix), Pydantic data models for Sourcing and Dealflow partners, and CRUD operations. It also handles web scraping, statistics generation, user authentication, and authorization.
+-   ****:
+    -   **Summary of importance**: Defines core backend logic, FastAPI setup, MongoDB connection, API routes, Pydantic models, and CRUD operations.
     -   **Changes made**:
-        -   Initial setup of FastAPI, MongoDB connection.
-        -   Definition of ,  Pydantic models with fields for status, dates, domains, scoring (, , , ).
-        -   Implementation of CRUD endpoints for partners.
-        -   Addition of endpoints for transitioning partners, web data enrichment (), and fetching statistics.
-        -   **Phase 1 Additions**: Introduced , ,  fields. Added  model and associated endpoints (, , ). Modified partner creation/update/transition to log activities automatically.
-        -   **Phase 2 Additions**: Added new statistic endpoints (e.g., , , ) to support dynamic charts.
-        -   **Phase 3 Additions**: Implemented  and  models. Added authentication endpoints (), user management endpoints (, ), and private comment endpoints (). Integrated role-based authorization into existing partner CRUD and transition endpoints.
-        -   **Phase 4 Additions**: Defined Kanban stages and added endpoints for Kanban data () and updating partner status via drag-and-drop (). Added endpoints for synthetic reports ().
-        -   Updates to  for new dependencies (e.g., , , , , , ).
-
--   **/app/frontend/src/App.js**:
-    -   **Summary of importance**: This is the main React component responsible for the entire user interface, handling state management, API calls to the backend using , form rendering, table displays, and all interactive elements.
+        -   **Kanban Fix**: Modified endpoint to expect query parameters (, , , ) for drag & drop.
+        -   **Settings Fix**: Ensured  correctly processed  Pydantic model with valid  enum (, , ) and proper  dictionary structure.
+        -   **Document Management**: Added  Enum and  Pydantic model (fields: uid=0(root) gid=0(root) groups=0(root), , , , ,  (Base64), , , , , ). Implemented 5 API endpoints: , , , , .
+-   ****:
+    -   **Summary of importance**: Main React component managing the entire UI, state, API calls, and integrating all interactive elements.
     -   **Changes made**:
-        -   Initial dashboard layout with tabs (Dashboard, Sourcing, Dealflow).
-        -   Modal forms for creating/editing partners, search, sorting, column visibility.
-        -   Integration of Enrichir button and .
-        -   Bulk actions (select, export, transition, delete).
-        -   Advanced filtering.
-        -   Integration of user roles and permission management in UI elements.
-        -   Predefined domain list integration.
-        -   Scoring and strategic priority fields (stars, icons, tags) in forms and tables.
-        -   **Phase 1 Additions**: Integrated  field into forms. Added , ,  components. Implemented logic for fetching/displaying activity logs and handling next action dates in tables.
-        -   **Phase 2 Additions**: Integrated  and . Created  component and replaced the old Dashboard tab with it, displaying dynamic charts (pie, bar/line charts) and filter controls.
-        -   **Phase 3 Additions**: Added state for user roles and current user data. Implemented  and  components. Integrated private comments buttons into tables and the new My Startups tab. Resolved  declaration conflicts.
-        -   **Phase 4 Additions**: Installed . Added  and  components. Integrated Kanban and Reports tabs into navigation. Implemented  and  modal for quick navigation. Made initial attempts at responsive design for Kanban and streamlined navigation.
--   **/app/frontend/src/components/**: New components like , , , , , , , , .
--   **/app/frontend/.env**: Contains  for frontend-backend communication.
--   **/app/backend/.env**: Contains  for database connectivity.
+        -   **Kanban Fixes**: Updated  to correctly form the backend API request. Added  to the  component. Renamed the Pipeline navigation tab to 📋 Kanban for clarity.
+        -   **Header Refactor**: Reworked the main navigation section. Added a hamburger menu to group less frequently used tabs (Vues, Paramètres, Rôles, Rapports, Mes Startups), keeping key tabs (Recherche, Dashboard, Kanban, Sourcing, Dealflow) directly visible. Integrated necessary state variables (, ) and logic.
+        -   **Scroll Improvements**: Integrated the  hook. Applied CSS classes (, ) to Kanban, Sourcing, and Dealflow table containers. Wrapped relevant sections in  and  for synchronized top scrollbars and improved UX.
+        -   **Scroll Performance Fix (Kanban)**: Implemented a  flag, used  for scroll updates, applied a wheel event multiplier, and adjusted CSS properties to prevent scroll conflicts and improve fluidity.
+        -   **Settings Fix**: Modified the data structure sent to  to match the backend's expected  model.
+        -   **Document Management**: Integrated the new , , and  components. Added state (, ) and functions (, ) to manage modal visibility and partner selection. Added 📎 Documents buttons within Sourcing and Dealflow tables to trigger the document modal.
+-   ****:
+    -   **Summary of importance**: React application's entry point.
+    -   **Changes made**: Removed  due to its incompatibility with , which caused drag & drop issues.
+-   ****:
+    -   **Summary of importance**: Contains global styles and custom CSS.
+    -   **Changes made**: Added custom CSS for enhanced scrollbar styling (, ) to improve visibility and user experience. Adjusted  for Kanban for better responsiveness.
+-   ****:
+    -   **Summary of importance**: Contains reusable React components.
+    -   **New components**: , , , , , .
+-   ****:
+    -   **Summary of importance**: Contains custom React hooks.
+    -   **New hooks**: .
 </code_architecture>
+
 <pending_tasks>
-The following tasks are pending based on the latest user feedback on Phase 4:
-- Improve Kanban display: Implement horizontal fluid scrolling or column collapsing.
-- Refactor navigation: Group quick view buttons into a dropdown or hamburger menu to reduce density.
-- Debug Drag & Drop: Resolve the issue preventing cards from being moved in the Kanban board.
-- Complete Mobile-First Optimization: Fully optimize the interface for mobile readability, compact columns, and card-based display.
-- Implement Future Customization: Add support for custom fields, free tags, and strategic groups.
-- L’UX mobile est moins prioritaire à ce stade, car l’usage principal est sur desktop
+-   Complete Mobile-First Optimization: Fully optimize the interface for mobile readability, compact columns, and card-based display.
+-   Implement Future Customization: Add support for custom fields, free tags, and strategic groups.
+-   Investigate and fix the inability to create new partners in the Sourcing section.
 </pending_tasks>
+
 <current_work>
-The AI engineer is currently in **Phase 4: UX, Navigation & Visual Reporting**, specifically addressing user feedback related to the recently implemented features. The user reported three key issues: horizontal scrolling on the Kanban board, a dense navigation bar, and non-functional drag & drop for Kanban cards.
+The AI engineer is currently addressing a critical bug reported by the user: the **inability to create new partners in the Sourcing section**. This issue was reported immediately after the successful completion of a comprehensive document management system.
 
-Before this summary request, the AI engineer had initiated fixes for these problems:
-1.  **Navigation lightened**: Attempted to regroup quick view buttons into a dropdown or hamburger menu to streamline the header (seen in Chat Messages 236-237).
-2.  **Kanban responsive optimization**: Started to adjust the Kanban board's display for better responsiveness and visibility of all columns (Chat Messages 238-239).
-3.  **Horizontal scroll for Kanban**: Worked on making the Kanban scroll fluid horizontally (Chat Messages 240-241).
-4.  **Drag & Drop debugging**: The last action explicitly stated was to verify the drag & drop issue, potentially related to user permissions (Chat Message 242).
+Prior to this, significant work was done on UX/UI enhancements and bug fixes:
+1.  **Kanban Drag & Drop**: Was successfully debugged after multiple attempts. Initial issues included incorrect API parameter handling (frontend sending JSON body, backend expecting query parameters, and a parameter name mismatch). The persistent problem was identified as an incompatibility between  and , which was resolved by removing  from .
+2.  **Header Navigation**: The header was refactored to streamline navigation. Five primary tabs (Search, Dashboard, Kanban, Sourcing, Dealflow) were made persistently visible, while other less-frequently used tabs were consolidated into a compact hamburger menu. This involved resolving several state management and rendering issues.
+3.  **Horizontal Scroll Accessibility**: Improved scrolling for Kanban, Sourcing, and Dealflow tables. This included adding a synchronized horizontal scrollbar at the top of these views and enabling horizontal scrolling via mouse wheel/trackpad. Kanban's scroll performance, which became slow due to multiple overlapping scroll event listeners, was optimized using ,  flags, and CSS  adjustments.
+4.  **Settings Save Functionality**: A bug preventing the saving of column display settings was fixed. The root cause was an HTTP 422 (Unprocessable Entity) error from the backend's  endpoint, caused by the frontend sending an invalid  enum value ( instead of expected , , or ) and an incorrect structure for the  dictionary.
+5.  **Document Management System**: A complete feature for uploading and managing documents associated with startups was implemented. This includes backend API endpoints for upload (with automatic versioning and Base64 content storage), retrieval, download, and deletion, along with a user-friendly frontend interface featuring drag & drop, document type selection, and a list of versions.
 
-The backend for Phase 4 features (Kanban data endpoints, synthetic reports) has been confirmed functional through testing. The frontend has also been largely implemented for these features, but the user's feedback indicates that the user experience aspects and core interactions (like drag & drop) require further refinement and debugging. The system is in a state where the core infrastructure for these new features exists, but the user-facing polish and full functionality are still being worked on.
+The immediate next step is to diagnose and fix the newly reported Sourcing partner creation bug.
 </current_work>
+
 <optional_next_step>
-Continue debugging the Drag & Drop functionality on the Kanban board and ensure it functions correctly for all user roles as intended.
+The next step is to investigate and fix the inability to create new partners in sourcing bug.
 </optional_next_step>
