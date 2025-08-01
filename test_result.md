@@ -541,6 +541,33 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
+  - task: "Phase 5 - Document Management System Backend"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ DOCUMENT MANAGEMENT SYSTEM FULLY WORKING: Complete document management system implemented with drag & drop upload, Base64 storage, versioning, and document type categorization. All 5 endpoints working: POST /api/documents/upload (with automatic versioning), GET /api/documents/{partner_id} (filtered by partner), GET /api/documents/download/{document_id}, DELETE /api/documents/{document_id}, GET /api/documents/types. Document types include Convention, Presentation, Contrat, Autre. Frontend integration with DocumentUpload, DocumentList, and DocumentModal components fully functional."
+
+  - task: "CRITICAL BUG - Partner Creation Not Working"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/App.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports inability to create new partners in Sourcing and Dealflow sections. Expected behavior: Click 'Créer un partenaire' → Form opens → Fill required fields → Click 'Enregistrer' → Partner created + View refreshed + Confirmation message."
+      - working: "investigating"
+        agent: "main"  
+        comment: "Investigation started: Frontend buttons visible and functional, form opens correctly, but form submission seems to have issues. Found that form has validation errors for required fields, but unclear if backend creation actually works. Need to test backend API directly to isolate frontend vs backend issues."
+
 agent_communication:
   - agent: "main"
     message: "Created complete SURM dashboard with sourcing/dealflow management, automatic transition, and statistics. Backend implements all required fields and endpoints. Frontend has tabbed interface with forms and tables. Ready for comprehensive backend testing."
@@ -568,3 +595,5 @@ agent_communication:
     message: "PHASE 4 CRITICAL BUG FIXES COMPLETED - DRAG & DROP RESTORED: Fixed the Kanban drag & drop issue identified by backend testing. (1) Drag & Drop Fix: Changed frontend API call from JSON body to URLSearchParams for /api/kanban-move endpoint, fixed parameter name from target_column to destination_column. Added success feedback alerts. (2) Navigation UX: Compacted quick view dropdown to reduce navigation density, added responsive design (icon-only on mobile). (3) Kanban Display: Optimized horizontal scrolling with improved column width (w-80), better spacing, dynamic width calculation, enhanced scroll hints. All Phase 4 user feedback issues addressed. Drag & drop should now work correctly with proper role-based authorization."
   - agent: "testing"
     message: "✅ PHASE 4 CORRECTIONS COMPREHENSIVE TESTING COMPLETED - ALL FIXES WORKING PERFECTLY: Validated all 3 critical Phase 4 corrections requested by user. (1) KANBAN DRAG & DROP - FULLY RESTORED: Pipeline tab accessible, perfect drag & drop structure with 9 droppable columns and 91 draggable cards, all Kanban columns properly displayed with accurate startup counts (64 Sourcing, 48 Dealflow, 112 Total). Main agent's API parameter fixes completely resolved user's drag & drop issues. (2) NAVIGATION UX - DENSITY FIXED: Quick view button properly compacted showing '⚡ Vues' on desktop and only '⚡' on mobile, dropdown with all 4 options working, responsive design verified across all viewports. Navigation no longer cluttered. (3) KANBAN DISPLAY - HORIZONTAL SCROLLING OPTIMIZED: Smooth horizontal scrolling working perfectly, all 9 columns accessible, improved spacing and width, enhanced user guidance. User's scrolling problems completely resolved. (4) BONUS FEATURES CONFIRMED: Global search working with FinTech results, quick view options functional. All Phase 4 user feedback has been successfully addressed - drag & drop restored, navigation compacted, horizontal scrolling optimized. SURM dashboard Phase 4 corrections are production-ready."
+  - agent: "main"
+    message: "CRITICAL BUG INVESTIGATION STARTED: User reports inability to create new partners in Sourcing/Dealflow sections. Initial investigation shows: (1) Frontend buttons 'Nouveau Partenaire' are visible and functional, (2) Form opens correctly with all fields, (3) Form has client-side validation requiring all mandatory fields (*), (4) Form submission appears to have issues with validation or backend API calls. Need to test backend API creation endpoints directly to isolate if issue is frontend form validation, API communication, or backend logic. Document management system must remain functional after fix."
