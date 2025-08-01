@@ -2421,245 +2421,118 @@ const QuickViewResults = ({ isVisible, viewData, onClose }) => {
 };
 
 const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [] }) => {
+  // État simple avec tous les champs requis
   const [formData, setFormData] = useState({
-    nom_entreprise: "",
-    statut: "A traiter",
-    pays_origine: "",
-    domaine_activite: "",
-    typologie: "",
-    objet: "",
-    cas_usage: "",
-    technologie: "",
-    source: "",
-    date_entree_sourcing: "",
-    interet: true,
-    date_presentation_metiers: "",
-    pilote: "",
-    actions_commentaires: "",
-    // Phase 1 - Suivi & Relance
-    date_prochaine_action: "",
-    score_maturite: "",
-    priorite_strategique: "",
-    score_potentiel: "",
-    tags_strategiques: [],
-    custom_fields: {},
-    ...initialData
+    nom_entreprise: initialData?.nom_entreprise || "",
+    statut: initialData?.statut || "A traiter",
+    pays_origine: initialData?.pays_origine || "",
+    domaine_activite: initialData?.domaine_activite || "",
+    typologie: initialData?.typologie || "",
+    objet: initialData?.objet || "",
+    cas_usage: initialData?.cas_usage || "",
+    technologie: initialData?.technologie || "",
+    source: initialData?.source || "",
+    date_entree_sourcing: initialData?.date_entree_sourcing || "",
+    pilote: initialData?.pilote || "",
+    interet: initialData?.interet || true,
+    date_presentation_metiers: initialData?.date_presentation_metiers || "",
+    actions_commentaires: initialData?.actions_commentaires || "",
+    date_prochaine_action: initialData?.date_prochaine_action || ""
   });
 
+  // Gestion simple des changements
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  // Soumission simple et robuste
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    console.log("🔍 SOURCING FORM - Starting submission...");
+    console.log("🔍 NOUVEAU FORMULAIRE SOURCING - Démarrage...");
+    console.log("📋 Données du formulaire:", formData);
     
-    // Get values directly from form elements by name
-    const form = e.target;
-    const getFieldValue = (name) => {
-      const field = form.querySelector(`[name="${name}"]`);
-      if (!field) return "";
-      return field.type === 'checkbox' ? field.checked : field.value;
+    // Vérification des champs requis
+    const requiredFields = {
+      nom_entreprise: "Nom entreprise",
+      statut: "Statut", 
+      pays_origine: "Pays d'origine",
+      domaine_activite: "Domaine d'activité",
+      typologie: "Typologie",
+      objet: "Objet",
+      cas_usage: "Cas d'usage",
+      technologie: "Technologie",
+      source: "Source",
+      date_entree_sourcing: "Date d'entrée sourcing",
+      pilote: "Pilote"
     };
-    
-    // Build data object with all required fields
-    const formObject = {
-      nom_entreprise: getFieldValue('nom_entreprise'),
-      statut: getFieldValue('statut'),
-      pays_origine: getFieldValue('pays_origine'),
-      domaine_activite: getFieldValue('domaine_activite'),
-      typologie: getFieldValue('typologie'),
-      objet: getFieldValue('objet'),
-      cas_usage: getFieldValue('cas_usage'),
-      technologie: getFieldValue('technologie'),
-      source: getFieldValue('source'),
-      date_entree_sourcing: getFieldValue('date_entree_sourcing'),
-      pilote: getFieldValue('pilote'),
-      interet: getFieldValue('interet'),
-      date_presentation_metiers: getFieldValue('date_presentation_metiers'),
-      actions_commentaires: getFieldValue('actions_commentaires'),
-      date_prochaine_action: getFieldValue('date_prochaine_action'),
-      score_maturite: getFieldValue('score_maturite'),
-      priorite_strategique: getFieldValue('priorite_strategique'),
-      score_potentiel: getFieldValue('score_potentiel')
-    };
-    
-    console.log("📋 Complete form data:", formObject);
-    
-    // Check required fields
-    const requiredFields = [
-      'nom_entreprise', 'statut', 'pays_origine', 'domaine_activite', 
-      'typologie', 'objet', 'cas_usage', 'technologie', 
-      'source', 'date_entree_sourcing', 'pilote'
-    ];
-    
-    const missingFields = requiredFields.filter(field => !formObject[field] || formObject[field] === "");
-    
-    if (missingFields.length > 0) {
-      const message = `Veuillez remplir tous les champs requis marqués d'un *:\n- ${missingFields.join('\n- ')}`;
-      console.log("⚠️ VALIDATION FAILED:", message);
-      alert(message);
-      return;
-    }
-    
-    console.log("✅ All required fields filled, proceeding with submission...");
-    
-    // Convert empty date strings to null
-    Object.keys(formObject).forEach(key => {
-      if (key.includes('date') && formObject[key] === '') {
-        formObject[key] = null;
+
+    const missingFields = [];
+    Object.entries(requiredFields).forEach(([field, label]) => {
+      if (!formData[field] || formData[field].trim() === "") {
+        missingFields.push(label);
       }
     });
-    
-    console.log("📤 Final data for API:", formObject);
-    console.log("🚀 Calling onSubmit...");
-    onSubmit(formObject);
-  };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    console.log(`🔄 Field change: ${name} = ${value} (type: ${type})`);
-    
-    if (name.startsWith('custom_')) {
-      const customFieldName = name.replace('custom_', '');
-      setFormData(prev => {
-        const newData = {
-          ...prev,
-          custom_fields: {
-            ...prev.custom_fields,
-            [customFieldName]: type === 'checkbox' ? checked : value
-          }
-        };
-        console.log(`📝 Updated formData (custom field):`, newData);
-        return newData;
-      });
-    } else if (name === 'tags_strategiques') {
-      // Handle tags as comma-separated string
-      const tags = value.split(',').map(tag => tag.trim()).filter(tag => tag);
-      setFormData(prev => {
-        const newData = {
-          ...prev,
-          [name]: tags
-        };
-        console.log(`📝 Updated formData (tags):`, newData);
-        return newData;
-      });
-    } else {
-      // Simplified logic - just store the value directly
-      const finalValue = type === 'checkbox' ? checked : value;
-      setFormData(prev => {
-        const newData = {
-          ...prev,
-          [name]: finalValue
-        };
-        console.log(`📝 Updated formData (${name}):`, finalValue);
-        console.log(`📝 Full formData keys:`, Object.keys(newData));
-        return newData;
-      });
+    if (missingFields.length > 0) {
+      alert(`Veuillez remplir les champs obligatoires :\n• ${missingFields.join('\n• ')}`);
+      return;
     }
-  };
 
-  const renderCustomField = (field) => {
-    const fieldName = `custom_${field.name}`;
-    const fieldValue = formData.custom_fields[field.name] || '';
+    console.log("✅ Validation réussie, envoi des données...");
+    
+    // Préparation des données pour l'API
+    const apiData = { ...formData };
+    
+    // Conversion des dates vides en null
+    Object.keys(apiData).forEach(key => {
+      if (key.includes('date') && apiData[key] === '') {
+        apiData[key] = null;
+      }
+    });
 
-    switch (field.type) {
-      case 'text':
-      case 'email':
-      case 'number':
-        return (
-          <input
-            key={field.id}
-            type={field.type}
-            name={fieldName}
-            value={fieldValue}
-            onChange={handleChange}
-            required={field.required}
-            placeholder={field.placeholder}
-            className="w-full border rounded-md px-3 py-2"
-          />
-        );
-      case 'textarea':
-        return (
-          <textarea
-            key={field.id}
-            name={fieldName}
-            value={fieldValue}
-            onChange={handleChange}
-            required={field.required}
-            placeholder={field.placeholder}
-            rows="3"
-            className="w-full border rounded-md px-3 py-2"
-          />
-        );
-      case 'select':
-        return (
-          <select
-            key={field.id}
-            name={fieldName}
-            value={fieldValue}
-            onChange={handleChange}
-            required={field.required}
-            className="w-full border rounded-md px-3 py-2"
-          >
-            <option value="">Sélectionnez...</option>
-            {field.options?.map(option => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
-        );
-      case 'checkbox':
-        return (
-          <input
-            key={field.id}
-            type="checkbox"
-            name={fieldName}
-            checked={fieldValue}
-            onChange={handleChange}
-            className="mr-2"
-          />
-        );
-      case 'date':
-        return (
-          <input
-            key={field.id}
-            type="date"
-            name={fieldName}
-            value={fieldValue}
-            onChange={handleChange}
-            required={field.required}
-            className="w-full border rounded-md px-3 py-2"
-          />
-        );
-      default:
-        return null;
-    }
+    console.log("📤 Données pour l'API:", apiData);
+    onSubmit(apiData);
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold mb-6 text-center">
           {initialData ? "Modifier" : "Nouveau"} Partenaire Sourcing
         </h2>
+        
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Champs obligatoires - Structure simple linéaire */}
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Nom entreprise <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="nom_entreprise"
+              value={formData.nom_entreprise}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nom de l'entreprise"
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Nom entreprise *</label>
-              <input
-                type="text"
-                name="nom_entreprise"
-                value={formData.nom_entreprise}
-                onChange={handleChange}
-                required
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Statut *</label>
+              <label className="block text-sm font-medium mb-2">
+                Statut <span className="text-red-500">*</span>
+              </label>
               <select
                 name="statut"
                 value={formData.statut}
                 onChange={handleChange}
-                required
-                className="w-full border rounded-md px-3 py-2"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="A traiter">A traiter</option>
                 <option value="Clos">Clos</option>
@@ -2667,255 +2540,206 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                 <option value="Klaxoon">Klaxoon</option>
               </select>
             </div>
+
             <div>
-              <label className="block text-sm font-medium mb-1">Pays d'origine *</label>
+              <label className="block text-sm font-medium mb-2">
+                Pays d'origine <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 name="pays_origine"
                 value={formData.pays_origine}
                 onChange={handleChange}
-                required
-                className="w-full border rounded-md px-3 py-2"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="France"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Domaine d'activité <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="domaine_activite"
+              value={formData.domaine_activite}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Sélectionnez un domaine...</option>
+              {DOMAINES_ACTIVITE.map(domaine => (
+                <option key={domaine} value={domaine}>{domaine}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Domaine d'activité *</label>
-              <select
-                name="domaine_activite"
-                value={formData.domaine_activite}
-                onChange={handleChange}
-                required
-                className="w-full border rounded-md px-3 py-2"
-              >
-                <option value="">Sélectionnez un domaine...</option>
-                {DOMAINES_ACTIVITE.map(domaine => (
-                  <option key={domaine} value={domaine}>{domaine}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Typologie *</label>
+              <label className="block text-sm font-medium mb-2">
+                Typologie <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 name="typologie"
                 value={formData.typologie}
                 onChange={handleChange}
-                required
-                className="w-full border rounded-md px-3 py-2"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Startup, PME, Scale-up..."
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium mb-1">Objet *</label>
-              <input
-                type="text"
-                name="objet"
-                value={formData.objet}
-                onChange={handleChange}
-                required
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Cas d'usage *</label>
-              <input
-                type="text"
-                name="cas_usage"
-                value={formData.cas_usage}
-                onChange={handleChange}
-                required
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Technologie *</label>
+              <label className="block text-sm font-medium mb-2">
+                Technologie <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 name="technologie"
                 value={formData.technologie}
                 onChange={handleChange}
-                required
-                className="w-full border rounded-md px-3 py-2"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="IA, Blockchain, IoT..."
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Objet <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="objet"
+              value={formData.objet}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Description de la solution..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Cas d'usage <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="cas_usage"
+              value={formData.cas_usage}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Application concrète..."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Source *</label>
+              <label className="block text-sm font-medium mb-2">
+                Source <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 name="source"
                 value={formData.source}
                 onChange={handleChange}
-                required
-                className="w-full border rounded-md px-3 py-2"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="VivaTech, LinkedIn, Partenariat..."
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium mb-1">Date d'entrée sourcing *</label>
+              <label className="block text-sm font-medium mb-2">
+                Date d'entrée sourcing <span className="text-red-500">*</span>
+              </label>
               <input
                 type="date"
                 name="date_entree_sourcing"
                 value={formData.date_entree_sourcing}
                 onChange={handleChange}
-                required
-                className="w-full border rounded-md px-3 py-2"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Pilote *</label>
-              <input
-                type="text"
-                name="pilote"
-                value={formData.pilote}
-                onChange={handleChange}
-                required
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </div>
-            
-            {/* Phase 1 - Date prochaine action */}
-            <div>
-              <label className="block text-sm font-medium mb-1">📅 Date prochaine action</label>
-              <input
-                type="date"
-                name="date_prochaine_action"
-                value={formData.date_prochaine_action}
-                onChange={handleChange}
-                className="w-full border rounded-md px-3 py-2"
-                title="Planifier la prochaine action à effectuer"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">Date présentation métiers</label>
-              <input
-                type="date"
-                name="date_presentation_metiers"
-                value={formData.date_presentation_metiers}
-                onChange={handleChange}
-                className="w-full border rounded-md px-3 py-2"
-              />
-            </div>
-            
-            {/* Custom Fields */}
-            {customFields.filter(field => field.visible).map(field => (
-              <div key={field.id}>
-                <label className="block text-sm font-medium mb-1">
-                  {field.label} {field.required && "*"}
-                </label>
-                {renderCustomField(field)}
-              </div>
-            ))}
           </div>
-          
+
           <div>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="interet"
-                checked={formData.interet}
-                onChange={handleChange}
-                className="mr-2"
-              />
-              Intérêt
+            <label className="block text-sm font-medium mb-2">
+              Pilote <span className="text-red-500">*</span>
             </label>
-          </div>
-
-          {/* Section Scoring et Priorité */}
-          <div className="col-span-1 md:col-span-2">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-blue-800 mb-4">🎯 Évaluation Stratégique</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                
-                {/* Score de Maturité */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Score de Maturité</label>
-                  <select
-                    name="score_maturite"
-                    value={formData.score_maturite}
-                    onChange={handleChange}
-                    className="w-full border rounded-md px-3 py-2"
-                  >
-                    <option value="">Non évalué</option>
-                    {SCORE_MATURITE.map(score => (
-                      <option key={score.value} value={score.value}>
-                        {score.stars} {score.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Priorité Stratégique */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Priorité Stratégique</label>
-                  <select
-                    name="priorite_strategique"
-                    value={formData.priorite_strategique}
-                    onChange={handleChange}
-                    className="w-full border rounded-md px-3 py-2"
-                  >
-                    <option value="">Non définie</option>
-                    {Object.entries(PRIORITE_STRATEGIQUE).map(([key, config]) => (
-                      <option key={key} value={key}>
-                        {config.icon} {config.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Score Potentiel */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Score Potentiel (1-10)</label>
-                  <select
-                    name="score_potentiel"
-                    value={formData.score_potentiel}
-                    onChange={handleChange}
-                    className="w-full border rounded-md px-3 py-2"
-                  >
-                    <option value="">Non évalué</option>
-                    {[1,2,3,4,5,6,7,8,9,10].map(score => (
-                      <option key={score} value={score}>
-                        {score}/10 {score >= 8 ? '🔥' : score >= 6 ? '⭐' : score >= 4 ? '👍' : '📌'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Tags Stratégiques */}
-                <div className="md:col-span-3">
-                  <label className="block text-sm font-medium mb-1">Tags Stratégiques</label>
-                  <input
-                    type="text"
-                    name="tags_strategiques"
-                    value={formData.tags_strategiques ? formData.tags_strategiques.join(', ') : ''}
-                    onChange={handleChange}
-                    placeholder="Ex: Innovation, Partenariat, B2B, Scaling..."
-                    className="w-full border rounded-md px-3 py-2"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Séparez les tags par des virgules</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Actions/Commentaires</label>
-            <textarea
-              name="actions_commentaires"
-              value={formData.actions_commentaires}
+            <input
+              type="text"
+              name="pilote"
+              value={formData.pilote}
               onChange={handleChange}
-              rows="3"
-              className="w-full border rounded-md px-3 py-2"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nom du pilote responsable"
             />
           </div>
-          <div className="flex justify-end space-x-2">
+
+          {/* Champs optionnels */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-medium mb-3">Informations complémentaires</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Date présentation métiers</label>
+                <input
+                  type="date"
+                  name="date_presentation_metiers"
+                  value={formData.date_presentation_metiers}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Date prochaine action</label>
+                <input
+                  type="date"
+                  name="date_prochaine_action"
+                  value={formData.date_prochaine_action}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="interet"
+                  checked={formData.interet}
+                  onChange={handleChange}
+                  className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="text-sm font-medium">Intérêt confirmé</span>
+              </label>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-2">Actions / Commentaires</label>
+              <textarea
+                name="actions_commentaires"
+                value={formData.actions_commentaires}
+                onChange={handleChange}
+                rows={3}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Notes et commentaires..."
+              />
+            </div>
+          </div>
+
+          {/* Boutons d'action */}
+          <div className="flex justify-end space-x-3 pt-6 border-t">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300"
+              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {initialData ? "Modifier" : "Créer"}
             </button>
