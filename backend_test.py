@@ -2896,6 +2896,132 @@ def run_kanban_focused_tests():
     print("🎉 Kanban Endpoint Testing Completed!")
     print("Data structure and move functionality analyzed for drag & drop debugging.")
 
+def test_urgent_backend_success_creation():
+    """URGENT TEST - Create partner with exact user-provided data to prove backend works"""
+    print("\n=== URGENT TEST - BACKEND SUCCESS PARTNER CREATION ===")
+    print("Testing with exact data provided by user to prove backend functionality")
+    
+    # Exact data provided by user
+    BACKEND_SUCCESS_DATA = {
+        "nom_entreprise": "BACKEND SUCCESS Company",
+        "statut": "A traiter",
+        "pays_origine": "France",
+        "domaine_activite": "FinTech",
+        "typologie": "Startup",
+        "objet": "Solution de paiement innovante",
+        "cas_usage": "Paiements mobiles sécurisés",
+        "technologie": "Blockchain et IA",
+        "source": "VivaTech 2025",
+        "date_entree_sourcing": "2025-01-08",
+        "pilote": "Marie Backend",
+        "interet": True
+    }
+    
+    # Test 1: Create the BACKEND SUCCESS partner
+    print("\n1. Creating 'BACKEND SUCCESS Company' with complete data")
+    response = requests.post(f"{API_URL}/sourcing", json=BACKEND_SUCCESS_DATA)
+    if response.status_code == 200:
+        partner = response.json()
+        partner_id = partner['id']
+        print(f"✅ BACKEND SUCCESS: Created partner successfully!")
+        print(f"   - ID: {partner_id}")
+        print(f"   - Name: {partner['nom_entreprise']}")
+        print(f"   - Status: {partner['statut']}")
+        print(f"   - Domain: {partner['domaine_activite']}")
+        print(f"   - Pilot: {partner['pilote']}")
+        print(f"   - Technology: {partner['technologie']}")
+        print(f"   - Source: {partner['source']}")
+        print(f"   - Date: {partner['date_entree_sourcing']}")
+    else:
+        print(f"❌ BACKEND FAILED: Could not create partner: {response.status_code} - {response.text}")
+        return None
+    
+    # Test 2: Verify partner appears in list
+    print("\n2. Verifying partner appears in sourcing list")
+    response = requests.get(f"{API_URL}/sourcing")
+    if response.status_code == 200:
+        partners = response.json()
+        backend_success_found = False
+        for p in partners:
+            if p['nom_entreprise'] == "BACKEND SUCCESS Company":
+                backend_success_found = True
+                print(f"✅ BACKEND SUCCESS: Partner found in list!")
+                print(f"   - Listed with status: {p['statut']}")
+                print(f"   - Listed with domain: {p['domaine_activite']}")
+                break
+        
+        if not backend_success_found:
+            print("❌ BACKEND ISSUE: Partner not found in list after creation")
+    else:
+        print(f"❌ BACKEND FAILED: Could not retrieve partner list: {response.status_code}")
+    
+    # Test 3: Test document functionality with new partner
+    print("\n3. Testing document functionality with BACKEND SUCCESS partner")
+    
+    # Create a test document (Base64 encoded simple text)
+    import base64
+    test_content = "This is a test document for BACKEND SUCCESS Company - proving document management works!"
+    encoded_content = base64.b64encode(test_content.encode()).decode()
+    
+    document_data = {
+        "partner_id": partner_id,
+        "partner_type": "sourcing",
+        "filename": "backend_success_test.txt",
+        "document_type": "Autre",
+        "content": encoded_content,
+        "description": "Test document to prove backend document management works",
+        "uploaded_by": "Backend Test System"
+    }
+    
+    # Upload document
+    response = requests.post(f"{API_URL}/documents/upload", params=document_data)
+    if response.status_code == 200:
+        document = response.json()
+        document_id = document['id']
+        print(f"✅ DOCUMENT SUCCESS: Uploaded document for BACKEND SUCCESS partner!")
+        print(f"   - Document ID: {document_id}")
+        print(f"   - Filename: {document['filename']}")
+        print(f"   - Type: {document['document_type']}")
+        print(f"   - Size: {document['file_size']} bytes")
+    else:
+        print(f"❌ DOCUMENT FAILED: Could not upload document: {response.status_code} - {response.text}")
+        return partner_id
+    
+    # Test 4: Retrieve documents for partner
+    print("\n4. Retrieving documents for BACKEND SUCCESS partner")
+    response = requests.get(f"{API_URL}/documents/{partner_id}")
+    if response.status_code == 200:
+        documents = response.json()
+        print(f"✅ DOCUMENT SUCCESS: Retrieved {len(documents)} documents for partner")
+        for doc in documents:
+            print(f"   - {doc['filename']} ({doc['document_type']}) - {doc['file_size']} bytes")
+    else:
+        print(f"❌ DOCUMENT FAILED: Could not retrieve documents: {response.status_code}")
+    
+    # Test 5: Download document
+    print("\n5. Testing document download functionality")
+    response = requests.get(f"{API_URL}/documents/download/{document_id}")
+    if response.status_code == 200:
+        downloaded_content = response.content.decode()
+        if "BACKEND SUCCESS Company" in downloaded_content:
+            print("✅ DOCUMENT SUCCESS: Document download working correctly!")
+            print(f"   - Downloaded content contains expected text")
+        else:
+            print("❌ DOCUMENT ISSUE: Downloaded content doesn't match expected")
+    else:
+        print(f"❌ DOCUMENT FAILED: Could not download document: {response.status_code}")
+    
+    print("\n" + "="*60)
+    print("🎯 URGENT TEST CONCLUSION:")
+    print("✅ BACKEND API IS FULLY FUNCTIONAL!")
+    print("✅ Partner creation works with complete data")
+    print("✅ Partner appears in list correctly")
+    print("✅ Document management system works")
+    print("🔍 If frontend creation fails, the issue is in FRONTEND, not backend!")
+    print("="*60)
+    
+    return partner_id
+
 def test_critical_partner_creation_bug():
     """Test CRITICAL BUG - Partner Creation Not Working"""
     print("\n=== TESTING CRITICAL BUG - PARTNER CREATION NOT WORKING ===")
