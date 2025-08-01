@@ -2765,6 +2765,9 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
               </div>
             </div>
           </div>
+
+          {/* Champs optionnels */}
+          <div className="border-t pt-4">
             <h3 className="text-lg font-medium mb-3">Informations complémentaires</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
