@@ -2896,10 +2896,235 @@ def run_kanban_focused_tests():
     print("🎉 Kanban Endpoint Testing Completed!")
     print("Data structure and move functionality analyzed for drag & drop debugging.")
 
-if __name__ == "__main__":
-    # Check if we want to run focused Kanban tests
-    import sys
-    if len(sys.argv) > 1 and sys.argv[1] == "kanban":
-        run_kanban_focused_tests()
+def test_critical_partner_creation():
+    """CRITICAL BUG TEST - Partner Creation Backend Testing"""
+    print("\n" + "=" * 80)
+    print("🚨 CRITICAL BUG INVESTIGATION - PARTNER CREATION BACKEND TESTING")
+    print("=" * 80)
+    
+    # Test data for realistic partner creation
+    sourcing_creation_data = {
+        "nom_entreprise": "CriticalTest Startup",
+        "statut": "A traiter",
+        "pays_origine": "France",
+        "domaine_activite": "Intelligence Artificielle",
+        "typologie": "Startup",
+        "objet": "Solution IA pour optimisation énergétique",
+        "cas_usage": "Optimisation consommation énergétique bâtiments tertiaires",
+        "technologie": "Machine Learning",
+        "source": "Test de création critique",
+        "date_entree_sourcing": "2024-12-20",
+        "interet": True,
+        "pilote": "Test Pilote",
+        "actions_commentaires": "Test de création de partenaire sourcing"
+    }
+    
+    dealflow_creation_data = {
+        "nom": "CriticalTest Dealflow",
+        "statut": "En cours avec les métiers",
+        "domaine": "Services Financiers",
+        "typologie": "Scale-up",
+        "objet": "Sécurisation transactions blockchain",
+        "source": "Test de création critique",
+        "pilote": "Test Pilote",
+        "metiers_concernes": "DSI, Risk Management",
+        "date_reception_fichier": "2024-12-20",
+        "actions_commentaires": "Test de création de partenaire dealflow"
+    }
+    
+    # Test 1: POST /api/sourcing endpoint
+    print("\n1. 🔍 TESTING POST /api/sourcing (Critical Partner Creation)")
+    print(f"   Testing with data: {sourcing_creation_data['nom_entreprise']}")
+    
+    response = requests.post(f"{API_URL}/sourcing", json=sourcing_creation_data)
+    print(f"   Response Status: {response.status_code}")
+    
+    if response.status_code == 200:
+        sourcing_partner = response.json()
+        sourcing_id = sourcing_partner['id']
+        print(f"✅ SOURCING CREATION SUCCESS!")
+        print(f"   - Created partner: {sourcing_partner['nom_entreprise']}")
+        print(f"   - Partner ID: {sourcing_id}")
+        print(f"   - Status: {sourcing_partner['statut']}")
+        print(f"   - Domain: {sourcing_partner['domaine_activite']}")
+        print(f"   - Pilote: {sourcing_partner['pilote']}")
+        
+        # Verify all required fields are present
+        required_fields = ['nom_entreprise', 'statut', 'pays_origine', 'domaine_activite', 'typologie', 'objet', 'cas_usage', 'technologie', 'source', 'date_entree_sourcing', 'interet', 'pilote']
+        missing_fields = [field for field in required_fields if field not in sourcing_partner]
+        if not missing_fields:
+            print("✅ All required fields present in response")
+        else:
+            print(f"❌ Missing fields in response: {missing_fields}")
+            
+    elif response.status_code == 422:
+        print("❌ SOURCING CREATION FAILED - Validation Error (422)")
+        try:
+            error_detail = response.json()
+            print(f"   Validation errors: {error_detail}")
+        except:
+            print(f"   Raw error response: {response.text}")
     else:
+        print(f"❌ SOURCING CREATION FAILED - Status: {response.status_code}")
+        print(f"   Error response: {response.text}")
+    
+    # Test 2: POST /api/dealflow endpoint
+    print("\n2. 🔍 TESTING POST /api/dealflow (Critical Partner Creation)")
+    print(f"   Testing with data: {dealflow_creation_data['nom']}")
+    
+    response = requests.post(f"{API_URL}/dealflow", json=dealflow_creation_data)
+    print(f"   Response Status: {response.status_code}")
+    
+    if response.status_code == 200:
+        dealflow_partner = response.json()
+        dealflow_id = dealflow_partner['id']
+        print(f"✅ DEALFLOW CREATION SUCCESS!")
+        print(f"   - Created partner: {dealflow_partner['nom']}")
+        print(f"   - Partner ID: {dealflow_id}")
+        print(f"   - Status: {dealflow_partner['statut']}")
+        print(f"   - Domain: {dealflow_partner['domaine']}")
+        print(f"   - Pilote: {dealflow_partner['pilote']}")
+        
+        # Verify all required fields are present
+        required_fields = ['nom', 'statut', 'domaine', 'typologie', 'objet', 'source', 'pilote', 'metiers_concernes', 'date_reception_fichier']
+        missing_fields = [field for field in required_fields if field not in dealflow_partner]
+        if not missing_fields:
+            print("✅ All required fields present in response")
+        else:
+            print(f"❌ Missing fields in response: {missing_fields}")
+            
+    elif response.status_code == 422:
+        print("❌ DEALFLOW CREATION FAILED - Validation Error (422)")
+        try:
+            error_detail = response.json()
+            print(f"   Validation errors: {error_detail}")
+        except:
+            print(f"   Raw error response: {response.text}")
+    else:
+        print(f"❌ DEALFLOW CREATION FAILED - Status: {response.status_code}")
+        print(f"   Error response: {response.text}")
+    
+    # Test 3: Verify created partners appear in GET requests
+    print("\n3. 🔍 TESTING GET REQUESTS (Verify Created Partners)")
+    
+    # Test GET /api/sourcing
+    print("   Testing GET /api/sourcing...")
+    response = requests.get(f"{API_URL}/sourcing")
+    if response.status_code == 200:
+        sourcing_partners = response.json()
+        critical_test_partners = [p for p in sourcing_partners if 'CriticalTest' in p.get('nom_entreprise', '')]
+        print(f"✅ GET /api/sourcing working - Found {len(critical_test_partners)} CriticalTest partners")
+        if critical_test_partners:
+            for partner in critical_test_partners:
+                print(f"   - {partner['nom_entreprise']} (ID: {partner['id']})")
+    else:
+        print(f"❌ GET /api/sourcing failed: {response.status_code}")
+    
+    # Test GET /api/dealflow
+    print("   Testing GET /api/dealflow...")
+    response = requests.get(f"{API_URL}/dealflow")
+    if response.status_code == 200:
+        dealflow_partners = response.json()
+        critical_test_partners = [p for p in dealflow_partners if 'CriticalTest' in p.get('nom', '')]
+        print(f"✅ GET /api/dealflow working - Found {len(critical_test_partners)} CriticalTest partners")
+        if critical_test_partners:
+            for partner in critical_test_partners:
+                print(f"   - {partner['nom']} (ID: {partner['id']})")
+    else:
+        print(f"❌ GET /api/dealflow failed: {response.status_code}")
+    
+    # Test 4: Test document management with new partners (if they were created)
+    print("\n4. 🔍 TESTING DOCUMENT MANAGEMENT (Verify Functionality)")
+    
+    # Try to find a created partner to test document upload
+    response = requests.get(f"{API_URL}/sourcing")
+    if response.status_code == 200:
+        sourcing_partners = response.json()
+        if sourcing_partners:
+            test_partner = sourcing_partners[0]
+            partner_id = test_partner['id']
+            
+            # Test document upload
+            print(f"   Testing document upload for partner: {test_partner.get('nom_entreprise', 'Unknown')}")
+            
+            # Create a simple base64 encoded test document
+            import base64
+            test_content = "This is a test document for partner creation verification."
+            encoded_content = base64.b64encode(test_content.encode()).decode()
+            
+            doc_data = {
+                "partner_id": partner_id,
+                "partner_type": "sourcing",
+                "filename": "test_document.txt",
+                "document_type": "Autre",
+                "content": encoded_content,
+                "description": "Test document for critical bug investigation"
+            }
+            
+            response = requests.post(f"{API_URL}/documents/upload", params=doc_data)
+            if response.status_code == 200:
+                document = response.json()
+                print(f"✅ Document upload working - Document ID: {document['id']}")
+                
+                # Test document retrieval
+                response = requests.get(f"{API_URL}/documents/{partner_id}")
+                if response.status_code == 200:
+                    documents = response.json()
+                    print(f"✅ Document retrieval working - Found {len(documents)} documents")
+                else:
+                    print(f"❌ Document retrieval failed: {response.status_code}")
+            else:
+                print(f"❌ Document upload failed: {response.status_code} - {response.text}")
+        else:
+            print("⚠️ No sourcing partners found to test document management")
+    else:
+        print("❌ Cannot test document management - sourcing partners not accessible")
+    
+    # Test 5: Test various validation scenarios
+    print("\n5. 🔍 TESTING VALIDATION SCENARIOS")
+    
+    # Test missing required fields
+    print("   Testing missing required fields...")
+    incomplete_data = {
+        "nom_entreprise": "Incomplete Test",
+        # Missing required fields intentionally
+    }
+    
+    response = requests.post(f"{API_URL}/sourcing", json=incomplete_data)
+    if response.status_code == 422:
+        print("✅ Validation working - Correctly rejected incomplete data")
+    else:
+        print(f"❌ Validation issue - Should reject incomplete data: {response.status_code}")
+    
+    # Test invalid enum values
+    print("   Testing invalid enum values...")
+    invalid_enum_data = sourcing_creation_data.copy()
+    invalid_enum_data["statut"] = "Invalid Status"
+    invalid_enum_data["nom_entreprise"] = "Invalid Enum Test"
+    
+    response = requests.post(f"{API_URL}/sourcing", json=invalid_enum_data)
+    if response.status_code == 422:
+        print("✅ Enum validation working - Correctly rejected invalid status")
+    else:
+        print(f"❌ Enum validation issue - Should reject invalid status: {response.status_code}")
+    
+    print("\n" + "=" * 80)
+    print("🔍 CRITICAL BUG INVESTIGATION COMPLETED")
+    print("=" * 80)
+
+if __name__ == "__main__":
+    # Check if we want to run focused tests
+    import sys
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "kanban":
+            run_kanban_focused_tests()
+        elif sys.argv[1] == "critical":
+            test_critical_partner_creation()
+        else:
+            main()
+    else:
+        # CRITICAL BUG INVESTIGATION - Test partner creation first
+        test_critical_partner_creation()
+        
+        # Then run full test suite
         main()
