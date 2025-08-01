@@ -2509,27 +2509,41 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    console.log(`🔄 Field change: ${name} = ${value} (type: ${type})`);
+    
     if (name.startsWith('custom_')) {
       const customFieldName = name.replace('custom_', '');
-      setFormData(prev => ({
-        ...prev,
-        custom_fields: {
-          ...prev.custom_fields,
-          [customFieldName]: type === 'checkbox' ? checked : value
-        }
-      }));
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          custom_fields: {
+            ...prev.custom_fields,
+            [customFieldName]: type === 'checkbox' ? checked : value
+          }
+        };
+        console.log(`📝 Updated formData (custom field):`, newData);
+        return newData;
+      });
     } else if (name === 'tags_strategiques') {
       // Handle tags as comma-separated string
       const tags = value.split(',').map(tag => tag.trim()).filter(tag => tag);
-      setFormData(prev => ({
-        ...prev,
-        [name]: tags
-      }));
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          [name]: tags
+        };
+        console.log(`📝 Updated formData (tags):`, newData);
+        return newData;
+      });
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: type === 'checkbox' ? checked : (value === '' ? null : value)
-      }));
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          [name]: type === 'checkbox' ? checked : (value === '' ? null : value)
+        };
+        console.log(`📝 Updated formData (regular field):`, newData);
+        return newData;
+      });
     }
   };
 
