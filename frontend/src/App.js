@@ -2074,8 +2074,8 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
       }, 1000);
 
     } catch (error) {
-      console.error('Error uploading document:', error);
-      alert('Erreur lors de l\'upload du document. Veuillez réessayer.');
+      console.error('❌ ERREUR UPLOAD - Document:', error);
+      alert('🔼 ERREUR UPLOAD: Impossible d\'uploader le document. Veuillez réessayer.');
       setIsUploading(false);
       setUploadProgress(0);
     }
