@@ -127,8 +127,14 @@ const DOMAINES_ACTIVITE = [
   "Autre"
 ];
 
-const BACKEND_URL = "http://localhost:8001";
-console.log("🔍 BACKEND_URL FORCÉE:", BACKEND_URL);
+// Détection automatique de l'environnement
+const isPreview = window.location.hostname.includes('preview.emergentagent.com');
+const BACKEND_URL = isPreview 
+  ? window.location.origin 
+  : (process.env.REACT_APP_BACKEND_URL || "http://localhost:8001");
+
+console.log("🔍 BACKEND_URL AUTO-DÉTECTÉE:", BACKEND_URL);
+console.log("🔍 Environnement:", isPreview ? "PREVIEW" : "LOCAL");
 
 const API_URL = `${BACKEND_URL}/api`;
 const API = `${BACKEND_URL}/api`;
