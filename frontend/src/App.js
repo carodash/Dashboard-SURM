@@ -2047,18 +2047,28 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
       // Convert to base64
       const base64Content = await convertToBase64(file);
 
-      // Upload to backend using query parameters (as expected by backend)
-      const params = new URLSearchParams({
+      // Upload to backend using FormData (better for FastAPI)
+      const formData = new FormData();
+      formData.append('partner_id', partnerId);
+      formData.append('partner_type', partnerType);
+      formData.append('filename', file.name);
+      formData.append('document_type', documentType);
+      formData.append('content', base64Content);
+      formData.append('description', description.trim() || '');
+      formData.append('uploaded_by', 'current_user');
+      
+      console.log('🔼 ENVOI UPLOAD - FormData créée avec:', {
         partner_id: partnerId,
-        partner_type: partnerType,
         filename: file.name,
         document_type: documentType,
-        content: base64Content,
-        description: description.trim() || '',
-        uploaded_by: 'current_user'
+        content_length: base64Content.length
       });
       
-      const response = await axios.post(`${API_URL}/documents/upload?${params.toString()}`);
+      const response = await axios.post(`${API_URL}/documents/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
 
       clearInterval(progressInterval);
       setUploadProgress(100);
