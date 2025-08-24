@@ -2277,7 +2277,12 @@ const DocumentList = ({ partnerId, documents, onDeleteDocument, onRefreshDocumen
             
             <div className="flex items-center space-x-2 ml-4">
               <button
-                onClick={() => handleDownload(doc.id, doc.filename)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('🔽 CLIC BOUTON TELECHARGEMENT - Document:', doc.id, doc.filename);
+                  handleDownload(doc.id, doc.filename);
+                }}
                 className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50"
                 title="Télécharger"
               >
