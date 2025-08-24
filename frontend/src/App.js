@@ -2167,7 +2167,8 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
 const DocumentList = ({ partnerId, documents, onDeleteDocument, onRefreshDocuments }) => {
   const handleDownload = async (documentId, filename) => {
     try {
-      const response = await axios.get(`${API}/documents/download/${documentId}`, {
+      console.log('🔍 Téléchargement document:', documentId, 'via', API_URL);
+      const response = await axios.get(`${API_URL}/documents/download/${documentId}`, {
         responseType: 'blob'
       });
       
@@ -2181,8 +2182,10 @@ const DocumentList = ({ partnerId, documents, onDeleteDocument, onRefreshDocumen
       link.remove();
       window.URL.revokeObjectURL(url);
       
+      console.log('✅ Téléchargement réussi:', filename);
+      
     } catch (error) {
-      console.error('Error downloading document:', error);
+      console.error('❌ Error downloading document:', error);
       alert('Erreur lors du téléchargement du document.');
     }
   };
