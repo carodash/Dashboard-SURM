@@ -2047,16 +2047,18 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
       // Convert to base64
       const base64Content = await convertToBase64(file);
 
-      // Upload to backend
-      const response = await axios.post(`${API_URL}/documents/upload`, {
+      // Upload to backend using query parameters (as expected by backend)
+      const params = new URLSearchParams({
         partner_id: partnerId,
         partner_type: partnerType,
         filename: file.name,
         document_type: documentType,
         content: base64Content,
-        description: description.trim() || null,
+        description: description.trim() || '',
         uploaded_by: 'current_user'
       });
+      
+      const response = await axios.post(`${API_URL}/documents/upload?${params.toString()}`);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
