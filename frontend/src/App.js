@@ -354,7 +354,7 @@ const ActivityTimelineModal = ({ isOpen, onClose, partnerId, partnerType, partne
   const loadActivities = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/activity/${partnerId}?partner_type=${partnerType}`);
+      const response = await axios.get(`${API_URL}/activity/${partnerId}?partner_type=${partnerType}`);
       setActivities(response.data);
     } catch (error) {
       console.error("Error loading activities:", error);
