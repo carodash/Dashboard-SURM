@@ -367,7 +367,7 @@ const ActivityTimelineModal = ({ isOpen, onClose, partnerId, partnerType, partne
     if (!newActivity.trim()) return;
     
     try {
-      await axios.post(`${API}/activity/${partnerId}?partner_type=${partnerType}&description=${encodeURIComponent(newActivity)}&user_name=User`);
+      await axios.post(`${API_URL}/activity/${partnerId}?partner_type=${partnerType}&description=${encodeURIComponent(newActivity)}&user_name=User`);
       setNewActivity("");
       loadActivities(); // Refresh the timeline
     } catch (error) {
@@ -623,7 +623,7 @@ const AnalyticsDashboard = ({ isVisible }) => {
     try {
       // Load monthly evolution
       const monthlyParams = new URLSearchParams(dateFilter);
-      const monthlyResponse = await axios.get(`${API}/analytics/monthly-evolution?${monthlyParams}`);
+      const monthlyResponse = await axios.get(`${API_URL}/analytics/monthly-evolution?${monthlyParams}`);
       setMonthlyData(monthlyResponse.data);
 
       // Load distribution data
@@ -631,7 +631,7 @@ const AnalyticsDashboard = ({ isVisible }) => {
         ...dateFilter,
         ...filters
       });
-      const distributionResponse = await axios.get(`${API}/analytics/distribution?${distributionParams}`);
+      const distributionResponse = await axios.get(`${API_URL}/analytics/distribution?${distributionParams}`);
       setDistributionData(distributionResponse.data);
     } catch (error) {
       console.error("Error loading analytics:", error);
@@ -789,7 +789,7 @@ const PrivateCommentsModal = ({ isOpen, onClose, partnerId, partnerType, partner
   const loadComments = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/comments/${partnerId}?partner_type=${partnerType}&user_id=default_user`);
+      const response = await axios.get(`${API_URL}/comments/${partnerId}?partner_type=${partnerType}&user_id=default_user`);
       setComments(response.data);
     } catch (error) {
       console.error("Error loading comments:", error);
@@ -802,7 +802,7 @@ const PrivateCommentsModal = ({ isOpen, onClose, partnerId, partnerType, partner
     if (!newComment.trim()) return;
     
     try {
-      await axios.post(`${API}/comments?user_id=default_user`, {
+      await axios.post(`${API_URL}/comments?user_id=default_user`, {
         partner_id: partnerId,
         partner_type: partnerType,
         comment: newComment
@@ -816,7 +816,7 @@ const PrivateCommentsModal = ({ isOpen, onClose, partnerId, partnerType, partner
 
   const handleEditComment = async (commentId, newText) => {
     try {
-      await axios.put(`${API}/comments/${commentId}?user_id=default_user`, {
+      await axios.put(`${API_URL}/comments/${commentId}?user_id=default_user`, {
         comment: newText
       });
       setEditingComment(null);
@@ -830,7 +830,7 @@ const PrivateCommentsModal = ({ isOpen, onClose, partnerId, partnerType, partner
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce commentaire ?")) return;
     
     try {
-      await axios.delete(`${API}/comments/${commentId}?user_id=default_user`);
+      await axios.delete(`${API_URL}/comments/${commentId}?user_id=default_user`);
       loadComments(); // Refresh comments
     } catch (error) {
       console.error("Error deleting comment:", error);
@@ -982,7 +982,7 @@ const PersonalDashboard = ({ isVisible, currentUser }) => {
   const loadMyStartups = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/my-startups?user_id=${currentUser.id || 'default_user'}`);
+      const response = await axios.get(`${API_URL}/my-startups?user_id=${currentUser.id || 'default_user'}`);
       setMyStartups(response.data);
     } catch (error) {
       console.error("Error loading my startups:", error);
@@ -1409,7 +1409,7 @@ const KanbanBoard = ({ isVisible }) => {
   const loadKanbanData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/kanban-data?user_id=default_user`);
+      const response = await axios.get(`${API_URL}/kanban-data?user_id=default_user`);
       console.log('🔍 DEBUG Kanban data received:', response.data);
       
       // Debug first partner in first column
@@ -1456,7 +1456,7 @@ const KanbanBoard = ({ isVisible }) => {
         user_id: 'default_user'
       });
       
-      const response = await axios.post(`${API}/kanban-move?${params}`);
+      const response = await axios.post(`${API_URL}/kanban-move?${params}`);
 
       console.log('✅ Move successful:', response.data);
       
@@ -1573,7 +1573,7 @@ const SyntheticReports = ({ isVisible }) => {
   const loadReportData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/synthetic-report?user_id=default_user`);
+      const response = await axios.get(`${API_URL}/synthetic-report?user_id=default_user`);
       setReportData(response.data);
     } catch (error) {
       console.error("Error loading report data:", error);
@@ -2048,7 +2048,7 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
       const base64Content = await convertToBase64(file);
 
       // Upload to backend
-      const response = await axios.post(`${API}/documents/upload`, {
+      const response = await axios.post(`${API_URL}/documents/upload`, {
         partner_id: partnerId,
         partner_type: partnerType,
         filename: file.name,
@@ -2195,7 +2195,7 @@ const DocumentList = ({ partnerId, documents, onDeleteDocument, onRefreshDocumen
     }
 
     try {
-      await axios.delete(`${API}/documents/${documentId}`);
+      await axios.delete(`${API_URL}/documents/${documentId}`);
       onDeleteDocument && onDeleteDocument(documentId);
       onRefreshDocuments && onRefreshDocuments();
     } catch (error) {
@@ -3319,15 +3319,15 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
   const loadSettings = async () => {
     try {
       // Load form configurations
-      const sourcingConfig = await axios.get(`${API}/config/form/sourcing`);
-      const dealflowConfig = await axios.get(`${API}/config/form/dealflow`);
+      const sourcingConfig = await axios.get(`${API_URL}/config/form/sourcing`);
+      const dealflowConfig = await axios.get(`${API_URL}/config/form/dealflow`);
       setFormConfig({
         sourcing: sourcingConfig.data,
         dealflow: dealflowConfig.data
       });
 
       // Load column configurations
-      const columnConfigResponse = await axios.get(`${API}/config/columns`);
+      const columnConfigResponse = await axios.get(`${API_URL}/config/columns`);
       if (columnConfigResponse.data) {
         setColumnConfig(columnConfigResponse.data);
       }
@@ -3400,18 +3400,18 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
   const handleSave = async () => {
     try {
       // Save form configurations
-      await axios.post(`${API}/config/form`, {
+      await axios.post(`${API_URL}/config/form`, {
         form_type: "sourcing",
         fields: formConfig.sourcing.fields || []
       });
       
-      await axios.post(`${API}/config/form`, {
+      await axios.post(`${API_URL}/config/form`, {
         form_type: "dealflow",
         fields: formConfig.dealflow.fields || []
       });
 
       // Save column configurations
-      await axios.post(`${API}/config/columns`, columnConfig);
+      await axios.post(`${API_URL}/config/columns`, columnConfig);
       
       // Save permissions with correct structure and valid enum values
       const permissionData = {
@@ -3420,10 +3420,10 @@ const SettingsModal = ({ isOpen, onClose, onSave }) => {
         permissions: permissions.permissions || {} // Ensure it's a Dict[str, bool]
       };
       
-      await axios.post(`${API}/config/permissions`, permissionData);
+      await axios.post(`${API_URL}/config/permissions`, permissionData);
       
       // Save enrichment settings
-      await axios.post(`${API}/config/enrichment`, enrichmentSettings);
+      await axios.post(`${API_URL}/config/enrichment`, enrichmentSettings);
       
       onSave();
       onClose();
@@ -4419,7 +4419,7 @@ const Dashboard = () => {
 
   const fetchSourcingPartners = async () => {
     try {
-      const response = await axios.get(`${API}/sourcing`);
+      const response = await axios.get(`${API_URL}/sourcing`);
       setSourcingPartners(response.data);
       setFilteredSourcingPartners(response.data);
     } catch (error) {
@@ -4429,7 +4429,7 @@ const Dashboard = () => {
 
   const fetchDealflowPartners = async () => {
     try {
-      const response = await axios.get(`${API}/dealflow`);
+      const response = await axios.get(`${API_URL}/dealflow`);
       setDealflowPartners(response.data);
       setFilteredDealflowPartners(response.data);
     } catch (error) {
@@ -4439,7 +4439,7 @@ const Dashboard = () => {
 
   const fetchStatistics = async () => {
     try {
-      const response = await axios.get(`${API}/statistics`);
+      const response = await axios.get(`${API_URL}/statistics`);
       setStatistics(response.data);
     } catch (error) {
       console.error("Error fetching statistics:", error);
@@ -4448,8 +4448,8 @@ const Dashboard = () => {
 
   const fetchCustomFields = async () => {
     try {
-      const sourcingConfig = await axios.get(`${API}/config/form/sourcing`);
-      const dealflowConfig = await axios.get(`${API}/config/form/dealflow`);
+      const sourcingConfig = await axios.get(`${API_URL}/config/form/sourcing`);
+      const dealflowConfig = await axios.get(`${API_URL}/config/form/dealflow`);
       setCustomFields({
         sourcing: sourcingConfig.data.fields || [],
         dealflow: dealflowConfig.data.fields || []
@@ -4461,7 +4461,7 @@ const Dashboard = () => {
 
   const fetchColumnConfig = async () => {
     try {
-      const response = await axios.get(`${API}/config/columns`);
+      const response = await axios.get(`${API_URL}/config/columns`);
       if (response.data) {
         setColumnConfig(response.data);
       }
@@ -4538,7 +4538,7 @@ const Dashboard = () => {
   const handleCreateSourcing = async (formData) => {
     setLoading(true);
     try {
-      await axios.post(`${API}/sourcing`, formData);
+      await axios.post(`${API_URL}/sourcing`, formData);
       await fetchSourcingPartners();
       await fetchStatistics();
       setShowSourcingForm(false);
@@ -4552,7 +4552,7 @@ const Dashboard = () => {
   const handleCreateDealflow = async (formData) => {
     setLoading(true);
     try {
-      await axios.post(`${API}/dealflow`, formData);
+      await axios.post(`${API_URL}/dealflow`, formData);
       await fetchDealflowPartners();
       await fetchStatistics();
       setShowDealflowForm(false);
@@ -4566,7 +4566,7 @@ const Dashboard = () => {
   const handleEditSourcing = async (formData) => {
     setLoading(true);
     try {
-      await axios.put(`${API}/sourcing/${editingPartner.id}`, formData);
+      await axios.put(`${API_URL}/sourcing/${editingPartner.id}`, formData);
       await fetchSourcingPartners();
       await fetchStatistics();
       setEditingPartner(null);
@@ -4581,7 +4581,7 @@ const Dashboard = () => {
   const handleEditDealflow = async (formData) => {
     setLoading(true);
     try {
-      await axios.put(`${API}/dealflow/${editingPartner.id}`, formData);
+      await axios.put(`${API_URL}/dealflow/${editingPartner.id}`, formData);
       await fetchDealflowPartners();
       await fetchStatistics();
       setEditingPartner(null);
@@ -4596,7 +4596,7 @@ const Dashboard = () => {
   const handleDeleteSourcing = async (id) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer ce partenaire ?")) {
       try {
-        await axios.delete(`${API}/sourcing/${id}`);
+        await axios.delete(`${API_URL}/sourcing/${id}`);
         await fetchSourcingPartners();
         await fetchStatistics();
       } catch (error) {
@@ -4608,7 +4608,7 @@ const Dashboard = () => {
   const handleDeleteDealflow = async (id) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer ce partenaire ?")) {
       try {
-        await axios.delete(`${API}/dealflow/${id}`);
+        await axios.delete(`${API_URL}/dealflow/${id}`);
         await fetchDealflowPartners();
         await fetchStatistics();
       } catch (error) {
@@ -4659,7 +4659,7 @@ const Dashboard = () => {
   // Phase 4 - Quick view functions
   const handleGlobalSearch = async (query) => {
     try {
-      const response = await axios.get(`${API}/global-search?query=${encodeURIComponent(query)}&user_id=default_user`);
+      const response = await axios.get(`${API_URL}/global-search?query=${encodeURIComponent(query)}&user_id=default_user`);
       setQuickViewData({
         view_name: `Recherche: "${query}"`,
         description: `Résultats de recherche pour "${query}"`,
@@ -4673,7 +4673,7 @@ const Dashboard = () => {
 
   const handleQuickView = async (viewType) => {
     try {
-      const response = await axios.get(`${API}/quick-views/${viewType}?user_id=default_user`);
+      const response = await axios.get(`${API_URL}/quick-views/${viewType}?user_id=default_user`);
       setQuickViewData(response.data);
       setShowQuickViewModal(true);
     } catch (error) {
@@ -4694,7 +4694,7 @@ const Dashboard = () => {
     };
 
     try {
-      await axios.post(`${API}/transition/${sourcingId}`, dealflowData);
+      await axios.post(`${API_URL}/transition/${sourcingId}`, dealflowData);
       await fetchSourcingPartners();
       await fetchDealflowPartners();
       await fetchStatistics();
@@ -4709,7 +4709,7 @@ const Dashboard = () => {
     setLoading(true);
     try {
       console.log(`Enriching partner ${partnerId} of type ${partnerType}`);
-      const response = await axios.post(`${API}/enrich/${partnerId}?partner_type=${partnerType}`);
+      const response = await axios.post(`${API_URL}/enrich/${partnerId}?partner_type=${partnerType}`);
       console.log("Enrichment response:", response.data);
       
       if (partnerType === "sourcing") {
@@ -4840,7 +4840,7 @@ const Dashboard = () => {
     try {
       const endpoint = activeTab === 'sourcing' ? '/api/sourcing' : '/api/dealflow';
       await Promise.all(
-        selectedItems.map(id => axios.delete(`${API}${endpoint}/${id}`))
+        selectedItems.map(id => axios.delete(`${API_URL}${endpoint}/${id}`))
       );
       
       // Refresh data
@@ -4865,7 +4865,7 @@ const Dashboard = () => {
     try {
       await Promise.all(
         selectedItems.map(id => 
-          axios.post(`${API}/transition/${id}`, {
+          axios.post(`${API_URL}/transition/${id}`, {
             statut: "En cours avec l'équipe inno",
             metiers_concernes: "À définir",
             date_reception_fichier: new Date().toISOString().split('T')[0]
@@ -5767,7 +5767,7 @@ const DocumentModal = ({ isOpen, onClose, partnerId, partnerType, partnerName })
     
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/documents/${partnerId}`);
+      const response = await axios.get(`${API_URL}/documents/${partnerId}`);
       setDocuments(response.data);
     } catch (error) {
       console.error('Error loading documents:', error);
