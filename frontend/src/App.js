@@ -251,7 +251,7 @@ const NextActionDate = ({ date, onUpdate, partnerId, partnerType }) => {
   const handleSave = async () => {
     try {
       const updateData = { date_prochaine_action: actionDate || null };
-      const response = await axios.put(`${API}/${partnerType}/${partnerId}`, updateData);
+      const response = await axios.put(`${API_URL}/${partnerType}/${partnerId}`, updateData);
       onUpdate(response.data);
       setIsEditing(false);
     } catch (error) {
