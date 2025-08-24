@@ -2166,10 +2166,17 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
 const DocumentList = ({ partnerId, documents, onDeleteDocument, onRefreshDocuments }) => {
   const handleDownload = async (documentId, filename) => {
     try {
-      console.log('🔍 Téléchargement document:', documentId, 'via', API_URL);
-      const response = await axios.get(`${API_URL}/documents/download/${documentId}`, {
+      console.log('🔽 DEBUT TELECHARGEMENT - Document ID:', documentId, 'Filename:', filename);
+      console.log('🔽 URL BACKEND utilisée:', API_URL);
+      
+      const downloadUrl = `${API_URL}/documents/download/${documentId}`;
+      console.log('🔽 URL complète de téléchargement:', downloadUrl);
+      
+      const response = await axios.get(downloadUrl, {
         responseType: 'blob'
       });
+      
+      console.log('🔽 Réponse reçue - Status:', response.status, 'Taille:', response.data.size);
       
       // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -2181,11 +2188,12 @@ const DocumentList = ({ partnerId, documents, onDeleteDocument, onRefreshDocumen
       link.remove();
       window.URL.revokeObjectURL(url);
       
-      console.log('✅ Téléchargement réussi:', filename);
+      console.log('✅ TELECHARGEMENT REUSSI:', filename);
       
     } catch (error) {
-      console.error('❌ Error downloading document:', error);
-      alert('Erreur lors du téléchargement du document.');
+      console.error('❌ ERREUR TELECHARGEMENT - Document ID:', documentId, 'Error:', error);
+      console.error('❌ Details erreur:', error.response?.status, error.response?.data);
+      alert(`🔽 ERREUR TÉLÉCHARGEMENT: Impossible de télécharger le document "${filename}". Vérifiez votre connexion.`);
     }
   };
 
