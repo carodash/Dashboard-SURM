@@ -137,7 +137,6 @@ console.log("🔍 BACKEND_URL AUTO-DÉTECTÉE:", BACKEND_URL);
 console.log("🔍 Environnement:", isPreview ? "PREVIEW" : "LOCAL");
 
 const API_URL = `${BACKEND_URL}/api`;
-const API = `${BACKEND_URL}/api`;
 
 const ScoreDisplay = ({ score, type = "maturite" }) => {
   if (!score) return <span className="text-gray-400">-</span>;
