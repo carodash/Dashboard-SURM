@@ -598,6 +598,21 @@ test_plan:
         agent: "testing"
         comment: "✅ DOCUMENT MANAGEMENT SYSTEM FULLY WORKING: Complete document management system implemented with drag & drop upload, Base64 storage, versioning, and document type categorization. All 5 endpoints working: POST /api/documents/upload (with automatic versioning), GET /api/documents/{partner_id} (filtered by partner), GET /api/documents/download/{document_id}, DELETE /api/documents/{document_id}, GET /api/documents/types. Document types include Convention, Presentation, Contrat, Autre. Frontend integration with DocumentUpload, DocumentList, and DocumentModal components fully functional."
 
+  - task: "NEW FEATURE - Duplicate Detection Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Caroline requested new duplicate detection endpoint GET /api/partners/check-duplicate?name={nomPartenaire} to prevent duplicate partner creation. Endpoint searches both sourcing (nom_entreprise) and dealflow (nom) collections with similarity scoring."
+      - working: true
+        agent: "testing"
+        comment: "✅ NEW DUPLICATE DETECTION ENDPOINT FULLY WORKING: Comprehensive testing completed successfully. (1) Basic Functionality - Correctly returns empty for names < 3 characters, finds FinTech matches (11 results), finds TestStartup matches (2 results). (2) Similarity Detection - Exact matches return 100% similarity, all partial matches meet 60% threshold, similarity range 0.80-1.00. (3) Cross-Collection Search - Successfully searches both sourcing partners (nom_entreprise field) and dealflow partners (nom field), returns correct partner types. (4) Response Format - Correct structure (search_term, duplicates, found_count), duplicate info includes all required fields (id, name, type, similarity, domain, status, pilot), results limited to top 5 matches, properly sorted by similarity (highest first). (5) Edge Cases - Handles special characters, very long names, single vs multi-word names correctly. (6) Field Mapping - Correctly searches nom_entreprise for sourcing and nom for dealflow partners. Ready for frontend integration to show duplicate alerts when users type partner names (after 3+ characters)."
+
   - task: "URGENT - Document Upload JSON Body Support"
     implemented: true
     working: true
