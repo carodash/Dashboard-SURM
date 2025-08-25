@@ -2047,28 +2047,31 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
       // Convert to base64
       const base64Content = await convertToBase64(file);
 
-      // Upload to backend using axios params (proper encoding)
-      console.log('🔼 ENVOI UPLOAD - Données préparées:', {
+      // Upload to backend using simple JSON (much more reliable)
+      const uploadData = {
+        partner_id: partnerId,
+        partner_type: partnerType,
+        filename: file.name,
+        document_type: documentType,
+        content: base64Content,
+        description: description.trim() || '',
+        uploaded_by: 'current_user'
+      };
+      
+      console.log('🔼 ENVOI UPLOAD JSON - Données:', {
         partner_id: partnerId,
         filename: file.name,
         document_type: documentType,
-        content_length: base64Content.length,
-        content_preview: base64Content.substring(0, 50) + '...'
+        content_length: base64Content.length
       });
       
-      const response = await axios.post(`${API_URL}/documents/upload`, null, {
-        params: {
-          partner_id: partnerId,
-          partner_type: partnerType,
-          filename: file.name,
-          document_type: documentType,
-          content: base64Content,
-          description: description.trim() || '',
-          uploaded_by: 'current_user'
+      const response = await axios.post(`${API_URL}/documents/upload`, uploadData, {
+        headers: {
+          'Content-Type': 'application/json'
         }
       });
       
-      console.log('✅ UPLOAD RÉUSSI - Réponse:', response.status);
+      console.log('✅ UPLOAD JSON RÉUSSI - Status:', response.status);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
