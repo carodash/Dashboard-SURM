@@ -1986,7 +1986,7 @@ async def get_kanban_data(user_id: str = "default_user"):
             kanban_data["columns"]["prequalification"]["partners"].append(kanban_partner)
         elif status == "En cours avec les métiers":
             kanban_data["columns"]["presentation"]["partners"].append(kanban_partner)
-        elif "go" in status.lower() and "etude" in status.lower():
+        elif "go" in status.lower() and "étude" in status.lower():
             kanban_data["columns"]["go_metier"]["partners"].append(kanban_partner)
         elif "experimentation" in status.lower() or "go experimentation" in status.lower():
             kanban_data["columns"]["experimentation"]["partners"].append(kanban_partner)
