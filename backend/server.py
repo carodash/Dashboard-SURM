@@ -1990,7 +1990,7 @@ async def get_kanban_data(user_id: str = "default_user"):
             kanban_data["columns"]["go_metier"]["partners"].append(kanban_partner)
         elif "experimentation" in status.lower() or "go experimentation" in status.lower():
             kanban_data["columns"]["experimentation"]["partners"].append(kanban_partner)
-        elif "generalisation" in status.lower() or "go generalisation" in status.lower():
+        elif "généralisation" in status.lower() or "go généralisation" in status.lower():
             kanban_data["columns"]["generalisation"]["partners"].append(kanban_partner)
         elif status == "Clos":
             kanban_data["columns"]["cloture"]["partners"].append(kanban_partner)
