@@ -2662,11 +2662,10 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     const { name, value, type, checked } = e.target;
     
     if (name === 'tags_strategiques') {
-      // Gestion spéciale pour les tags (conversion string vers array)
-      const tags = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+      // Preserve the raw input for tags during typing (don't filter until submission)
       setFormData(prev => ({
         ...prev,
-        [name]: tags
+        [name]: value  // Keep as string during typing
       }));
     } else {
       setFormData(prev => ({
