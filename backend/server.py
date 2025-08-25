@@ -1268,17 +1268,28 @@ async def upload_document(
     
     # Try to get data from JSON body first, then fallback to query parameters
     try:
-        if hasattr(request, '_body') and request._body:
+        # Check if request has JSON content-type and body
+        content_type = request.headers.get("content-type", "")
+        if "application/json" in content_type:
             body = await request.json()
-            partner_id = body.get('partner_id', partner_id)
-            partner_type = body.get('partner_type', partner_type)
-            filename = body.get('filename', filename)
-            document_type = body.get('document_type', document_type)
-            content = body.get('content', content)
-            description = body.get('description', description)
-            uploaded_by = body.get('uploaded_by', uploaded_by)
-    except:
+            # Only override parameters if they exist in JSON body
+            if 'partner_id' in body:
+                partner_id = body['partner_id']
+            if 'partner_type' in body:
+                partner_type = body['partner_type']
+            if 'filename' in body:
+                filename = body['filename']
+            if 'document_type' in body:
+                document_type = body['document_type']
+            if 'content' in body:
+                content = body['content']
+            if 'description' in body:
+                description = body['description']
+            if 'uploaded_by' in body:
+                uploaded_by = body['uploaded_by']
+    except Exception as e:
         # Fallback to query parameters (existing behavior)
+        print(f"JSON parsing failed, using query parameters: {e}")
         pass
     import base64
     
