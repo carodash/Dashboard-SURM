@@ -5204,20 +5204,86 @@ const Dashboard = () => {
   const convertToCSV = (data) => {
     if (data.length === 0) return '';
     
-    const headers = Object.keys(data[0]);
-    const csvContent = [
+    // Define clean column mapping for both sourcing and dealflow
+    const getSourcingColumns = () => ({
+      'nom_entreprise': 'Nom Entreprise',
+      'statut': 'Statut',
+      'domaine_activite': 'Domaine d\'Activité',
+      'typologie': 'Typologie',
+      'pays_origine': 'Pays d\'Origine',
+      'pilote': 'Pilote',
+      'source': 'Source',
+      'date_entree_sourcing': 'Date Entrée Sourcing',
+      'interet': 'Intérêt',
+      'objet': 'Objet',
+      'cas_usage': 'Cas d\'Usage',
+      'technologie': 'Technologie',
+      'score_maturite': 'Score Maturité',
+      'priorite_strategique': 'Priorité Stratégique',
+      'date_prochaine_action': 'Prochaine Action',
+      'actions_commentaires': 'Actions & Commentaires'
+    });
+
+    const getDealflowColumns = () => ({
+      'nom': 'Nom Startup',
+      'statut': 'Statut',
+      'domaine': 'Domaine',
+      'typologie': 'Typologie',
+      'pilote': 'Pilote',
+      'source': 'Source',
+      'metiers_concernes': 'Métiers Concernés',
+      'objet': 'Objet',
+      'date_reception_fichier': 'Date Réception',
+      'date_pre_qualification': 'Date Pré-qualification',
+      'date_presentation_metiers': 'Date Présentation Métiers',
+      'date_go_metier_etude': 'Date Go Métier Étude',
+      'date_go_experimentation': 'Date Go Expérimentation',
+      'date_go_generalisation': 'Date Go Généralisation',
+      'date_cloture': 'Date Clôture',
+      'date_prochaine_action': 'Prochaine Action',
+      'actions_commentaires': 'Actions & Commentaires'
+    });
+
+    // Determine data type and get appropriate columns
+    const isSourceData = data[0]?.nom_entreprise !== undefined;
+    const columnMapping = isSourceData ? getSourcingColumns() : getDealflowColumns();
+    
+    // Format data cleanly
+    const formatValue = (value) => {
+      if (value === null || value === undefined) return '';
+      if (typeof value === 'boolean') return value ? 'Oui' : 'Non';
+      if (Array.isArray(value)) return value.join('; ');
+      if (typeof value === 'object') return JSON.stringify(value);
+      if (typeof value === 'string') {
+        // Clean and format dates
+        if (value.match(/^\d{4}-\d{2}-\d{2}/)) {
+          try {
+            return new Date(value).toLocaleDateString('fr-FR');
+          } catch {
+            return value;
+          }
+        }
+        // Escape commas and quotes
+        if (value.includes(',') || value.includes('"')) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      }
+      return String(value);
+    };
+    
+    // Create CSV content
+    const headers = Object.values(columnMapping);
+    const csvRows = [
       headers.join(','),
       ...data.map(row => 
-        headers.map(header => {
-          const value = row[header];
-          return typeof value === 'string' && value.includes(',') 
-            ? `"${value}"` 
-            : value;
-        }).join(',')
+        Object.keys(columnMapping).map(key => 
+          formatValue(row[key])
+        ).join(',')
       )
-    ].join('\n');
+    ];
     
-    return csvContent;
+    return csvRows.join('\n');
   };
 
   const downloadCSV = (csv, filename) => {
