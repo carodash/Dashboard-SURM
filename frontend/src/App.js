@@ -2031,10 +2031,12 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
 
     setIsUploading(true);
     setUploadProgress(0);
+    
+    let progressInterval; // Declare outside try block
 
     try {
       // Simulate progress
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
             clearInterval(progressInterval);
@@ -2090,7 +2092,7 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
 
     } catch (error) {
       console.error('❌ ERREUR UPLOAD - Document:', error);
-      clearInterval(progressInterval);
+      if (progressInterval) clearInterval(progressInterval);
       
       // Detailed error handling
       let errorMessage = '🔼 ERREUR UPLOAD: ';
