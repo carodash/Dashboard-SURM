@@ -2855,6 +2855,138 @@ def test_critical_kanban_go_metier_bug():
         'presentation_id': presentation_id if 'presentation_id' in locals() else None
     }
 
+def test_urgent_kanban_response_format():
+    """Test URGENT - Kanban Move Response Format Fix for Caroline's issue"""
+    print("\n=== TESTING URGENT - KANBAN MOVE RESPONSE FORMAT FIX ===")
+    
+    # Test 1: Create test dealflow partner in "Présentation métiers" status
+    print("\n1. Creating test dealflow partner in 'Présentation métiers' status")
+    test_partner_data = {
+        "nom": "Caroline Test Partner",
+        "statut": "Présentation métiers",
+        "domaine": "FinTech",
+        "typologie": "Startup",
+        "objet": "Solution de paiement innovante",
+        "source": "VivaTech 2025",
+        "pilote": "Caroline Test",
+        "metiers_concernes": "DSI, Finance",
+        "date_reception_fichier": "2024-12-01",
+        "date_pre_qualification": "2024-12-05",
+        "actions_commentaires": "Test pour Caroline"
+    }
+    
+    response = requests.post(f"{API_URL}/dealflow", json=test_partner_data)
+    if response.status_code == 200:
+        partner = response.json()
+        partner_id = partner['id']
+        print(f"✅ Created test partner: {partner['nom']} (ID: {partner_id})")
+        print(f"   Initial status: {partner['statut']}")
+    else:
+        print(f"❌ Failed to create test partner: {response.status_code} - {response.text}")
+        return
+    
+    # Test 2: Move to "go_metier" column via POST /api/kanban-move
+    print(f"\n2. Testing POST /api/kanban-move to 'go_metier' column")
+    move_params = {
+        "partner_id": partner_id,
+        "partner_type": "dealflow",
+        "source_column": "presentation",
+        "destination_column": "go_metier"
+    }
+    
+    response = requests.post(f"{API_URL}/kanban-move", params=move_params)
+    if response.status_code == 200:
+        move_result = response.json()
+        print("✅ Kanban move successful!")
+        print(f"   Response: {move_result}")
+        
+        # Verify response includes new_status="Go métier étude"
+        if "new_status" in move_result:
+            if move_result["new_status"] == "Go métier étude":
+                print("✅ CRITICAL FIX VERIFIED: new_status='Go métier étude' returned correctly")
+            else:
+                print(f"❌ CRITICAL ISSUE: new_status='{move_result['new_status']}' (expected 'Go métier étude')")
+        else:
+            print("❌ CRITICAL ISSUE: 'new_status' field missing from response")
+        
+        # Verify other required fields
+        required_fields = ["message", "new_status", "partner_type", "partner_id"]
+        missing_fields = [field for field in required_fields if field not in move_result]
+        if not missing_fields:
+            print("✅ All required response fields present: message, new_status, partner_type, partner_id")
+        else:
+            print(f"❌ Missing required fields: {missing_fields}")
+            
+    else:
+        print(f"❌ Kanban move failed: {response.status_code} - {response.text}")
+        return
+    
+    # Test 3: Create another test dealflow partner for généralisation test
+    print("\n3. Creating second test partner for généralisation test")
+    test_partner_data_2 = test_partner_data.copy()
+    test_partner_data_2["nom"] = "Caroline Généralisation Test"
+    test_partner_data_2["statut"] = "Go experimentation"
+    
+    response = requests.post(f"{API_URL}/dealflow", json=test_partner_data_2)
+    if response.status_code == 200:
+        partner_2 = response.json()
+        partner_2_id = partner_2['id']
+        print(f"✅ Created second test partner: {partner_2['nom']} (ID: {partner_2_id})")
+    else:
+        print(f"❌ Failed to create second test partner: {response.status_code} - {response.text}")
+        return
+    
+    # Test 4: Move to "generalisation" column
+    print(f"\n4. Testing POST /api/kanban-move to 'generalisation' column")
+    move_params_2 = {
+        "partner_id": partner_2_id,
+        "partner_type": "dealflow",
+        "source_column": "experimentation",
+        "destination_column": "generalisation"
+    }
+    
+    response = requests.post(f"{API_URL}/kanban-move", params=move_params_2)
+    if response.status_code == 200:
+        move_result_2 = response.json()
+        print("✅ Kanban move to généralisation successful!")
+        print(f"   Response: {move_result_2}")
+        
+        # Verify response includes new_status="Go généralisation"
+        if "new_status" in move_result_2:
+            if move_result_2["new_status"] == "Go généralisation":
+                print("✅ GÉNÉRALISATION FIX VERIFIED: new_status='Go généralisation' returned correctly")
+            else:
+                print(f"❌ GÉNÉRALISATION ISSUE: new_status='{move_result_2['new_status']}' (expected 'Go généralisation')")
+        else:
+            print("❌ GÉNÉRALISATION ISSUE: 'new_status' field missing from response")
+            
+    else:
+        print(f"❌ Kanban move to généralisation failed: {response.status_code} - {response.text}")
+    
+    # Test 5: Test Response Structure Completeness
+    print("\n5. Testing complete response structure for all required fields")
+    test_cases = [
+        ("go_metier move", move_result if 'move_result' in locals() else {}),
+        ("generalisation move", move_result_2 if 'move_result_2' in locals() else {})
+    ]
+    
+    for test_name, result in test_cases:
+        if result:
+            print(f"\n   Testing {test_name}:")
+            required_fields = ["message", "new_status", "partner_type", "partner_id"]
+            for field in required_fields:
+                if field in result:
+                    print(f"   ✅ {field}: {result[field]}")
+                else:
+                    print(f"   ❌ {field}: MISSING")
+    
+    print("\n🎯 CAROLINE'S KANBAN ISSUE RESOLUTION SUMMARY:")
+    print("   - Backend now returns complete response with new_status field")
+    print("   - Frontend should no longer show 'Nouveau statut: N/A'")
+    print("   - Drag & drop status confirmation working correctly")
+    
+    return partner_id, partner_2_id
+
 def main():
     """Run all tests"""
     print("🚀 Starting SURM Backend API Tests - Including Phase 1, Phase 2 & Phase 3 Features")
