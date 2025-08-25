@@ -1952,7 +1952,7 @@ const GlobalSearchBar = ({ onSearch, onQuickView }) => {
 const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [documentType, setDocumentType] = useState('AUTRE');
+  const [documentType, setDocumentType] = useState('Autre');
   const [description, setDescription] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
   
