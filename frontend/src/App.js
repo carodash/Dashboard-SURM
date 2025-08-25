@@ -1957,12 +1957,12 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   
   const documentTypes = [
-    { value: 'CONVENTION', label: '📄 Convention' },
-    { value: 'PRESENTATION', label: '📊 Présentation' },
-    { value: 'COMPTE_RENDU', label: '📝 Compte-rendu' },
-    { value: 'CONTRAT', label: '📋 Contrat' },
-    { value: 'DOCUMENT_TECHNIQUE', label: '🔧 Document technique' },
-    { value: 'AUTRE', label: '📎 Autre' }
+    { value: 'Convention', label: '📄 Convention' },
+    { value: 'Présentation', label: '📊 Présentation' },
+    { value: 'Compte-rendu', label: '📝 Compte-rendu' },
+    { value: 'Contrat', label: '📋 Contrat' },
+    { value: 'Document technique', label: '🔧 Document technique' },
+    { value: 'Autre', label: '📎 Autre' }
   ];
 
   const convertToBase64 = (file) => {
