@@ -1456,12 +1456,22 @@ const KanbanBoard = ({ isVisible }) => {
         user_id: 'default_user'
       });
       
+      console.log('🔍 DEBUGGING DRAG & DROP - Paramètres API:', {
+        partner_id: partnerId,
+        partner_type: partnerType,
+        source_column: source.droppableId,
+        destination_column: destination.droppableId,
+        api_url: `${API_URL}/kanban-move?${params}`
+      });
+      
       const response = await axios.post(`${API_URL}/kanban-move?${params}`);
 
       console.log('✅ Move successful:', response.data);
+      console.log('✅ Response status:', response.status);
+      console.log('✅ Response headers:', response.headers);
       
       // Show success feedback
-      alert(`✅ Startup déplacée avec succès vers "${destination.droppableId}"`);
+      alert(`✅ Startup déplacée avec succès vers "${destination.droppableId}"\nNouveau statut: ${response.data?.new_status || 'N/A'}`);
       
       // Reload data to reflect changes
       loadKanbanData();
