@@ -2762,6 +2762,8 @@ def test_critical_kanban_go_metier_bug():
         # Now test the kanban move
         move_params = {
             "partner_id": presentation_id,
+            "partner_type": "dealflow",
+            "source_column": "presentation",
             "destination_column": "go_metier"
         }
         
