@@ -3095,34 +3095,42 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
 const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [] }) => {
   const [formData, setFormData] = useState({
-    nom: "",
-    statut: "En cours avec l'équipe inno",
-    domaine: "",
-    typologie: "",
-    objet: "",
-    source: "",
-    pilote: "",
-    metiers_concernes: "",
-    date_reception_fichier: "",
-    date_pre_qualification: "",
-    date_presentation_meetup_referents: "",
-    date_presentation_metiers: "",
-    date_go_metier_etude: "",
-    date_go_experimentation: "",
-    date_go_generalisation: "",
-    date_cloture: "",
-    actions_commentaires: "",
-    points_etapes_intermediaires: "",
+    nom: initialData?.nom || "",
+    statut: initialData?.statut || "En cours avec l'équipe inno",
+    domaine: initialData?.domaine || "",
+    typologie: initialData?.typologie || "",
+    objet: initialData?.objet || "",
+    source: initialData?.source || "",
+    pilote: initialData?.pilote || "",
+    metiers_concernes: initialData?.metiers_concernes || "",
+    date_reception_fichier: initialData?.date_reception_fichier || "",
+    date_pre_qualification: initialData?.date_pre_qualification || "",
+    date_presentation_meetup_referents: initialData?.date_presentation_meetup_referents || "",
+    date_presentation_metiers: initialData?.date_presentation_metiers || "",
+    date_go_metier_etude: initialData?.date_go_metier_etude || "",
+    date_go_experimentation: initialData?.date_go_experimentation || "",
+    date_go_generalisation: initialData?.date_go_generalisation || "",
+    date_cloture: initialData?.date_cloture || "",
+    actions_commentaires: initialData?.actions_commentaires || "",
+    points_etapes_intermediaires: initialData?.points_etapes_intermediaires || "",
     // Phase 1 - Suivi & Relance
-    date_prochaine_action: "",
+    date_prochaine_action: initialData?.date_prochaine_action || "",
     // Scoring fields
-    score_maturite: "",
-    priorite_strategique: "",
-    score_potentiel: "",
-    tags_strategiques: [],
-    custom_fields: {},
-    ...initialData
+    score_maturite: initialData?.score_maturite || "",
+    priorite_strategique: initialData?.priorite_strategique || "",
+    score_potentiel: initialData?.score_potentiel || "",
+    tags_strategiques: initialData?.tags_strategiques || [],
+    custom_fields: initialData?.custom_fields || {},
+    ...customFields.reduce((acc, field) => {
+      acc[field.name] = initialData?.[field.name] || field.defaultValue || "";
+      return acc;
+    }, {})
   });
+
+  // Phase 5 - Duplicate Detection  
+  const { duplicates, isChecking, checkDuplicates, clearDuplicates } = useDuplicateDetection();
+  const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
+  const [forcingCreation, setForcingCreation] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -3151,6 +3159,7 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
     if (name.startsWith('custom_')) {
       const customFieldName = name.replace('custom_', '');
       setFormData(prev => ({
@@ -3165,6 +3174,19 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
         ...prev,
         [name]: type === 'checkbox' ? checked : value
       }));
+
+      // Phase 5 - Check for duplicates when nom changes
+      if (name === 'nom' && !initialData) { // Only check for new partners, not edits
+        if (value.length >= 3) {
+          checkDuplicates(value);
+          setShowDuplicateAlert(true);
+          setForcingCreation(false);
+        } else {
+          clearDuplicates();
+          setShowDuplicateAlert(false);
+          setForcingCreation(false);
+        }
+      }
     }
   };
 
