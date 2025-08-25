@@ -535,9 +535,24 @@ metadata:
   test_sequence: 3
   run_ui: false
 
+  - task: "CRITICAL - Kanban Go Métier Drag & Drop Bug"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User Caroline reports Kanban drag & drop issue: Cannot move cards to 'Go Métier' column despite success message. Drag & drop appears to fail specifically for this column while other columns work."
+      - working: "investigating"
+        agent: "main"
+        comment: "FOUND ROOT CAUSE: DealflowStatus enum was incomplete - missing 'Go métier étude', 'Go experimentation', 'Go généralisation', 'Présentation métiers' statuses. Backend Kanban mapping tries to use 'Go métier étude' status but enum validation rejects it. Updated DealflowStatus enum to include all 7 dealflow statuses. Need backend testing to confirm fix."
+
 test_plan:
   current_focus:
-    - "URGENT - Document Upload JSON Body Support"
+    - "CRITICAL - Kanban Go Métier Drag & Drop Bug"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
