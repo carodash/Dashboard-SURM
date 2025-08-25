@@ -3714,6 +3714,148 @@ def test_critical_partner_creation():
     print("🔍 CRITICAL BUG INVESTIGATION COMPLETED")
     print("=" * 80)
 
+def test_urgent_document_upload_json():
+    """URGENT TEST - Document Upload with JSON Body (User Request)"""
+    print("\n=== 🚨 URGENT TEST - DOCUMENT UPLOAD JSON ENDPOINT 🚨 ===")
+    print("Testing the modified backend endpoint that should accept JSON instead of query parameters")
+    
+    # First create a test partner
+    print("\n1. Creating test partner for urgent document upload test")
+    test_data = SOURCING_TEST_DATA.copy()
+    test_data["nom_entreprise"] = "URGENT JSON Upload Test Partner"
+    response = requests.post(f"{API_URL}/sourcing", json=test_data)
+    if response.status_code != 200:
+        print(f"❌ Failed to create test partner: {response.status_code}")
+        return
+    
+    partner = response.json()
+    partner_id = partner['id']
+    print(f"✅ Created test partner: {partner_id}")
+    
+    # Test with EXACT data provided by user
+    print(f"\n2. Testing POST /api/documents/upload with EXACT USER-PROVIDED JSON DATA")
+    
+    # User's exact test data
+    user_test_data = {
+        "partner_id": partner_id,  # Using real partner ID instead of "test-partner-id"
+        "partner_type": "sourcing", 
+        "filename": "test.txt",
+        "document_type": "Autre",
+        "content": "VGVzdCBjb250ZW50",  # base64 for "Test content"
+        "description": "Test upload",
+        "uploaded_by": "test_user"
+    }
+    
+    print("📋 Request data:")
+    print(f"   - partner_id: {user_test_data['partner_id']}")
+    print(f"   - partner_type: {user_test_data['partner_type']}")
+    print(f"   - filename: {user_test_data['filename']}")
+    print(f"   - document_type: {user_test_data['document_type']}")
+    print(f"   - content: {user_test_data['content'][:20]}... (base64)")
+    print(f"   - description: {user_test_data['description']}")
+    print(f"   - uploaded_by: {user_test_data['uploaded_by']}")
+    
+    # Make the request with JSON body (as user expects it to work)
+    print(f"\n3. Making POST request to {API_URL}/documents/upload with JSON body...")
+    response = requests.post(f"{API_URL}/documents/upload", json=user_test_data)
+    
+    print(f"📊 Response Status: {response.status_code}")
+    print(f"📊 Response Headers: {dict(response.headers)}")
+    
+    if response.status_code == 200:
+        document = response.json()
+        print("✅ SUCCESS! Document upload with JSON body is working!")
+        print(f"   - Document ID: {document['id']}")
+        print(f"   - Filename: {document['filename']}")
+        print(f"   - Type: {document['document_type']}")
+        print(f"   - Size: {document['file_size']} bytes")
+        print(f"   - Version: {document['version']}")
+        print(f"   - Uploaded by: {document['uploaded_by']}")
+        
+        # Verify the content was decoded correctly
+        import base64
+        expected_content = base64.b64decode("VGVzdCBjb250ZW50").decode()
+        print(f"   - Expected decoded content: '{expected_content}'")
+        
+        # Test download to verify content integrity
+        print(f"\n4. Verifying uploaded content by downloading...")
+        download_response = requests.get(f"{API_URL}/documents/download/{document['id']}")
+        if download_response.status_code == 200:
+            downloaded_content = download_response.content.decode()
+            if downloaded_content == expected_content:
+                print("✅ Content integrity verified - upload and download match!")
+            else:
+                print(f"❌ Content mismatch: '{downloaded_content}' != '{expected_content}'")
+        else:
+            print(f"❌ Failed to download for verification: {download_response.status_code}")
+            
+    elif response.status_code == 400:
+        print("❌ CRITICAL: Still getting 400 Bad Request!")
+        print(f"📋 Response body: {response.text}")
+        
+        # Let's try to understand what the backend expects
+        print(f"\n🔍 DEBUGGING: Let's check what the backend actually receives...")
+        
+        # Try with query parameters (old method) to see if that still works
+        print(f"\n5. Testing with query parameters (fallback method)...")
+        params = {
+            "partner_id": user_test_data["partner_id"],
+            "partner_type": user_test_data["partner_type"],
+            "filename": user_test_data["filename"],
+            "document_type": user_test_data["document_type"],
+            "content": user_test_data["content"],
+            "description": user_test_data["description"],
+            "uploaded_by": user_test_data["uploaded_by"]
+        }
+        
+        fallback_response = requests.post(f"{API_URL}/documents/upload", params=params)
+        print(f"📊 Fallback Response Status: {fallback_response.status_code}")
+        
+        if fallback_response.status_code == 200:
+            print("✅ Query parameters method still works - JSON parsing issue in backend")
+        else:
+            print(f"❌ Both methods failing: {fallback_response.text}")
+            
+    else:
+        print(f"❌ Unexpected status code: {response.status_code}")
+        print(f"📋 Response body: {response.text}")
+    
+    # Test 6: Additional validation tests
+    print(f"\n6. Testing edge cases and validation...")
+    
+    # Test with missing required fields
+    incomplete_data = {
+        "partner_id": partner_id,
+        "partner_type": "sourcing",
+        "filename": "incomplete.txt"
+        # Missing document_type, content, etc.
+    }
+    
+    response = requests.post(f"{API_URL}/documents/upload", json=incomplete_data)
+    print(f"📊 Incomplete data test: {response.status_code}")
+    if response.status_code in [400, 422]:
+        print("✅ Correctly rejected incomplete data")
+    else:
+        print(f"❌ Should have rejected incomplete data: {response.status_code}")
+    
+    # Test with invalid base64
+    invalid_b64_data = user_test_data.copy()
+    invalid_b64_data["content"] = "invalid-base64-content!"
+    
+    response = requests.post(f"{API_URL}/documents/upload", json=invalid_b64_data)
+    print(f"📊 Invalid base64 test: {response.status_code}")
+    if response.status_code in [400, 422]:
+        print("✅ Correctly rejected invalid base64")
+    else:
+        print(f"❌ Should have rejected invalid base64: {response.status_code}")
+    
+    print(f"\n🎯 URGENT TEST SUMMARY:")
+    print(f"   - Backend URL: {API_URL}/documents/upload")
+    print(f"   - JSON body method: {'✅ WORKING' if response.status_code == 200 else '❌ FAILING'}")
+    print(f"   - User's 400 error: {'🔧 FIXED' if response.status_code == 200 else '🚨 STILL PRESENT'}")
+    
+    return partner_id
+
 if __name__ == "__main__":
     # Check if we want to run focused tests
     import sys
