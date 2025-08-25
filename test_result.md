@@ -536,10 +536,29 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "URGENT - Document Upload JSON Body Support"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+
+  - task: "URGENT - Document Upload JSON Body Support"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py, /app/frontend/src/App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User Caroline reports document upload still failing despite previous backend fixes. Getting 400/422 errors when trying to upload documents. Expected behavior: Upload should work for all file types (.pdf, .docx, .pptx, .png, etc.) and documents should be correctly linked to startups."
+      - working: true
+        agent: "testing"
+        comment: "🚨 URGENT ISSUE RESOLVED - JSON DOCUMENT UPLOAD NOW WORKING: Fixed critical bug in POST /api/documents/upload endpoint. Problem was incorrect JSON body parsing logic using hasattr(request, '_body') which doesn't work properly in FastAPI. ✅ SOLUTION IMPLEMENTED: Updated JSON parsing to check content-type header and properly extract JSON body parameters. ✅ TESTING COMPLETED: User's exact test data now works perfectly - JSON body method returns 200 status, document created successfully with correct content, versioning working, download verification passed. ✅ BACKWARD COMPATIBILITY: Query parameters method still works as fallback. User's 400 Bad Request error is completely resolved."
+      - working: false
+        agent: "main"
+        comment: "User Caroline still reports document upload issues in production environment. Need to investigate current backend state, test exact upload flow, and ensure JSON body parsing is working correctly. Frontend sends proper JSON structure but receives errors."
 
   - task: "Phase 5 - Document Management System Backend"
     implemented: true
