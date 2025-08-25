@@ -4538,19 +4538,46 @@ def test_urgent_document_upload_json():
     
     return partner_id
 
+def main():
+    """Main test execution function"""
+    print("\n" + "=" * 80)
+    print("🚀 SURM BACKEND API COMPREHENSIVE TESTING SUITE")
+    print("=" * 80)
+    
+    # Test the new duplicate detection endpoint first (Caroline's request)
+    test_duplicate_detection_endpoint()
+    
+    # Run basic CRUD tests
+    sourcing_id = test_sourcing_crud()
+    dealflow_id = test_dealflow_crud()
+    
+    # Test transition workflow
+    if sourcing_id:
+        transitioned_dealflow_id = test_transition_workflow(sourcing_id)
+    
+    # Test statistics
+    test_statistics_endpoint()
+    
+    # Test Phase 1 features
+    test_phase1_next_action_date()
+    test_phase1_inactivity_indicators()
+    test_phase1_activity_timeline()
+    
+    print("\n" + "=" * 80)
+    print("✅ BACKEND TESTING COMPLETED")
+    print("=" * 80)
+
 if __name__ == "__main__":
     # Check if we want to run focused tests
     import sys
     if len(sys.argv) > 1:
-        if sys.argv[1] == "kanban":
-            run_kanban_focused_tests()
+        if sys.argv[1] == "duplicate":
+            # Run only the duplicate detection test
+            test_duplicate_detection_endpoint()
         elif sys.argv[1] == "critical":
             test_critical_partner_creation()
         else:
             main()
     else:
-        # CRITICAL BUG INVESTIGATION - Test partner creation first
-        test_critical_partner_creation()
-        
-        # Then run full test suite
-        main()
+        # Run the new duplicate detection test
+        test_duplicate_detection_endpoint()
