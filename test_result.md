@@ -553,6 +553,21 @@ test_plan:
         agent: "testing"
         comment: "✅ DOCUMENT MANAGEMENT SYSTEM FULLY WORKING: Complete document management system implemented with drag & drop upload, Base64 storage, versioning, and document type categorization. All 5 endpoints working: POST /api/documents/upload (with automatic versioning), GET /api/documents/{partner_id} (filtered by partner), GET /api/documents/download/{document_id}, DELETE /api/documents/{document_id}, GET /api/documents/types. Document types include Convention, Presentation, Contrat, Autre. Frontend integration with DocumentUpload, DocumentList, and DocumentModal components fully functional."
 
+  - task: "URGENT - Document Upload JSON Body Support"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports 400 Bad Request errors when trying to upload documents. Backend was modified to accept JSON instead of query parameters but users still getting errors."
+      - working: true
+        agent: "testing"
+        comment: "🚨 URGENT ISSUE RESOLVED - JSON DOCUMENT UPLOAD NOW WORKING: Fixed critical bug in POST /api/documents/upload endpoint. Problem was incorrect JSON body parsing logic using hasattr(request, '_body') which doesn't work properly in FastAPI. ✅ SOLUTION IMPLEMENTED: Updated JSON parsing to check content-type header and properly extract JSON body parameters. ✅ TESTING COMPLETED: User's exact test data now works perfectly - JSON body method returns 200 status, document created successfully with correct content, versioning working, download verification passed. ✅ BACKWARD COMPATIBILITY: Query parameters method still works as fallback. User's 400 Bad Request error is completely resolved."
+
   - task: "CRITICAL BUG - Partner Creation Not Working"
     implemented: false
     working: false
