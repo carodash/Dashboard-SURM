@@ -2108,7 +2108,12 @@ async def move_kanban_partner(
             user_name=current_user.full_name
         )
         
-        return {"message": "Partner transitioned to dealflow successfully", "new_partner_id": dealflow_partner.id}
+        return {
+            "message": "Partner transitioned to dealflow successfully", 
+            "new_partner_id": dealflow_partner.id,
+            "new_status": new_status,
+            "partner_type": target_type
+        }
     
     # Handle status change within same type
     elif partner_type == target_type:
