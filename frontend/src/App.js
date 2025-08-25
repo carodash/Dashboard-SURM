@@ -2649,7 +2649,9 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     score_maturite: initialData?.score_maturite || "",
     priorite_strategique: initialData?.priorite_strategique || "",
     score_potentiel: initialData?.score_potentiel || "",
-    tags_strategiques: initialData?.tags_strategiques || []
+    tags_strategiques: Array.isArray(initialData?.tags_strategiques) 
+      ? initialData.tags_strategiques.join(', ') 
+      : (initialData?.tags_strategiques || "")
   });
 
   // Phase 5 - Duplicate Detection
