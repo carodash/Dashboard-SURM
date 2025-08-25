@@ -2624,6 +2624,235 @@ def test_document_download_urgent():
         'test_passed': response.status_code == 200
     }
 
+def test_critical_kanban_go_metier_bug():
+    """Test CRITICAL - Kanban Go Métier Drag & Drop Bug Fix"""
+    print("\n=== TESTING CRITICAL - KANBAN GO MÉTIER DRAG & DROP BUG FIX ===")
+    
+    # Test 1: Create dealflow partner with new "Go métier étude" status
+    print("\n1. Testing POST /api/dealflow with 'Go métier étude' status")
+    go_metier_data = {
+        "nom": "Go Métier Test Startup",
+        "statut": "Go métier étude",
+        "domaine": "Intelligence Artificielle",
+        "typologie": "Startup",
+        "objet": "Solution IA pour optimisation énergétique",
+        "source": "Salon VivaTech 2024",
+        "pilote": "Caroline Test",
+        "metiers_concernes": "Innovation, R&D",
+        "date_reception_fichier": "2024-03-01",
+        "date_pre_qualification": "2024-03-15",
+        "date_presentation_metiers": "2024-03-20",
+        "date_go_metier_etude": "2024-03-25",
+        "actions_commentaires": "Test pour Go métier étude"
+    }
+    
+    response = requests.post(f"{API_URL}/dealflow", json=go_metier_data)
+    if response.status_code == 200:
+        go_metier_partner = response.json()
+        go_metier_id = go_metier_partner['id']
+        print(f"✅ Created dealflow partner with 'Go métier étude' status: {go_metier_partner['nom']}")
+        print(f"   Status: {go_metier_partner['statut']}")
+    else:
+        print(f"❌ Failed to create dealflow partner with 'Go métier étude': {response.status_code} - {response.text}")
+        return None
+    
+    # Test 2: Create dealflow partners with other new statuses
+    print("\n2. Testing POST /api/dealflow with other new statuses")
+    new_statuses_data = [
+        {
+            "nom": "Go Experimentation Test",
+            "statut": "Go experimentation",
+            "domaine": "FinTech",
+            "typologie": "Scale-up",
+            "objet": "Solution blockchain",
+            "source": "Réseau partenaires",
+            "pilote": "Caroline Test",
+            "metiers_concernes": "DSI, Risk",
+            "date_reception_fichier": "2024-03-01",
+            "date_go_experimentation": "2024-03-30"
+        },
+        {
+            "nom": "Go Généralisation Test",
+            "statut": "Go généralisation",
+            "domaine": "Développement Durable",
+            "typologie": "PME",
+            "objet": "Technologies vertes",
+            "source": "Partenariat industriel",
+            "pilote": "Caroline Test",
+            "metiers_concernes": "Environnement",
+            "date_reception_fichier": "2024-03-01",
+            "date_go_generalisation": "2024-04-01"
+        },
+        {
+            "nom": "Présentation Métiers Test",
+            "statut": "Présentation métiers",
+            "domaine": "Santé",
+            "typologie": "Startup",
+            "objet": "Dispositif médical",
+            "source": "Salon santé",
+            "pilote": "Caroline Test",
+            "metiers_concernes": "Médical",
+            "date_reception_fichier": "2024-03-01",
+            "date_presentation_metiers": "2024-03-15"
+        }
+    ]
+    
+    created_partners = []
+    for partner_data in new_statuses_data:
+        response = requests.post(f"{API_URL}/dealflow", json=partner_data)
+        if response.status_code == 200:
+            partner = response.json()
+            created_partners.append(partner)
+            print(f"✅ Created partner with '{partner['statut']}': {partner['nom']}")
+        else:
+            print(f"❌ Failed to create partner with '{partner_data['statut']}': {response.status_code} - {response.text}")
+    
+    # Test 3: Test PUT /api/dealflow/{id} with new status values
+    print("\n3. Testing PUT /api/dealflow/{id} with new status values")
+    if go_metier_id:
+        # Update to Go experimentation
+        update_data = {
+            "statut": "Go experimentation",
+            "date_go_experimentation": "2024-04-05",
+            "actions_commentaires": "Moved to experimentation phase"
+        }
+        response = requests.put(f"{API_URL}/dealflow/{go_metier_id}", json=update_data)
+        if response.status_code == 200:
+            updated_partner = response.json()
+            print(f"✅ Successfully updated partner to 'Go experimentation': {updated_partner['statut']}")
+        else:
+            print(f"❌ Failed to update partner to 'Go experimentation': {response.status_code} - {response.text}")
+        
+        # Update to Go généralisation
+        update_data = {
+            "statut": "Go généralisation",
+            "date_go_generalisation": "2024-04-10",
+            "actions_commentaires": "Moved to generalisation phase"
+        }
+        response = requests.put(f"{API_URL}/dealflow/{go_metier_id}", json=update_data)
+        if response.status_code == 200:
+            updated_partner = response.json()
+            print(f"✅ Successfully updated partner to 'Go généralisation': {updated_partner['statut']}")
+        else:
+            print(f"❌ Failed to update partner to 'Go généralisation': {response.status_code} - {response.text}")
+    
+    # Test 4: Test Kanban Move to Go Métier column
+    print("\n4. Testing POST /api/kanban-move with destination_column='go_metier'")
+    
+    # First, create a partner in presentation status to move
+    presentation_data = {
+        "nom": "Kanban Move Test Startup",
+        "statut": "Présentation métiers",
+        "domaine": "Intelligence Artificielle",
+        "typologie": "Startup",
+        "objet": "Solution IA test",
+        "source": "Test source",
+        "pilote": "Caroline Test",
+        "metiers_concernes": "Innovation",
+        "date_reception_fichier": "2024-03-01",
+        "date_presentation_metiers": "2024-03-15"
+    }
+    
+    response = requests.post(f"{API_URL}/dealflow", json=presentation_data)
+    if response.status_code == 200:
+        presentation_partner = response.json()
+        presentation_id = presentation_partner['id']
+        print(f"✅ Created partner in 'Présentation métiers' for move test: {presentation_partner['nom']}")
+        
+        # Now test the kanban move
+        move_params = {
+            "partner_id": presentation_id,
+            "destination_column": "go_metier"
+        }
+        
+        response = requests.post(f"{API_URL}/kanban-move", params=move_params)
+        if response.status_code == 200:
+            move_result = response.json()
+            print(f"✅ Successfully moved partner to go_metier column")
+            print(f"   New status: {move_result.get('new_status', 'N/A')}")
+            print(f"   Message: {move_result.get('message', 'N/A')}")
+            
+            # Verify the partner status was updated to "Go métier étude"
+            verify_response = requests.get(f"{API_URL}/dealflow/{presentation_id}")
+            if verify_response.status_code == 200:
+                verified_partner = verify_response.json()
+                if verified_partner['statut'] == "Go métier étude":
+                    print(f"✅ Partner status correctly updated to 'Go métier étude'")
+                else:
+                    print(f"❌ Partner status not updated correctly: {verified_partner['statut']}")
+            else:
+                print(f"❌ Failed to verify partner status: {verify_response.status_code}")
+        else:
+            print(f"❌ Failed to move partner to go_metier column: {response.status_code} - {response.text}")
+    else:
+        print(f"❌ Failed to create partner for move test: {response.status_code} - {response.text}")
+    
+    # Test 5: Test Complete Kanban Workflow - Verify all columns show correctly
+    print("\n5. Testing Complete Kanban Workflow - Column Display")
+    response = requests.get(f"{API_URL}/kanban-data")
+    if response.status_code == 200:
+        kanban_data = response.json()
+        
+        # Check if go_metier column exists and has partners
+        go_metier_column = kanban_data.get("columns", {}).get("go_metier", {})
+        if go_metier_column:
+            partners_in_go_metier = go_metier_column.get("partners", [])
+            print(f"✅ Go Métier column exists with {len(partners_in_go_metier)} partners")
+            
+            # Check if our test partners appear in correct columns
+            for partner in partners_in_go_metier:
+                if partner.get("partner_type") == "dealflow":
+                    print(f"   - Dealflow partner in go_metier: {partner.get('nom', 'N/A')}")
+        else:
+            print(f"❌ Go Métier column not found in Kanban data")
+        
+        # Check other new status columns
+        experimentation_column = kanban_data.get("columns", {}).get("experimentation", {})
+        generalisation_column = kanban_data.get("columns", {}).get("generalisation", {})
+        
+        if experimentation_column:
+            exp_partners = experimentation_column.get("partners", [])
+            print(f"✅ Experimentation column exists with {len(exp_partners)} partners")
+        
+        if generalisation_column:
+            gen_partners = generalisation_column.get("partners", [])
+            print(f"✅ Généralisation column exists with {len(gen_partners)} partners")
+            
+    else:
+        print(f"❌ Failed to get Kanban data: {response.status_code} - {response.text}")
+    
+    # Test 6: Test enum validation - verify no 422 errors for new statuses
+    print("\n6. Testing enum validation - no 422 errors for new statuses")
+    all_new_statuses = ["Go métier étude", "Go experimentation", "Go généralisation", "Présentation métiers"]
+    
+    for status in all_new_statuses:
+        test_data = {
+            "nom": f"Enum Test {status}",
+            "statut": status,
+            "domaine": "Test Domain",
+            "typologie": "Startup",
+            "objet": "Test object",
+            "source": "Test source",
+            "pilote": "Test Pilot",
+            "metiers_concernes": "Test métiers",
+            "date_reception_fichier": "2024-03-01"
+        }
+        
+        response = requests.post(f"{API_URL}/dealflow", json=test_data)
+        if response.status_code == 200:
+            print(f"✅ Enum validation passed for '{status}'")
+        elif response.status_code == 422:
+            print(f"❌ Enum validation failed for '{status}' - 422 error")
+        else:
+            print(f"⚠️ Unexpected response for '{status}': {response.status_code}")
+    
+    print("\n🎯 CRITICAL KANBAN GO MÉTIER BUG TESTING COMPLETED")
+    return {
+        'go_metier_id': go_metier_id if 'go_metier_id' in locals() else None,
+        'created_partners': created_partners,
+        'presentation_id': presentation_id if 'presentation_id' in locals() else None
+    }
+
 def main():
     """Run all tests"""
     print("🚀 Starting SURM Backend API Tests - Including Phase 1, Phase 2 & Phase 3 Features")
