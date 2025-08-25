@@ -1254,15 +1254,32 @@ async def get_inactive_partners(threshold_days: int = 90):
 # DOCUMENT MANAGEMENT ENDPOINTS
 @api_router.post("/documents/upload", response_model=Document)
 async def upload_document(
-    partner_id: str,
-    partner_type: str,
-    filename: str,
-    document_type: DocumentType,
-    content: str,  # Base64 encoded content
+    request: Request,
+    partner_id: str = None,
+    partner_type: str = None,
+    filename: str = None,
+    document_type: DocumentType = None,
+    content: str = None,
     description: Optional[str] = None,
     uploaded_by: str = "default_user"
 ):
-    """Upload a document for a startup"""
+    """Upload a document for a startup - accepts both JSON body and query parameters"""
+    import base64
+    
+    # Try to get data from JSON body first, then fallback to query parameters
+    try:
+        if hasattr(request, '_body') and request._body:
+            body = await request.json()
+            partner_id = body.get('partner_id', partner_id)
+            partner_type = body.get('partner_type', partner_type)
+            filename = body.get('filename', filename)
+            document_type = body.get('document_type', document_type)
+            content = body.get('content', content)
+            description = body.get('description', description)
+            uploaded_by = body.get('uploaded_by', uploaded_by)
+    except:
+        # Fallback to query parameters (existing behavior)
+        pass
     import base64
     
     try:
