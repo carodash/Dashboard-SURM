@@ -554,8 +554,7 @@ metadata:
         comment: "✅ CRITICAL KANBAN GO MÉTIER BUG COMPLETELY RESOLVED: Comprehensive testing confirms the fix is working perfectly. (1) NEW DEALFLOW STATUSES WORKING: Successfully created dealflow partners with all 4 new statuses: 'Go métier étude', 'Go experimentation', 'Go généralisation', 'Présentation métiers'. (2) ENUM VALIDATION FIXED: All new status values pass validation - no more 422 errors. (3) KANBAN MOVE TO GO MÉTIER WORKING: POST /api/kanban-move with destination_column='go_metier' successfully moves partners from 'Présentation métiers' to 'Go métier étude' status. (4) STATUS UPDATES WORKING: PUT /api/dealflow/{id} correctly accepts and processes all new status values. (5) KANBAN DISPLAY WORKING: All new status columns (go_metier, experimentation, generalisation) appear correctly in Kanban data with proper partner assignments. Caroline's drag & drop issue to 'Go Métier' column is definitively resolved - the backend now properly supports the complete 7-status dealflow workflow."
 
 test_plan:
-  current_focus:
-    - "CRITICAL - Kanban Go Métier Drag & Drop Bug"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
