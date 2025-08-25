@@ -4969,7 +4969,7 @@ def main():
     print("=" * 80)
     
     # Test the new duplicate detection endpoint first (Caroline's request)
-    test_duplicate_detection_endpoint()
+    test_duplicate_detection_comprehensive()
     
     # Run basic CRUD tests
     sourcing_id = test_sourcing_crud()
