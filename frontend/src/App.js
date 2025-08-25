@@ -2723,6 +2723,12 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
       return;
     }
 
+    // Phase 5 - Check for duplicates before submission (only for new partners)
+    if (!initialData && duplicates.length > 0 && !forcingCreation) {
+      alert("⚠️ Des partenaires similaires existent déjà. Veuillez vérifier les suggestions ou forcer la création.");
+      return;
+    }
+
     console.log("✅ Validation réussie, envoi des données...");
     
     // Préparation des données pour l'API
