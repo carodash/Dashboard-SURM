@@ -2733,6 +2733,14 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     // Préparation des données pour l'API
     const apiData = { ...formData };
     
+    // Conversion des tags stratégiques (string -> array)
+    if (typeof apiData.tags_strategiques === 'string') {
+      apiData.tags_strategiques = apiData.tags_strategiques
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
+    }
+    
     // Conversion des dates vides en null
     Object.keys(apiData).forEach(key => {
       if (key.includes('date') && apiData[key] === '') {
