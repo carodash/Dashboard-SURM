@@ -5191,6 +5191,16 @@ const Dashboard = () => {
     downloadCSV(csv, `${activeTab}_export_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
+  const handleGlobalExport = () => {
+    // Export ALL filtered data, not just selected items
+    const data = activeTab === 'sourcing' 
+      ? filteredSourcingPartners 
+      : filteredDealflowPartners;
+    
+    const csv = convertToCSV(data);
+    downloadCSV(csv, `${activeTab}_export_global_${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
   const convertToCSV = (data) => {
     if (data.length === 0) return '';
     
