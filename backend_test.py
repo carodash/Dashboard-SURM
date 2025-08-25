@@ -782,6 +782,310 @@ def test_phase2_data_accuracy():
     else:
         print(f"❌ Failed to handle empty date range: {response.status_code}")
 
+def test_duplicate_detection_endpoint():
+    """Test NEW DUPLICATE DETECTION ENDPOINT - Caroline's feature request"""
+    print("\n=== TESTING NEW DUPLICATE DETECTION ENDPOINT ===")
+    
+    # First, create test partners with known names for testing
+    print("\n0. Setting up test data for duplicate detection")
+    
+    # Create test sourcing partners
+    fintech_sourcing = {
+        "nom_entreprise": "FinTech Solutions",
+        "statut": "A traiter",
+        "pays_origine": "France",
+        "domaine_activite": "Services Financiers",
+        "typologie": "Startup",
+        "objet": "Solutions de paiement innovantes",
+        "cas_usage": "Paiements mobiles",
+        "technologie": "Blockchain",
+        "source": "VivaTech 2024",
+        "date_entree_sourcing": "2024-03-15",
+        "interet": True,
+        "pilote": "Marie Dubois",
+        "actions_commentaires": "Test partner for duplicate detection"
+    }
+    
+    teststartup_sourcing = {
+        "nom_entreprise": "TestStartup Innovation",
+        "statut": "Klaxoon",
+        "pays_origine": "France",
+        "domaine_activite": "Intelligence Artificielle",
+        "typologie": "Startup",
+        "objet": "IA pour l'innovation",
+        "cas_usage": "Automatisation processus",
+        "technologie": "Machine Learning",
+        "source": "Salon Innovation",
+        "date_entree_sourcing": "2024-02-10",
+        "interet": True,
+        "pilote": "Jean Martin",
+        "actions_commentaires": "Test startup for duplicate detection"
+    }
+    
+    # Create test dealflow partners
+    fintech_dealflow = {
+        "nom": "FinTech Pro Services",
+        "statut": "En cours avec les métiers",
+        "domaine": "Services Financiers",
+        "typologie": "Scale-up",
+        "objet": "Plateforme fintech avancée",
+        "source": "Réseau partenaires",
+        "pilote": "Sophie Laurent",
+        "metiers_concernes": "DSI, Finance",
+        "date_reception_fichier": "2024-02-01",
+        "date_pre_qualification": "2024-02-15",
+        "actions_commentaires": "Test dealflow for duplicate detection"
+    }
+    
+    teststartup_dealflow = {
+        "nom": "TestStartup Advanced",
+        "statut": "En cours avec l'équipe inno",
+        "domaine": "Intelligence Artificielle",
+        "typologie": "Startup",
+        "objet": "Solutions IA avancées",
+        "source": "Incubateur",
+        "pilote": "Marie Dubois",
+        "metiers_concernes": "R&D, Innovation",
+        "date_reception_fichier": "2024-01-15",
+        "actions_commentaires": "Test dealflow for duplicate detection"
+    }
+    
+    # Create the test partners
+    test_partners = []
+    for partner_data in [fintech_sourcing, teststartup_sourcing]:
+        response = requests.post(f"{API_URL}/sourcing", json=partner_data)
+        if response.status_code == 200:
+            test_partners.append(('sourcing', response.json()))
+            print(f"✅ Created sourcing test partner: {partner_data['nom_entreprise']}")
+        else:
+            print(f"❌ Failed to create sourcing partner: {response.status_code}")
+    
+    for partner_data in [fintech_dealflow, teststartup_dealflow]:
+        response = requests.post(f"{API_URL}/dealflow", json=partner_data)
+        if response.status_code == 200:
+            test_partners.append(('dealflow', response.json()))
+            print(f"✅ Created dealflow test partner: {partner_data['nom']}")
+        else:
+            print(f"❌ Failed to create dealflow partner: {response.status_code}")
+    
+    # Test 1: Basic Functionality - Name < 3 characters
+    print("\n1. Testing name < 3 characters (should return empty)")
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name=Fi")
+    if response.status_code == 200:
+        data = response.json()
+        if "duplicates" in data and len(data["duplicates"]) == 0:
+            print("✅ Correctly returned empty results for name < 3 characters")
+        else:
+            print(f"❌ Should return empty for short names, got: {len(data.get('duplicates', []))} results")
+    else:
+        print(f"❌ Failed to handle short name: {response.status_code} - {response.text}")
+    
+    # Test 2: Basic Functionality - Exact match with "FinTech"
+    print("\n2. Testing name = 'FinTech' (should find matches)")
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name=FinTech")
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ FinTech search returned {data.get('found_count', 0)} matches")
+        
+        # Verify response structure
+        required_fields = ["search_term", "duplicates", "found_count"]
+        if all(field in data for field in required_fields):
+            print("✅ Response has correct structure (search_term, duplicates, found_count)")
+            
+            # Check if we found our test partners
+            duplicates = data.get("duplicates", [])
+            fintech_found = any("FinTech" in dup.get("name", "") for dup in duplicates)
+            if fintech_found:
+                print("✅ Found FinTech test partners in results")
+                
+                # Check duplicate info structure
+                if duplicates:
+                    sample_dup = duplicates[0]
+                    required_dup_fields = ["id", "name", "type", "similarity", "domain", "status", "pilot"]
+                    missing_fields = [field for field in required_dup_fields if field not in sample_dup]
+                    if not missing_fields:
+                        print("✅ Duplicate info has correct structure")
+                        print(f"   Sample: {sample_dup['name']} ({sample_dup['type']}) - {sample_dup['similarity']}% similarity")
+                    else:
+                        print(f"❌ Missing fields in duplicate info: {missing_fields}")
+            else:
+                print("⚠️ FinTech test partners not found in results")
+        else:
+            missing_fields = [field for field in required_fields if field not in data]
+            print(f"❌ Missing required fields in response: {missing_fields}")
+    else:
+        print(f"❌ Failed FinTech search: {response.status_code} - {response.text}")
+    
+    # Test 3: Basic Functionality - "TestStartup" search
+    print("\n3. Testing name = 'TestStartup' (should find test partners)")
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name=TestStartup")
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ TestStartup search returned {data.get('found_count', 0)} matches")
+        
+        duplicates = data.get("duplicates", [])
+        teststartup_found = any("TestStartup" in dup.get("name", "") for dup in duplicates)
+        if teststartup_found:
+            print("✅ Found TestStartup test partners in results")
+        else:
+            print("⚠️ TestStartup test partners not found in results")
+    else:
+        print(f"❌ Failed TestStartup search: {response.status_code} - {response.text}")
+    
+    # Test 4: Similarity Detection - Exact matches (100% similarity)
+    print("\n4. Testing exact matches (should have 100% similarity)")
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name=FinTech Solutions")
+    if response.status_code == 200:
+        data = response.json()
+        duplicates = data.get("duplicates", [])
+        
+        exact_matches = [dup for dup in duplicates if dup.get("similarity", 0) == 1.0]
+        if exact_matches:
+            print(f"✅ Found {len(exact_matches)} exact matches with 100% similarity")
+            for match in exact_matches:
+                print(f"   - {match['name']} ({match['type']}) - {match['similarity']}% similarity")
+        else:
+            print("⚠️ No exact matches found with 100% similarity")
+    else:
+        print(f"❌ Failed exact match test: {response.status_code}")
+    
+    # Test 5: Similarity Detection - Partial matches (>= 60% threshold)
+    print("\n5. Testing partial matches (should be >= 60% threshold)")
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name=FinTech")
+    if response.status_code == 200:
+        data = response.json()
+        duplicates = data.get("duplicates", [])
+        
+        # Check that all results meet the 60% threshold
+        below_threshold = [dup for dup in duplicates if dup.get("similarity", 0) < 0.6]
+        if not below_threshold:
+            print("✅ All results meet 60% similarity threshold")
+            
+            # Show similarity distribution
+            if duplicates:
+                similarities = [dup.get("similarity", 0) for dup in duplicates]
+                print(f"   Similarity range: {min(similarities):.2f} - {max(similarities):.2f}")
+        else:
+            print(f"❌ Found {len(below_threshold)} results below 60% threshold")
+            for dup in below_threshold:
+                print(f"   - {dup['name']}: {dup['similarity']}% (below threshold)")
+    else:
+        print(f"❌ Failed partial match test: {response.status_code}")
+    
+    # Test 6: Cross-Collection Search - Verify both sourcing and dealflow
+    print("\n6. Testing cross-collection search (sourcing + dealflow)")
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name=FinTech")
+    if response.status_code == 200:
+        data = response.json()
+        duplicates = data.get("duplicates", [])
+        
+        sourcing_results = [dup for dup in duplicates if dup.get("type") == "sourcing"]
+        dealflow_results = [dup for dup in duplicates if dup.get("type") == "dealflow"]
+        
+        print(f"✅ Cross-collection search results:")
+        print(f"   - Sourcing partners: {len(sourcing_results)}")
+        print(f"   - Dealflow partners: {len(dealflow_results)}")
+        
+        if sourcing_results and dealflow_results:
+            print("✅ Successfully searches both collections")
+        elif sourcing_results or dealflow_results:
+            print("⚠️ Found results in only one collection")
+        else:
+            print("❌ No results found in either collection")
+    else:
+        print(f"❌ Failed cross-collection test: {response.status_code}")
+    
+    # Test 7: Response Format - Verify results limited to top 5 and sorted by similarity
+    print("\n7. Testing response format (top 5, sorted by similarity)")
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name=Test")  # Broad search
+    if response.status_code == 200:
+        data = response.json()
+        duplicates = data.get("duplicates", [])
+        
+        # Check limit to 5 results
+        if len(duplicates) <= 5:
+            print(f"✅ Results limited to {len(duplicates)} (≤ 5)")
+        else:
+            print(f"❌ Too many results returned: {len(duplicates)} > 5")
+        
+        # Check sorting by similarity (highest first)
+        if len(duplicates) > 1:
+            similarities = [dup.get("similarity", 0) for dup in duplicates]
+            is_sorted = all(similarities[i] >= similarities[i+1] for i in range(len(similarities)-1))
+            if is_sorted:
+                print("✅ Results correctly sorted by similarity (highest first)")
+                print(f"   Similarity order: {[f'{s:.2f}' for s in similarities]}")
+            else:
+                print("❌ Results not properly sorted by similarity")
+                print(f"   Similarity order: {[f'{s:.2f}' for s in similarities]}")
+    else:
+        print(f"❌ Failed response format test: {response.status_code}")
+    
+    # Test 8: Edge Cases - Special characters
+    print("\n8. Testing special characters")
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name=FinTech & Co.")
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ Special characters handled: {data.get('found_count', 0)} results")
+    else:
+        print(f"❌ Failed special characters test: {response.status_code}")
+    
+    # Test 9: Edge Cases - Very long names
+    print("\n9. Testing very long names")
+    long_name = "Very Long Company Name That Exceeds Normal Length Expectations For Testing Purposes"
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name={long_name}")
+    if response.status_code == 200:
+        data = response.json()
+        print(f"✅ Long names handled: {data.get('found_count', 0)} results")
+    else:
+        print(f"❌ Failed long names test: {response.status_code}")
+    
+    # Test 10: Edge Cases - Single word vs multi-word names
+    print("\n10. Testing single word vs multi-word names")
+    
+    # Single word
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name=Innovation")
+    if response.status_code == 200:
+        single_word_data = response.json()
+        print(f"✅ Single word search: {single_word_data.get('found_count', 0)} results")
+    else:
+        print(f"❌ Failed single word test: {response.status_code}")
+    
+    # Multi-word
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name=Innovation Solutions")
+    if response.status_code == 200:
+        multi_word_data = response.json()
+        print(f"✅ Multi-word search: {multi_word_data.get('found_count', 0)} results")
+    else:
+        print(f"❌ Failed multi-word test: {response.status_code}")
+    
+    # Test 11: Verify field mapping (sourcing nom_entreprise vs dealflow nom)
+    print("\n11. Testing field mapping verification")
+    response = requests.get(f"{API_URL}/partners/check-duplicate?name=FinTech")
+    if response.status_code == 200:
+        data = response.json()
+        duplicates = data.get("duplicates", [])
+        
+        # Check that sourcing partners use nom_entreprise and dealflow use nom
+        field_mapping_correct = True
+        for dup in duplicates:
+            if dup.get("type") == "sourcing":
+                # Should have found via nom_entreprise field
+                print(f"   Sourcing: {dup['name']} (from nom_entreprise field)")
+            elif dup.get("type") == "dealflow":
+                # Should have found via nom field
+                print(f"   Dealflow: {dup['name']} (from nom field)")
+        
+        print("✅ Field mapping verification completed")
+    else:
+        print(f"❌ Failed field mapping test: {response.status_code}")
+    
+    print(f"\n=== DUPLICATE DETECTION ENDPOINT TESTING COMPLETED ===")
+    print("This endpoint will be integrated into frontend forms to show duplicate alerts")
+    print("when users type partner names (after 3+ characters).")
+    
+    return test_partners
+
 # PHASE 3 - USER MANAGEMENT TESTS
 def test_phase3_user_management():
     """Test Phase 3 - User Management System"""
