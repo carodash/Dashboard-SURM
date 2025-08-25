@@ -2859,6 +2859,13 @@ def main():
     print("=" * 60)
     
     try:
+        # CRITICAL TEST FIRST - Kanban Go Métier Bug Fix
+        print("\n" + "🚨" * 40)
+        print("🚨 CRITICAL PRIORITY - KANBAN GO MÉTIER BUG FIX TESTING")
+        print("🚨" * 40)
+        
+        test_critical_kanban_go_metier_bug()
+        
         # URGENT: Test document download functionality first
         print("🚨 RUNNING URGENT DOCUMENT DOWNLOAD TEST FIRST")
         urgent_result = test_document_download_urgent()
