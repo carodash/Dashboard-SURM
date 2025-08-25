@@ -2090,7 +2090,41 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
 
     } catch (error) {
       console.error('❌ ERREUR UPLOAD - Document:', error);
-      alert('🔼 ERREUR UPLOAD: Impossible d\'uploader le document. Veuillez réessayer.');
+      clearInterval(progressInterval);
+      
+      // Detailed error handling
+      let errorMessage = '🔼 ERREUR UPLOAD: ';
+      if (error.response) {
+        const status = error.response.status;
+        const responseText = error.response.data?.detail || error.response.data || 'Erreur inconnue';
+        
+        if (status === 400) {
+          errorMessage += `Données invalides (400): ${responseText}`;
+        } else if (status === 422) {
+          errorMessage += `Validation échouée (422): ${responseText}`;
+        } else if (status === 500) {
+          errorMessage += `Erreur serveur (500): ${responseText}`;
+        } else {
+          errorMessage += `Erreur HTTP ${status}: ${responseText}`;
+        }
+      } else if (error.request) {
+        errorMessage += 'Impossible de contacter le serveur. Vérifiez votre connexion.';
+      } else {
+        errorMessage += `Erreur: ${error.message}`;
+      }
+      
+      alert(errorMessage);
+      console.error('📊 DÉTAILS ERREUR UPLOAD:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        }
+      });
+      
       setIsUploading(false);
       setUploadProgress(0);
     }
