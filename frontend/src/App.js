@@ -2652,6 +2652,11 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     tags_strategiques: initialData?.tags_strategiques || []
   });
 
+  // Phase 5 - Duplicate Detection
+  const { duplicates, isChecking, checkDuplicates, clearDuplicates } = useDuplicateDetection();
+  const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
+  const [forcingCreation, setForcingCreation] = useState(false);
+
   // Gestion simple des changements + tags stratégiques
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
