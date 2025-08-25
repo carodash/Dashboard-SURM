@@ -591,6 +591,8 @@ test_plan:
 
 agent_communication:
   - agent: "main"
+    message: "URGENT DOCUMENT UPLOAD FIX INVESTIGATION: User Caroline reports document upload still failing despite previous backend fixes. Need to test current document upload JSON endpoint and identify exact issue. Frontend sends correct JSON structure but gets 400/422 errors. Backend previously tested as functional, need to re-verify current state and identify root cause."
+  - agent: "main"
     message: "Created complete SURM dashboard with sourcing/dealflow management, automatic transition, and statistics. Backend implements all required fields and endpoints. Frontend has tabbed interface with forms and tables. Ready for comprehensive backend testing."
   - agent: "testing"
     message: "✅ COMPREHENSIVE BACKEND TESTING COMPLETED - ALL SYSTEMS WORKING: Fixed critical date serialization issue for MongoDB compatibility. All 4 high-priority backend tasks are fully functional: (1) Sourcing CRUD - all 5 endpoints working, (2) Dealflow CRUD - all 5 endpoints working, (3) Transition workflow - complete data inheritance verified, (4) Statistics - accurate calculations confirmed. Tested enum validations, date handling, optional fields, error handling, and data integrity. SURM backend API is production-ready for innovation manager use case."
