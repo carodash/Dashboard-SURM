@@ -4997,7 +4997,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "duplicate":
             # Run only the duplicate detection test
-            test_duplicate_detection_endpoint()
+            test_duplicate_detection_comprehensive()
         elif sys.argv[1] == "critical":
             test_critical_partner_creation()
         else:
