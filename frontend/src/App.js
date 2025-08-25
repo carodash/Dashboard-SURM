@@ -3285,6 +3285,27 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                 required
                 className="w-full border rounded-md px-3 py-2"
               />
+              
+              {/* Phase 5 - Duplicate Detection Alert */}
+              {showDuplicateAlert && duplicates.length > 0 && (
+                <DuplicateAlert
+                  duplicates={duplicates}
+                  onViewPartner={(duplicate) => {
+                    // Could implement a view partner modal here
+                    console.log('View partner:', duplicate);
+                  }}
+                  onCreateAnyway={() => {
+                    setForcingCreation(true);
+                    setShowDuplicateAlert(false);
+                    clearDuplicates();
+                  }}
+                  onCancel={() => {
+                    setShowDuplicateAlert(false);
+                    clearDuplicates();
+                    setFormData(prev => ({ ...prev, nom: '' }));
+                  }}
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Statut *</label>
