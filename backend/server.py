@@ -864,6 +864,127 @@ async def delete_sourcing_partner(partner_id: str, user_id: str = "default_user"
     
     return {"message": "Partner deleted successfully"}
 
+# DUPLICATE DETECTION ENDPOINT
+@api_router.get("/partners/check-duplicate")
+async def check_duplicate_partners(name: str):
+    """Check for potential duplicate partners based on name similarity"""
+    if not name or len(name) < 3:
+        return {"duplicates": []}
+    
+    # Prepare search patterns for better matching
+    name_clean = name.strip().lower()
+    
+    # Create multiple regex patterns for flexible matching
+    patterns = [
+        # Exact match (case insensitive)
+        {"$regex": f"^{re.escape(name_clean)}$", "$options": "i"},
+        # Contains the search term
+        {"$regex": re.escape(name_clean), "$options": "i"},
+        # Split words and search for combinations
+    ]
+    
+    # Also create word-based patterns for partial matching
+    words = name_clean.split()
+    if len(words) > 1:
+        # Search for partners containing most of the words
+        word_pattern = "|".join([re.escape(word) for word in words if len(word) > 2])
+        if word_pattern:
+            patterns.append({"$regex": word_pattern, "$options": "i"})
+    
+    duplicates = []
+    
+    # Search in sourcing partners
+    for pattern in patterns:
+        sourcing_partners = await db.sourcing_partners.find(
+            {"nom_entreprise": pattern}
+        ).limit(10).to_list(10)
+        
+        for partner in sourcing_partners:
+            # Calculate similarity score (simple approach)
+            partner_name = partner.get("nom_entreprise", "").lower()
+            similarity = calculate_similarity(name_clean, partner_name)
+            
+            if similarity >= 0.6:  # 60% threshold
+                duplicate_info = {
+                    "id": partner["id"],
+                    "name": partner["nom_entreprise"],
+                    "type": "sourcing",
+                    "similarity": round(similarity, 2),
+                    "domain": partner.get("domaine_activite", "N/A"),
+                    "status": partner.get("statut", "N/A"),
+                    "pilot": partner.get("pilote", "N/A")
+                }
+                
+                # Avoid exact duplicates in results
+                if not any(d["id"] == duplicate_info["id"] for d in duplicates):
+                    duplicates.append(duplicate_info)
+    
+    # Search in dealflow partners  
+    for pattern in patterns:
+        dealflow_partners = await db.dealflow_partners.find(
+            {"nom": pattern}
+        ).limit(10).to_list(10)
+        
+        for partner in dealflow_partners:
+            partner_name = partner.get("nom", "").lower()
+            similarity = calculate_similarity(name_clean, partner_name)
+            
+            if similarity >= 0.6:  # 60% threshold
+                duplicate_info = {
+                    "id": partner["id"],
+                    "name": partner["nom"],
+                    "type": "dealflow", 
+                    "similarity": round(similarity, 2),
+                    "domain": partner.get("domaine", "N/A"),
+                    "status": partner.get("statut", "N/A"),
+                    "pilot": partner.get("pilote", "N/A")
+                }
+                
+                if not any(d["id"] == duplicate_info["id"] for d in duplicates):
+                    duplicates.append(duplicate_info)
+    
+    # Sort by similarity score (highest first) and limit to 5
+    duplicates.sort(key=lambda x: x["similarity"], reverse=True)
+    
+    return {
+        "search_term": name,
+        "duplicates": duplicates[:5],
+        "found_count": len(duplicates)
+    }
+
+def calculate_similarity(str1: str, str2: str) -> float:
+    """Calculate similarity between two strings using a simple approach"""
+    if not str1 or not str2:
+        return 0.0
+    
+    # Exact match
+    if str1 == str2:
+        return 1.0
+    
+    # Check if one string contains the other
+    if str1 in str2 or str2 in str1:
+        return 0.8
+    
+    # Word-based similarity
+    words1 = set(str1.split())
+    words2 = set(str2.split())
+    
+    if not words1 or not words2:
+        return 0.0
+    
+    # Jaccard similarity for words
+    intersection = words1.intersection(words2)
+    union = words1.union(words2)
+    
+    jaccard_sim = len(intersection) / len(union) if union else 0.0
+    
+    # Character-based similarity (simple)
+    common_chars = sum(1 for c in str1 if c in str2)
+    char_sim = common_chars / max(len(str1), len(str2))
+    
+    # Combine both similarities
+    return (jaccard_sim * 0.7) + (char_sim * 0.3)
+
 # DEALFLOW ENDPOINTS
 @api_router.post("/dealflow", response_model=DealflowPartner)
 async def create_dealflow_partner(partner: DealflowPartnerCreate):
