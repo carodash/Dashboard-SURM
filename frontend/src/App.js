@@ -2078,7 +2078,7 @@ const DocumentUpload = ({ partnerId, partnerType, onDocumentUploaded }) => {
       
       // Reset form
       setDescription('');
-      setDocumentType('AUTRE');
+      setDocumentType('Autre');
       
       // Callback to parent component
       onDocumentUploaded && onDocumentUploaded(response.data);
