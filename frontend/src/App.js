@@ -1478,15 +1478,32 @@ const KanbanBoard = ({ isVisible }) => {
       
     } catch (error) {
       console.error("❌ Error moving partner:", error);
+      console.error("❌ Error details:", {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url
+      });
       
-      // Show error feedback
+      // Show error feedback with details
+      let errorMessage = "❌ Erreur lors du déplacement:\n";
+      
       if (error.response?.status === 403) {
-        alert("⚠️ Vous n'avez pas l'autorisation de déplacer cette startup.\nSeuls les pilotes et admins peuvent modifier leurs startups.");
+        errorMessage += "⚠️ Autorisation refusée. Seuls les pilotes et admins peuvent modifier leurs startups.";
       } else if (error.response?.status === 400) {
-        alert("⚠️ Déplacement invalide. Vérifiez que la transition est autorisée.");
+        const detail = error.response?.data?.detail || "Déplacement invalide";
+        errorMessage += `⚠️ Déplacement invalide: ${detail}`;
+      } else if (error.response?.status === 404) {
+        errorMessage += "⚠️ Startup non trouvée. Actualisez la page.";
+      } else if (error.response) {
+        errorMessage += `⚠️ Erreur HTTP ${error.response.status}: ${error.response.data?.detail || error.response.statusText}`;
+      } else if (error.request) {
+        errorMessage += "⚠️ Impossible de contacter le serveur. Vérifiez votre connexion.";
       } else {
-        alert("❌ Erreur lors du déplacement. Veuillez réessayer.");
+        errorMessage += `⚠️ Erreur: ${error.message}`;
       }
+      
+      alert(errorMessage);
       
       // Reload data to reset any visual changes
       loadKanbanData();
