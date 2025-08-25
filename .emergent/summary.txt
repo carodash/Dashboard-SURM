@@ -3,24 +3,34 @@ The previous AI engineer successfully brought the SURM dashboard from MVP to a f
 </analysis>
 
 <product_requirements>
-The primary objective was to replace an inefficient Excel-based system with a comprehensive Start-Up Relationship Management (SURM) dashboard, addressing fragmented data and lack of analytical capabilities. Initial requirements covered Sourcing & Dealflow management, workflow automation, and statistics. Subsequent enhancements added dashboard customization, automated data enrichment, advanced search/filtering, user roles, and scoring.
+The primary objective was to replace an inefficient Excel-based system with a comprehensive Start-Up Relationship Management (SURM) dashboard, addressing fragmented data and lack of analytical capabilities, covering Sourcing & Dealflow management, workflow automation, and statistics.
 
-**New Feature Requests & Implementations (during this trajectory):**
-*   **Kanban View:** Visual pipeline with stages and drag-and-drop. This was implemented, and the drag-and-drop functionality was debugged multiple times, finally resolved by removing  and correcting API payload.
-*   **Header Refactor:** Redesigned main navigation to keep key tabs (Search, Dashboard, Kanban, Sourcing, Dealflow) always visible, grouping others into a hamburger menu to reduce density.
-*   **Horizontal Scroll Accessibility:** Improved scroll experience on Kanban, Sourcing, and Dealflow tables by adding a synchronized top scrollbar and enabling mouse wheel/trackpad scrolling. Performance issues on Kanban scroll were resolved.
-*   **Document Management System:** Implemented functionality to upload documents (PDF, PPT, contracts) on each startup fiche with a drag & drop interface, versioning, and document type selection (Convention, Presentation, etc.).
-
-**Current Critical Issues Reported by User:**
-*   Inability to create new partners in the Sourcing section.
+During this trajectory, the user explicitly requested:
+1.  **Kanban View**: Visual pipeline with drag-and-drop (initially implemented, then debugged for functionality).
+2.  **Header Refactor**: Redesign main navigation for better visibility and grouping.
+3.  **Horizontal Scroll Accessibility**: Improve UX for tables in Kanban, Sourcing, and Dealflow.
+4.  **Document Management System**: Upload, download, versioning, and typing of documents for startup fiches (implemented and debugged).
+5.  **Critical Bug Fix (Priority Absolute)**: Resolve the inability to create new partners in the Sourcing section, ensuring:
+    *   Créer un partenaire button opens a form.
+    *   Enregistrer creates the partner, refreshes the view, and shows confirmation.
+    *   The document addition function remains available.
+    *   The 'Évaluation Stratégique' section is restored after form refactor.
+    *   All data displays correctly.
+    *   Settings save functionality works.
+    *   Document download and upload function correctly.
+6.  **Future Enhancements (Post-Bug Fix)**:
+    *   Customizable fields for startup fiches.
+    *   Free tags system (color-editable).
+    *   Strategic groups management.
+    *   No mobile optimization needed.
 </product_requirements>
 
 <key_technical_concepts>
 -   **Full-stack Development**: React (frontend), FastAPI (backend), MongoDB (database).
--   **UI/UX**: Tailwind CSS, Chart.js, react-beautiful-dnd, custom React hooks (), Base64 encoding for file storage.
--   **Data Management**: Pydantic models, CRUD operations, auto-versioning for documents.
--   **User Management**: Role-based Access Control (RBAC), JWT authentication.
--   **Performance Optimization**: ,  event listeners, CSS .
+-   **UI/UX**: Tailwind CSS, , custom React hooks, Base64 encoding for files, dynamic URL handling.
+-   **Data Management**: Pydantic models, CRUD operations, auto-versioning, JSON/Query Parameter/FormData API payloads.
+-   **Environment Variables**: , .
+-   **Debugging**: , console logging, browser developer tools.
 </key_technical_concepts>
 
 <code_architecture>
@@ -30,53 +40,50 @@ Directory Structure:
 
 
 -   ****:
-    -   **Summary of importance**: Defines core backend logic, FastAPI setup, MongoDB connection, API routes, Pydantic models, and CRUD operations.
+    -   **Summary of importance**: Core backend logic, FastAPI setup, MongoDB connection, API routes, Pydantic models, and CRUD operations.
     -   **Changes made**:
-        -   **Kanban Fix**: Modified endpoint to expect query parameters (, , , ) for drag & drop.
-        -   **Settings Fix**: Ensured  correctly processed  Pydantic model with valid  enum (, , ) and proper  dictionary structure.
-        -   **Document Management**: Added  Enum and  Pydantic model (fields: uid=0(root) gid=0(root) groups=0(root), , , , ,  (Base64), , , , , ). Implemented 5 API endpoints: , , , , .
+        -   **Kanban Fix**: Modified endpoint to expect query parameters.
+        -   **Settings Fix**: Ensured  processed  model with valid  enum and structure.
+        -   **Document Management**: Added  Enum and  Pydantic model. Implemented 5 API endpoints (, , , , ).
+        -   **Document Upload Bug Fix**: Modified  to accept a JSON request body instead of only query parameters, for improved robustness and frontend compatibility.
 -   ****:
-    -   **Summary of importance**: Main React component managing the entire UI, state, API calls, and integrating all interactive elements.
+    -   **Summary of importance**: Main React component managing UI, state, API calls, and integrating interactive elements.
     -   **Changes made**:
-        -   **Kanban Fixes**: Updated  to correctly form the backend API request. Added  to the  component. Renamed the Pipeline navigation tab to 📋 Kanban for clarity.
-        -   **Header Refactor**: Reworked the main navigation section. Added a hamburger menu to group less frequently used tabs (Vues, Paramètres, Rôles, Rapports, Mes Startups), keeping key tabs (Recherche, Dashboard, Kanban, Sourcing, Dealflow) directly visible. Integrated necessary state variables (, ) and logic.
-        -   **Scroll Improvements**: Integrated the  hook. Applied CSS classes (, ) to Kanban, Sourcing, and Dealflow table containers. Wrapped relevant sections in  and  for synchronized top scrollbars and improved UX.
-        -   **Scroll Performance Fix (Kanban)**: Implemented a  flag, used  for scroll updates, applied a wheel event multiplier, and adjusted CSS properties to prevent scroll conflicts and improve fluidity.
-        -   **Settings Fix**: Modified the data structure sent to  to match the backend's expected  model.
-        -   **Document Management**: Integrated the new , , and  components. Added state (, ) and functions (, ) to manage modal visibility and partner selection. Added 📎 Documents buttons within Sourcing and Dealflow tables to trigger the document modal.
+        -   **Kanban Fixes**: Updated , , renamed Pipeline tab.
+        -   **Header Refactor**: Reworked main navigation, added hamburger menu.
+        -   **Scroll Improvements**: Integrated , applied CSS classes, wrapped sections in /.
+        -   **Scroll Performance Fix (Kanban)**: Implemented , , CSS adjustments.
+        -   **Settings Fix**: Modified data structure for .
+        -   **Document Management**: Integrated , , .
+        -   **Sourcing Partner Creation Fix**:
+            -   Initial client-side validation added to Sourcing form .
+            -   Complete refactor of  to a simpler, linear structure for robustness, and restoration of 'Évaluation Stratégique' fields.
+        -   **API URL Handling**: Implemented dynamic  function to determine  based on the frontend's host (preview vs. localhost), ensuring correct backend communication.
+        -   **Document Download Fix**: Replaced all instances of  with  in download-related functions. Added  and  to the download button handler.
+        -   **Document Upload Fix**: Iteratively changed data submission from  to , then to direct query parameters (with  for encoding), and finally to  with a JSON body to match backend. Added distinct error messages and detailed console logs for upload/download.
 -   ****:
     -   **Summary of importance**: React application's entry point.
-    -   **Changes made**: Removed  due to its incompatibility with , which caused drag & drop issues.
+    -   **Changes made**: Removed  due to  incompatibility.
 -   ****:
-    -   **Summary of importance**: Contains global styles and custom CSS.
-    -   **Changes made**: Added custom CSS for enhanced scrollbar styling (, ) to improve visibility and user experience. Adjusted  for Kanban for better responsiveness.
+    -   **Summary of importance**: Global styles and custom CSS.
+    -   **Changes made**: Added custom CSS for enhanced scrollbar styling.
 -   ****:
-    -   **Summary of importance**: Contains reusable React components.
-    -   **New components**: , , , , , .
--   ****:
-    -   **Summary of importance**: Contains custom React hooks.
-    -   **New hooks**: .
+    -   **Summary of importance**: Stores environment variables like the backend URL.
+    -   **Changes made**:  was repeatedly corrected from  to  to resolve connectivity issues.
 </code_architecture>
 
 <pending_tasks>
--   Complete Mobile-First Optimization: Fully optimize the interface for mobile readability, compact columns, and card-based display.
--   Implement Future Customization: Add support for custom fields, free tags, and strategic groups.
--   Investigate and fix the inability to create new partners in the Sourcing section.
+-   Complete Mobile-First Optimization.
+-   Implement Future Customization: Add support for custom fields, free tags, and strategic groups for startup fiches.
+-   Resolve persistent frontend document upload issues, which are currently blocked by preview environment connectivity problems.
 </pending_tasks>
 
 <current_work>
-The AI engineer is currently addressing a critical bug reported by the user: the **inability to create new partners in the Sourcing section**. This issue was reported immediately after the successful completion of a comprehensive document management system.
+The AI engineer has most recently focused on resolving a series of critical bugs, culminating in significant progress. The Sourcing partner creation functionality is now fully operational, including a refactored frontend form that reliably captures all required fields, incorporates client-side validation, and properly includes the 'Évaluation Stratégique' section. The document download functionality is also completely fixed and verified, with the system correctly handling backend URL resolution and file retrieval.
 
-Prior to this, significant work was done on UX/UI enhancements and bug fixes:
-1.  **Kanban Drag & Drop**: Was successfully debugged after multiple attempts. Initial issues included incorrect API parameter handling (frontend sending JSON body, backend expecting query parameters, and a parameter name mismatch). The persistent problem was identified as an incompatibility between  and , which was resolved by removing  from .
-2.  **Header Navigation**: The header was refactored to streamline navigation. Five primary tabs (Search, Dashboard, Kanban, Sourcing, Dealflow) were made persistently visible, while other less-frequently used tabs were consolidated into a compact hamburger menu. This involved resolving several state management and rendering issues.
-3.  **Horizontal Scroll Accessibility**: Improved scrolling for Kanban, Sourcing, and Dealflow tables. This included adding a synchronized horizontal scrollbar at the top of these views and enabling horizontal scrolling via mouse wheel/trackpad. Kanban's scroll performance, which became slow due to multiple overlapping scroll event listeners, was optimized using ,  flags, and CSS  adjustments.
-4.  **Settings Save Functionality**: A bug preventing the saving of column display settings was fixed. The root cause was an HTTP 422 (Unprocessable Entity) error from the backend's  endpoint, caused by the frontend sending an invalid  enum value ( instead of expected , , or ) and an incorrect structure for the  dictionary.
-5.  **Document Management System**: A complete feature for uploading and managing documents associated with startups was implemented. This includes backend API endpoints for upload (with automatic versioning and Base64 content storage), retrieval, download, and deletion, along with a user-friendly frontend interface featuring drag & drop, document type selection, and a list of versions.
-
-The immediate next step is to diagnose and fix the newly reported Sourcing partner creation bug.
+However, the frontend document upload functionality remains problematic. Despite multiple iterations of fixes—including adjusting the frontend's data submission format (from  to , then direct query parameters, and finally a JSON body) to match the backend's expectations, and leveraging  for robust encoding—the upload persistently fails with a 400 or 422 error on the user's preview environment. While backend testing confirms the API () correctly processes JSON payloads, the frontend's attempts to upload are still being rejected, which the AI engineer attributes to instability and connectivity issues within the preview environment (e.g., WebSocket failures, Failed to load resource). The display of all Sourcing/Dealflow data and the functionality of settings buttons were also confirmed to be working after addressing environment variable loading issues via a dynamic URL detection mechanism.
 </current_work>
 
 <optional_next_step>
-The next step is to investigate and fix the inability to create new partners in sourcing bug.
+Investigate the preview environment's connectivity issues blocking frontend document upload, or advise on alternative deployment/testing.
 </optional_next_step>
