@@ -3142,6 +3142,12 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
       alert("Veuillez remplir tous les champs requis marqués d'un *");
       return;
     }
+
+    // Phase 5 - Check for duplicates before submission (only for new partners)
+    if (!initialData && duplicates.length > 0 && !forcingCreation) {
+      alert("⚠️ Des partenaires similaires existent déjà. Veuillez vérifier les suggestions ou forcer la création.");
+      return;
+    }
     
     // Process date fields
     const processedData = { ...formData };
