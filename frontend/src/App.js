@@ -198,6 +198,111 @@ const StrategicTags = ({ tags }) => {
   );
 };
 
+// Phase 5 - Duplicate Detection Component
+const DuplicateAlert = ({ duplicates, onViewPartner, onCreateAnyway, onCancel }) => {
+  if (!duplicates || duplicates.length === 0) return null;
+
+  return (
+    <div className="mt-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+      <div className="flex items-start">
+        <div className="flex-shrink-0">
+          <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+        </div>
+        <div className="ml-3 flex-1">
+          <h3 className="text-sm font-medium text-yellow-800">
+            ⚠️ Des partenaires similaires existent déjà :
+          </h3>
+          <div className="mt-2 text-sm text-yellow-700">
+            <ul className="space-y-2">
+              {duplicates.map((duplicate, index) => (
+                <li key={index} className="flex items-center justify-between bg-white p-2 rounded border">
+                  <div className="flex-1">
+                    <span className="font-medium">{duplicate.name}</span>
+                    <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
+                      {duplicate.type === 'sourcing' ? 'Sourcing' : 'Dealflow'}
+                    </span>
+                    <span className="ml-2 text-xs text-gray-500">
+                      {duplicate.similarity * 100}% similarité
+                    </span>
+                  </div>
+                  <div className="ml-4">
+                    <button
+                      onClick={() => onViewPartner(duplicate)}
+                      className="text-blue-600 hover:text-blue-800 text-xs underline"
+                    >
+                      [Voir la fiche]
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="mt-4 flex space-x-3">
+            <button
+              onClick={onCreateAnyway}
+              className="bg-yellow-600 text-white px-4 py-2 rounded text-sm hover:bg-yellow-700"
+            >
+              Créer quand même
+            </button>
+            <button
+              onClick={onCancel}
+              className="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Phase 5 - Custom Hook for Duplicate Detection
+const useDuplicateDetection = () => {
+  const [duplicates, setDuplicates] = useState([]);
+  const [isChecking, setIsChecking] = useState(false);
+  
+  const checkDuplicates = async (name) => {
+    if (!name || name.length < 3) {
+      setDuplicates([]);
+      return;
+    }
+    
+    setIsChecking(true);
+    try {
+      const response = await axios.get(`${API_URL}/partners/check-duplicate?name=${encodeURIComponent(name)}`);
+      setDuplicates(response.data.duplicates || []);
+    } catch (error) {
+      console.error('Error checking duplicates:', error);
+      setDuplicates([]);
+    } finally {
+      setIsChecking(false);
+    }
+  };
+  
+  // Debounced version to avoid too many API calls
+  const debouncedCheck = useRef(null);
+  
+  const checkDuplicatesDebounced = (name) => {
+    if (debouncedCheck.current) {
+      clearTimeout(debouncedCheck.current);
+    }
+    
+    debouncedCheck.current = setTimeout(() => {
+      checkDuplicates(name);
+    }, 500); // 500ms delay
+  };
+  
+  return {
+    duplicates,
+    isChecking,
+    checkDuplicates: checkDuplicatesDebounced,
+    clearDuplicates: () => setDuplicates([])
+  };
+};
+
 const SearchBar = ({ onSearch, placeholder = "Rechercher..." }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
