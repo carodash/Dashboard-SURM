@@ -41,6 +41,10 @@ class DealflowStatus(str, Enum):
     CLOS = "Clos"
     EN_COURS_METIERS = "En cours avec les métiers"
     EN_COURS_EQUIPE_INNO = "En cours avec l'équipe inno"
+    PRESENTATION_METIERS = "Présentation métiers"
+    GO_METIER_ETUDE = "Go métier étude"
+    GO_EXPERIMENTATION = "Go experimentation"
+    GO_GENERALISATION = "Go généralisation"
 
 class UserRole(str, Enum):
     ADMIN = "admin"
