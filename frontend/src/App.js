@@ -2761,6 +2761,26 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Nom de l'entreprise"
             />
+            
+            {/* Phase 5 - Duplicate Detection Alert */}
+            {showDuplicateAlert && duplicates.length > 0 && (
+              <DuplicateAlert
+                duplicates={duplicates}
+                onViewPartner={(duplicate) => {
+                  // Could implement a view partner modal here
+                  console.log('View partner:', duplicate);
+                }}
+                onCreateAnyway={() => {
+                  setForcingCreation(true);
+                  setShowDuplicateAlert(false);
+                }}
+                onCancel={() => {
+                  setFormData(prev => ({ ...prev, nom_entreprise: '' }));
+                  setShowDuplicateAlert(false);
+                  clearDuplicates();
+                }}
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
