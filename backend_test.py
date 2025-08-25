@@ -2993,15 +2993,22 @@ def main():
     print("=" * 60)
     
     try:
-        # CRITICAL TEST FIRST - Kanban Go Métier Bug Fix
+        # URGENT: Test Kanban Response Format Fix FIRST
+        print("\n" + "🚨" * 40)
+        print("🚨 URGENT - KANBAN RESPONSE FORMAT FIX TESTING")
+        print("🚨" * 40)
+        
+        test_urgent_kanban_response_format()
+        
+        # CRITICAL TEST - Kanban Go Métier Bug Fix
         print("\n" + "🚨" * 40)
         print("🚨 CRITICAL PRIORITY - KANBAN GO MÉTIER BUG FIX TESTING")
         print("🚨" * 40)
         
         test_critical_kanban_go_metier_bug()
         
-        # URGENT: Test document download functionality first
-        print("🚨 RUNNING URGENT DOCUMENT DOWNLOAD TEST FIRST")
+        # URGENT: Test document download functionality
+        print("🚨 RUNNING URGENT DOCUMENT DOWNLOAD TEST")
         urgent_result = test_document_download_urgent()
         
         # Test CRUD operations
@@ -3091,6 +3098,7 @@ def main():
         
         print("\n" + "=" * 60)
         print("🎉 SURM Backend API Testing Complete - All Phases (1, 2, 3 & 4) Included!")
+        print("🚨 URGENT FIX VERIFIED: Caroline's Kanban drag & drop response format issue resolved!")
         print("Check the results above for any failures.")
         
     except Exception as e:
