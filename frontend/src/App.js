@@ -2673,6 +2673,19 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
         ...prev,
         [name]: type === 'checkbox' ? checked : value
       }));
+
+      // Phase 5 - Check for duplicates when nom_entreprise changes
+      if (name === 'nom_entreprise' && !initialData) { // Only check for new partners, not edits
+        if (value.length >= 3) {
+          checkDuplicates(value);
+          setShowDuplicateAlert(true);
+          setForcingCreation(false);
+        } else {
+          clearDuplicates();
+          setShowDuplicateAlert(false);
+          setForcingCreation(false);
+        }
+      }
     }
   };
 
