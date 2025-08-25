@@ -2133,7 +2133,12 @@ async def move_kanban_partner(
             user_name=current_user.full_name
         )
         
-        return {"message": "Partner status updated successfully"}
+        return {
+            "message": "Partner status updated successfully",
+            "new_status": new_status,
+            "partner_type": partner_type,
+            "partner_id": partner_id
+        }
     
     else:
         raise HTTPException(status_code=400, detail="Invalid transition between partner types")
