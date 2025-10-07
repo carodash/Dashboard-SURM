@@ -4867,6 +4867,12 @@ const Dashboard = () => {
     // Apply column filters
     Object.entries(columnFilters).forEach(([columnKey, filterValues]) => {
       if (filterValues && filterValues.length > 0) {
+        // Handle special case: if filter contains '__NONE__', show nothing
+        if (filterValues.includes('__NONE__')) {
+          filtered = [];
+          return;
+        }
+        
         filtered = filtered.filter(item => {
           const value = item[columnKey];
           let displayValue;
