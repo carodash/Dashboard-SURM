@@ -5599,14 +5599,16 @@ const Dashboard = () => {
     return currentUser.permissions.includes(permission);
   };
 
-  // Update filtered data when original data changes
+  // Update filtered data when original data or filters change
   useEffect(() => {
-    setFilteredSourcingPartners(applyFilters(sourcingPartners, activeFilters));
-  }, [sourcingPartners, activeFilters]);
+    const newFilteredSourcing = applyAdvancedFilters(sourcingPartners);
+    setFilteredSourcingPartners(newFilteredSourcing);
+  }, [sourcingPartners, activeFilters, columnFilters, columnSortConfig]);
 
   useEffect(() => {
-    setFilteredDealflowPartners(applyFilters(dealflowPartners, activeFilters));
-  }, [dealflowPartners, activeFilters]);
+    const newFilteredDealflow = applyAdvancedFilters(dealflowPartners);
+    setFilteredDealflowPartners(newFilteredDealflow);
+  }, [dealflowPartners, activeFilters, columnFilters, columnSortConfig]);
 
   const renderTableCell = (partner, key, config) => {
     const value = partner[key];
