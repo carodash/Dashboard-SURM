@@ -6012,7 +6012,7 @@ const Dashboard = () => {
               <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      {/* Phase 6 - Demo: Add Excel-like filters to key columns */}
+                      {/* Restore dynamic column configuration with Excel-like filters */}
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <input
                           type="checkbox"
@@ -6021,42 +6021,20 @@ const Dashboard = () => {
                           className="rounded"
                         />
                       </th>
-                      <FilterableTableHeader
-                        column="nom_entreprise"
-                        label="Entreprise"
-                        data={sourcingPartners}
-                        activeFilters={columnFilters}
-                        onFilterChange={handleColumnFilterChange}
-                        onSort={handleColumnSort}
-                        sortConfig={columnSortConfig}
-                      />
-                      <FilterableTableHeader
-                        column="statut"
-                        label="Statut"
-                        data={sourcingPartners}
-                        activeFilters={columnFilters}
-                        onFilterChange={handleColumnFilterChange}
-                        onSort={handleColumnSort}
-                        sortConfig={columnSortConfig}
-                      />
-                      <FilterableTableHeader
-                        column="domaine_activite"
-                        label="Domaine"
-                        data={sourcingPartners}
-                        activeFilters={columnFilters}
-                        onFilterChange={handleColumnFilterChange}
-                        onSort={handleColumnSort}
-                        sortConfig={columnSortConfig}
-                      />
-                      <FilterableTableHeader
-                        column="pilote"
-                        label="Pilote"
-                        data={sourcingPartners}
-                        activeFilters={columnFilters}
-                        onFilterChange={handleColumnFilterChange}
-                        onSort={handleColumnSort}
-                        sortConfig={columnSortConfig}
-                      />
+                      {Object.entries(columnConfig.sourcing).map(([key, config]) => 
+                        config.visible ? (
+                          <FilterableTableHeader
+                            key={key}
+                            column={key}
+                            label={config.label}
+                            data={sourcingPartners}
+                            activeFilters={columnFilters}
+                            onFilterChange={handleColumnFilterChange}
+                            onSort={handleColumnSort}
+                            sortConfig={columnSortConfig}
+                          />
+                        ) : null
+                      )}
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
