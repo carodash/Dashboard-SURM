@@ -6205,7 +6205,8 @@ const Dashboard = () => {
               <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left">
+                      {/* Apply Excel-like filters to Dealflow columns */}
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <input
                           type="checkbox"
                           checked={selectedItems.length === filteredDealflowPartners.length && filteredDealflowPartners.length > 0}
@@ -6215,14 +6216,16 @@ const Dashboard = () => {
                       </th>
                       {Object.entries(columnConfig.dealflow).map(([key, config]) => 
                         config.visible ? (
-                          <SortableTableHeader
+                          <FilterableTableHeader
                             key={key}
-                            sortKey={key}
-                            currentSort={sortConfig}
-                            onSort={handleSort}
-                          >
-                            {config.label}
-                          </SortableTableHeader>
+                            column={key}
+                            label={config.label}
+                            data={dealflowPartners}
+                            activeFilters={columnFilters}
+                            onFilterChange={handleColumnFilterChange}
+                            onSort={handleColumnSort}
+                            sortConfig={columnSortConfig}
+                          />
                         ) : null
                       )}
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
