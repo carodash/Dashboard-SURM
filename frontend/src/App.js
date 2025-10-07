@@ -468,7 +468,7 @@ const ColumnFilter = ({
                 <label key={index} className="flex items-center text-sm py-1 hover:bg-gray-50">
                   <input
                     type="checkbox"
-                    checked={currentFilters.length === 0 || currentFilters.includes(value)}
+                    checked={!isNothingSelected && (currentFilters.length === 0 || currentFilters.includes(value))}
                     onChange={() => handleValueToggle(value)}
                     className="mr-2"
                   />
