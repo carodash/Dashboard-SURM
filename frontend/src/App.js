@@ -336,7 +336,8 @@ const ColumnFilter = ({
   );
 
   const currentFilters = activeFilters[columnKey] || [];
-  const allSelected = currentFilters.length === 0 || currentFilters.length === uniqueValues.length;
+  const isNothingSelected = currentFilters.includes('__NONE__');
+  const allSelected = (currentFilters.length === 0 && !isNothingSelected) || currentFilters.length === uniqueValues.length;
 
   const handleValueToggle = (value) => {
     let newFilters;
