@@ -4835,7 +4835,7 @@ const EnrichedDataModal = ({ isOpen, onClose, partner, partnerType }) => {
 const Dashboard = () => {
   // Phase 6 - Advanced Column Filtering & Sorting State
   const [columnFilters, setColumnFilters] = useState({});
-  const [sortConfig, setSortConfig] = useState({ column: null, direction: null });
+  const [columnSortConfig, setColumnSortConfig] = useState({ column: null, direction: null });
 
   // Phase 6 - Advanced filtering and sorting functions
   const handleColumnFilterChange = (columnKey, filterValues) => {
@@ -4846,7 +4846,7 @@ const Dashboard = () => {
   };
 
   const handleColumnSort = (columnKey, direction) => {
-    setSortConfig({ column: columnKey, direction });
+    setColumnSortConfig({ column: columnKey, direction });
   };
 
   const applyAdvancedFilters = (data, filters = {}, sort = null) => {
@@ -4878,10 +4878,10 @@ const Dashboard = () => {
     });
 
     // Apply sorting
-    if (sortConfig.column && sortConfig.direction) {
+    if (columnSortConfig.column && columnSortConfig.direction) {
       filtered.sort((a, b) => {
-        const aVal = a[sortConfig.column];
-        const bVal = b[sortConfig.column];
+        const aVal = a[columnSortConfig.column];
+        const bVal = b[columnSortConfig.column];
         
         // Handle null/undefined values
         if (aVal === null || aVal === undefined) return 1;
@@ -4891,20 +4891,20 @@ const Dashboard = () => {
         if (typeof aVal === 'string' && aVal.match(/^\d{4}-\d{2}-\d{2}/)) {
           const aDate = new Date(aVal);
           const bDate = new Date(bVal);
-          return sortConfig.direction === 'asc' ? aDate - bDate : bDate - aDate;
+          return columnSortConfig.direction === 'asc' ? aDate - bDate : bDate - aDate;
         }
         
         // Numeric comparison
         if (!isNaN(Number(aVal)) && !isNaN(Number(bVal))) {
           const aNum = Number(aVal);
           const bNum = Number(bVal);
-          return sortConfig.direction === 'asc' ? aNum - bNum : bNum - aNum;
+          return columnSortConfig.direction === 'asc' ? aNum - bNum : bNum - aNum;
         }
         
         // String comparison
         const aStr = String(aVal).toLowerCase();
         const bStr = String(bVal).toLowerCase();
-        if (sortConfig.direction === 'asc') {
+        if (columnSortConfig.direction === 'asc') {
           return aStr.localeCompare(bStr);
         } else {
           return bStr.localeCompare(aStr);
