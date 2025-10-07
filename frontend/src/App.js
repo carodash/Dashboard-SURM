@@ -4833,6 +4833,88 @@ const EnrichedDataModal = ({ isOpen, onClose, partner, partnerType }) => {
 };
 
 const Dashboard = () => {
+  // Phase 6 - Advanced Column Filtering & Sorting State
+  const [columnFilters, setColumnFilters] = useState({});
+  const [sortConfig, setSortConfig] = useState({ column: null, direction: null });
+
+  // Phase 6 - Advanced filtering and sorting functions
+  const handleColumnFilterChange = (columnKey, filterValues) => {
+    setColumnFilters(prev => ({
+      ...prev,
+      [columnKey]: filterValues
+    }));
+  };
+
+  const handleColumnSort = (columnKey, direction) => {
+    setSortConfig({ column: columnKey, direction });
+  };
+
+  const applyAdvancedFilters = (data, filters = {}, sort = null) => {
+    let filtered = [...data];
+
+    // Apply existing basic filters first
+    filtered = applyFilters(filtered, activeFilters);
+
+    // Apply column filters
+    Object.entries(columnFilters).forEach(([columnKey, filterValues]) => {
+      if (filterValues && filterValues.length > 0) {
+        filtered = filtered.filter(item => {
+          const value = item[columnKey];
+          let displayValue;
+          
+          if (value === null || value === undefined) {
+            displayValue = '(Vide)';
+          } else if (typeof value === 'boolean') {
+            displayValue = value ? 'Oui' : 'Non';
+          } else if (Array.isArray(value)) {
+            displayValue = value.join(', ');
+          } else {
+            displayValue = String(value);
+          }
+          
+          return filterValues.includes(displayValue);
+        });
+      }
+    });
+
+    // Apply sorting
+    if (sortConfig.column && sortConfig.direction) {
+      filtered.sort((a, b) => {
+        const aVal = a[sortConfig.column];
+        const bVal = b[sortConfig.column];
+        
+        // Handle null/undefined values
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+        
+        // Date comparison
+        if (typeof aVal === 'string' && aVal.match(/^\d{4}-\d{2}-\d{2}/)) {
+          const aDate = new Date(aVal);
+          const bDate = new Date(bVal);
+          return sortConfig.direction === 'asc' ? aDate - bDate : bDate - aDate;
+        }
+        
+        // Numeric comparison
+        if (!isNaN(Number(aVal)) && !isNaN(Number(bVal))) {
+          const aNum = Number(aVal);
+          const bNum = Number(bVal);
+          return sortConfig.direction === 'asc' ? aNum - bNum : bNum - aNum;
+        }
+        
+        // String comparison
+        const aStr = String(aVal).toLowerCase();
+        const bStr = String(bVal).toLowerCase();
+        if (sortConfig.direction === 'asc') {
+          return aStr.localeCompare(bStr);
+        } else {
+          return bStr.localeCompare(aStr);
+        }
+      });
+    }
+
+    return filtered;
+  };
+
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sourcingPartners, setSourcingPartners] = useState([]);
   const [dealflowPartners, setDealflowPartners] = useState([]);
