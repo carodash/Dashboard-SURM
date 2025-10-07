@@ -303,6 +303,222 @@ const useDuplicateDetection = () => {
   };
 };
 
+// Phase 6 - Advanced Column Filter Component (Excel-like)
+const ColumnFilter = ({ 
+  data, 
+  columnKey, 
+  columnLabel, 
+  activeFilters, 
+  onFilterChange,
+  onSort 
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Get unique values for this column
+  const uniqueValues = useMemo(() => {
+    const values = data
+      .map(item => {
+        const value = item[columnKey];
+        if (value === null || value === undefined) return '(Vide)';
+        if (typeof value === 'boolean') return value ? 'Oui' : 'Non';
+        if (Array.isArray(value)) return value.join(', ');
+        return String(value);
+      })
+      .filter((value, index, self) => self.indexOf(value) === index)
+      .sort();
+    return values;
+  }, [data, columnKey]);
+
+  // Filter values based on search
+  const filteredValues = uniqueValues.filter(value =>
+    value.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const currentFilters = activeFilters[columnKey] || [];
+  const allSelected = currentFilters.length === 0 || currentFilters.length === uniqueValues.length;
+
+  const handleValueToggle = (value) => {
+    let newFilters;
+    if (currentFilters.includes(value)) {
+      newFilters = currentFilters.filter(f => f !== value);
+    } else {
+      newFilters = [...currentFilters, value];
+    }
+    
+    // If all values are selected, clear filters (show all)
+    if (newFilters.length === uniqueValues.length) {
+      newFilters = [];
+    }
+    
+    onFilterChange(columnKey, newFilters);
+  };
+
+  const handleSelectAll = () => {
+    if (allSelected) {
+      onFilterChange(columnKey, [uniqueValues[0]]); // Select only first item to deselect all
+    } else {
+      onFilterChange(columnKey, []); // Clear filters to select all
+    }
+  };
+
+  const handleSort = (direction) => {
+    onSort(columnKey, direction);
+    setIsOpen(false);
+  };
+
+  const detectColumnType = () => {
+    const sampleValue = data.find(item => item[columnKey] !== null && item[columnKey] !== undefined)?.[columnKey];
+    if (!sampleValue) return 'text';
+    
+    // Check if it's a date
+    if (typeof sampleValue === 'string' && sampleValue.match(/^\d{4}-\d{2}-\d{2}/)) {
+      return 'date';
+    }
+    
+    // Check if it's numeric
+    if (typeof sampleValue === 'number' || (typeof sampleValue === 'string' && !isNaN(Number(sampleValue)))) {
+      return 'number';
+    }
+    
+    return 'text';
+  };
+
+  const columnType = detectColumnType();
+
+  return (
+    <div className="relative inline-block">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="ml-1 p-1 hover:bg-gray-200 rounded"
+        title={`Filtrer ${columnLabel}`}
+      >
+        <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg z-50">
+          <div className="p-3">
+            {/* Sort Options */}
+            <div className="mb-3 pb-3 border-b">
+              <div className="text-sm font-medium text-gray-700 mb-2">Trier</div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleSort('asc')}
+                  className="flex items-center px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
+                >
+                  ↑ {columnType === 'date' ? 'Plus ancien' : columnType === 'number' ? 'Croissant' : 'A → Z'}
+                </button>
+                <button
+                  onClick={() => handleSort('desc')}
+                  className="flex items-center px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
+                >
+                  ↓ {columnType === 'date' ? 'Plus récent' : columnType === 'number' ? 'Décroissant' : 'Z → A'}
+                </button>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div className="mb-3">
+              <input
+                type="text"
+                placeholder="Rechercher..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+              />
+            </div>
+
+            {/* Select All */}
+            <div className="mb-2">
+              <label className="flex items-center text-sm font-medium">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={handleSelectAll}
+                  className="mr-2"
+                />
+                (Tout sélectionner)
+              </label>
+            </div>
+
+            {/* Values List */}
+            <div className="max-h-48 overflow-y-auto">
+              {filteredValues.map((value, index) => (
+                <label key={index} className="flex items-center text-sm py-1 hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={currentFilters.length === 0 || currentFilters.includes(value)}
+                    onChange={() => handleValueToggle(value)}
+                    className="mr-2"
+                  />
+                  <span className="truncate">{value}</span>
+                </label>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div className="mt-3 pt-3 border-t flex space-x-2">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+              >
+                OK
+              </button>
+              <button
+                onClick={() => {
+                  onFilterChange(columnKey, []);
+                  setSearchTerm('');
+                  setIsOpen(false);
+                }}
+                className="px-3 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded"
+              >
+                Effacer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Phase 6 - Enhanced Table Header Component
+const FilterableTableHeader = ({ 
+  column, 
+  label, 
+  data, 
+  activeFilters, 
+  onFilterChange, 
+  onSort,
+  sortConfig 
+}) => {
+  const getSortIcon = () => {
+    if (sortConfig?.column === column) {
+      return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+    }
+    return '';
+  };
+
+  return (
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      <div className="flex items-center">
+        <span>{label}{getSortIcon()}</span>
+        <ColumnFilter
+          data={data}
+          columnKey={column}
+          columnLabel={label}
+          activeFilters={activeFilters}
+          onFilterChange={onFilterChange}
+          onSort={onSort}
+        />
+      </div>
+    </th>
+  );
+};
+
 const SearchBar = ({ onSearch, placeholder = "Rechercher..." }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
