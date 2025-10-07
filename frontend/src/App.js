@@ -341,13 +341,21 @@ const ColumnFilter = ({
   const handleValueToggle = (value) => {
     let newFilters;
     
-    // If no filters are active (all selected), start with all values except the one being deselected
-    if (currentFilters.length === 0) {
+    // Special case: if we're in "nothing selected" mode
+    if (currentFilters.includes('__NONE__')) {
+      // Start fresh with just this value
+      newFilters = [value];
+    } else if (currentFilters.length === 0) {
+      // If no filters are active (all selected), start with all values except the one being deselected
       newFilters = uniqueValues.filter(v => v !== value);
     } else {
       // Normal toggle logic
       if (currentFilters.includes(value)) {
         newFilters = currentFilters.filter(f => f !== value);
+        // If we deselected everything, go to "nothing selected" mode
+        if (newFilters.length === 0) {
+          newFilters = ['__NONE__'];
+        }
       } else {
         newFilters = [...currentFilters, value];
       }
@@ -363,7 +371,7 @@ const ColumnFilter = ({
 
   const handleSelectAll = () => {
     if (allSelected) {
-      // Deselect all by keeping only one item (effectively showing nothing)
+      // Deselect all by using special marker
       onFilterChange(columnKey, ['__NONE__']);
     } else {
       // Select all by clearing filters
