@@ -3489,6 +3489,9 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
   const [forcingCreation, setForcingCreation] = useState(false);
 
+  // Phase 6 - Company Enrichment
+  const { enrichCompany, isEnriching, enrichmentError, clearError } = useCompanyEnrichment();
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
