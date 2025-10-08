@@ -303,6 +303,57 @@ const useDuplicateDetection = () => {
   };
 };
 
+// Phase 6 - Company Enrichment Hook
+const useCompanyEnrichment = () => {
+  const [isEnriching, setIsEnriching] = useState(false);
+  const [enrichmentError, setEnrichmentError] = useState(null);
+  
+  const enrichCompany = async (companyName) => {
+    if (!companyName || companyName.length < 3) {
+      return null;
+    }
+    
+    setIsEnriching(true);
+    setEnrichmentError(null);
+    
+    try {
+      console.log(`🔍 ENRICHISSEMENT - Recherche données pour: ${companyName}`);
+      
+      // Try to extract domain from company name if it looks like a domain
+      let domain = companyName.toLowerCase().trim();
+      
+      // If it doesn't end with a TLD, try to find the company via Abstract API
+      const response = await axios.post(`${API_URL}/enrich-company`, {
+        query: companyName,
+        domain: domain.includes('.') ? domain : null
+      });
+      
+      if (response.data.success && response.data.company_data) {
+        console.log('✅ ENRICHISSEMENT RÉUSSI:', response.data.company_data);
+        return response.data.company_data;
+      } else {
+        console.log('❌ ENRICHISSEMENT ÉCHOUÉ:', response.data.error_message);
+        setEnrichmentError(response.data.error_message || 'Aucune donnée trouvée');
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ ERREUR ENRICHISSEMENT:', error);
+      const errorMsg = error.response?.data?.detail || 'Erreur lors de l\'enrichissement';
+      setEnrichmentError(errorMsg);
+      return null;
+    } finally {
+      setIsEnriching(false);
+    }
+  };
+  
+  return {
+    enrichCompany,
+    isEnriching,
+    enrichmentError,
+    clearError: () => setEnrichmentError(null)
+  };
+};
+
 // Phase 6 - Advanced Column Filter Component (Excel-like)
 const ColumnFilter = ({ 
   data, 
