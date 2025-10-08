@@ -990,6 +990,169 @@ def calculate_similarity(str1: str, str2: str) -> float:
     # Combine both similarities
     return (jaccard_sim * 0.7) + (char_sim * 0.3)
 
+# COMPANY ENRICHMENT MODELS AND ENDPOINTS
+class CompanyEnrichmentRequest(BaseModel):
+    query: str
+    domain: Optional[str] = None
+
+class EnrichedCompanyData(BaseModel):
+    name: Optional[str] = None
+    domain: Optional[str] = None
+    industry: Optional[str] = None
+    employees_count: Optional[int] = None
+    country: Optional[str] = None
+    country_code: Optional[str] = None
+    year_founded: Optional[int] = None
+    company_type: Optional[str] = None
+    description: Optional[str] = None
+    website: Optional[str] = None
+
+class CompanyEnrichmentResponse(BaseModel):
+    success: bool
+    company_data: Optional[EnrichedCompanyData] = None
+    error_message: Optional[str] = None
+    api_source: Optional[str] = None
+
+@api_router.post("/enrich-company", response_model=CompanyEnrichmentResponse)
+async def enrich_company_data(request: CompanyEnrichmentRequest):
+    """Enrich company data using free APIs"""
+    
+    try:
+        # Method 1: Try Abstract API with free tier (if API key available)
+        abstract_key = os.environ.get('ABSTRACT_API_KEY')
+        if abstract_key:
+            try:
+                # Extract domain from query or use provided domain
+                domain = request.domain
+                if not domain:
+                    # Try to extract domain from company name
+                    query_lower = request.query.lower().replace(' ', '').replace('-', '')
+                    if '.' in query_lower and any(ext in query_lower for ext in ['.com', '.fr', '.org', '.net']):
+                        domain = query_lower
+                    else:
+                        # Create potential domain
+                        domain = f"{query_lower.replace(' ', '').replace('-', '')}.com"
+                
+                # Call Abstract API
+                url = "https://companyenrichment.abstractapi.com/v1/"
+                params = {
+                    'api_key': abstract_key,
+                    'domain': domain
+                }
+                
+                response = requests.get(url, params=params, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    enriched_data = EnrichedCompanyData(
+                        name=data.get('name'),
+                        domain=data.get('domain'),
+                        industry=data.get('industry'),
+                        employees_count=data.get('employees_count'),
+                        country=data.get('country'),
+                        country_code=data.get('country_code'),
+                        year_founded=data.get('year_founded'),
+                        company_type=data.get('type'),
+                        description=data.get('description'),
+                        website=data.get('domain')
+                    )
+                    
+                    return CompanyEnrichmentResponse(
+                        success=True,
+                        company_data=enriched_data,
+                        api_source="abstract_api"
+                    )
+                    
+            except Exception as e:
+                print(f"Abstract API error: {str(e)}")
+        
+        # Method 2: Try French SIRENE API (free for French companies)
+        try:
+            sirene_url = "https://api.insee.fr/entreprises/sirene/V3/siret"
+            headers = {
+                'Accept': 'application/json'
+            }
+            params = {
+                'q': f"denominationUniteLegale:\"{request.query}\"",
+                'nombre': 1
+            }
+            
+            response = requests.get(sirene_url, headers=headers, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                
+                if 'etablissements' in data and len(data['etablissements']) > 0:
+                    etablissement = data['etablissements'][0]
+                    unite_legale = etablissement.get('uniteLegale', {})
+                    
+                    # Map SIRENE data to our format
+                    enriched_data = EnrichedCompanyData(
+                        name=unite_legale.get('denominationUniteLegale'),
+                        industry=etablissement.get('libelleSecteurActiviteUniteLegale'),
+                        country="France",
+                        country_code="FR",
+                        company_type="private" if unite_legale.get('categorieJuridiqueUniteLegale') else None,
+                        year_founded=int(unite_legale.get('dateCreationUniteLegale', '0')[:4]) if unite_legale.get('dateCreationUniteLegale') else None
+                    )
+                    
+                    return CompanyEnrichmentResponse(
+                        success=True,
+                        company_data=enriched_data,
+                        api_source="sirene_api"
+                    )
+                    
+        except Exception as e:
+            print(f"SIRENE API error: {str(e)}")
+        
+        # Method 3: Basic domain enrichment (fallback)
+        try:
+            # Extract potential domain and create basic data
+            query_clean = request.query.lower().strip()
+            
+            # Create basic enriched data based on patterns
+            enriched_data = EnrichedCompanyData(
+                name=request.query.title(),
+                domain=request.domain if request.domain else f"{query_clean.replace(' ', '').replace('-', '')}.com"
+            )
+            
+            # Try to determine industry from keywords
+            industry_keywords = {
+                'tech': 'Technology',
+                'software': 'Software',
+                'digital': 'Digital Services',
+                'finance': 'Finance',
+                'consulting': 'Consulting',
+                'startup': 'Technology Startup',
+                'solutions': 'Technology Solutions'
+            }
+            
+            for keyword, industry in industry_keywords.items():
+                if keyword in query_clean:
+                    enriched_data.industry = industry
+                    break
+            
+            if enriched_data.name:
+                return CompanyEnrichmentResponse(
+                    success=True,
+                    company_data=enriched_data,
+                    api_source="basic_enrichment"
+                )
+                
+        except Exception as e:
+            print(f"Basic enrichment error: {str(e)}")
+        
+        # If all methods fail
+        return CompanyEnrichmentResponse(
+            success=False,
+            error_message="Aucune donnée trouvée pour cette entreprise. Vérifiez le nom ou essayez avec le domaine web."
+        )
+        
+    except Exception as e:
+        return CompanyEnrichmentResponse(
+            success=False,
+            error_message=f"Erreur lors de l'enrichissement: {str(e)}"
+        )
+
 # DEALFLOW ENDPOINTS
 @api_router.post("/dealflow", response_model=DealflowPartner)
 async def create_dealflow_partner(partner: DealflowPartnerCreate):
