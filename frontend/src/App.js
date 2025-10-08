@@ -2944,6 +2944,9 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
   const [forcingCreation, setForcingCreation] = useState(false);
 
+  // Phase 6 - Company Enrichment
+  const { enrichCompany, isEnriching, enrichmentError, clearError } = useCompanyEnrichment();
+
   // Gestion simple des changements + tags stratégiques
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
