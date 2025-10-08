@@ -1014,7 +1014,7 @@ class CompanyEnrichmentResponse(BaseModel):
     api_source: Optional[str] = None
 
 @api_router.post("/enrich-company", response_model=CompanyEnrichmentResponse)
-async def enrich_company_data(request: CompanyEnrichmentRequest):
+async def enrich_company_endpoint(request: CompanyEnrichmentRequest):
     """Enrich company data using free APIs"""
     
     try:
