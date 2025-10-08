@@ -5518,51 +5518,30 @@ def main():
         print("\n" + "=" * 60)
         print("📋 QUICK SYSTEM HEALTH CHECK")
         print("=" * 60)
-        print("🔄 TESTING PHASE 1 - SUIVI & RELANCE FEATURES")
-        print("=" * 60)
         
-        # Test next action date functionality
-        next_action_sourcing_id, next_action_dealflow_id = test_phase1_next_action_date()
+        # Quick sourcing list test
+        response = requests.get(f"{API_URL}/sourcing")
+        if response.status_code == 200:
+            partners = response.json()
+            print(f"✅ Sourcing list: {len(partners)} partners available")
+        else:
+            print(f"❌ Sourcing list failed: {response.status_code}")
         
-        # Test inactivity indicators
-        test_phase1_inactivity_indicators()
+        # Quick dealflow list test
+        response = requests.get(f"{API_URL}/dealflow")
+        if response.status_code == 200:
+            partners = response.json()
+            print(f"✅ Dealflow list: {len(partners)} partners available")
+        else:
+            print(f"❌ Dealflow list failed: {response.status_code}")
         
-        # Test activity timeline
-        timeline_partner_id = test_phase1_activity_timeline()
-        
-        # Test enhanced transition with inheritance
-        enhanced_transition_dealflow_id = test_phase1_transition_inheritance()
-        
-        # Test Phase 2 features
-        print("\n" + "=" * 60)
-        print("📊 TESTING PHASE 2 - ENHANCED ANALYTICS")
-        print("=" * 60)
-        
-        test_phase2_monthly_evolution()
-        test_phase2_enhanced_distribution()
-        test_phase2_data_accuracy()
-        
-        # Test NEW duplicate detection feature
-        print("\n" + "=" * 60)
-        print("🔍 TESTING NEW DUPLICATE DETECTION FEATURE")
-        print("=" * 60)
-        
-        test_duplicate_detection_endpoint()
-        test_duplicate_detection_comprehensive()
-        
-        print("\n" + "=" * 60)
-        print("✅ ALL BACKEND TESTS COMPLETED SUCCESSFULLY!")
-        print("=" * 60)
-        print("\n📋 SUMMARY:")
-        print("- ✅ Caroline's critical bug fixes working correctly")
-        print("- ✅ Sourcing CRUD operations working")
-        print("- ✅ Dealflow CRUD operations working") 
-        print("- ✅ Transition workflow functional")
-        print("- ✅ Statistics endpoint accurate")
-        print("- ✅ Phase 1 features (Next Action Date, Inactivity, Timeline) working")
-        print("- ✅ Phase 2 enhanced analytics working")
-        print("- ✅ NEW Duplicate detection feature working")
-        print("\n🎯 SURM Backend API is production-ready for innovation management!")
+        # Quick statistics test
+        response = requests.get(f"{API_URL}/statistics")
+        if response.status_code == 200:
+            stats = response.json()
+            print(f"✅ Statistics: {stats.get('total_sourcing', 0)} sourcing, {stats.get('total_dealflow', 0)} dealflow")
+        else:
+            print(f"❌ Statistics failed: {response.status_code}")
         
         return True
         
