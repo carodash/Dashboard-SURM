@@ -5264,6 +5264,214 @@ def test_caroline_bug_fixes():
     
     return True
 
+def test_caroline_partner_creation_issue():
+    """Test Caroline's critical partner creation issue"""
+    print("\n=== TESTING CAROLINE'S PARTNER CREATION ISSUE ===")
+    print("User Caroline reports: Clicking 'Créer' button does nothing in partner creation forms")
+    
+    # Test 1: POST /api/sourcing with Caroline's exact scenario
+    print("\n1. Testing POST /api/sourcing with realistic Caroline data")
+    caroline_sourcing_data = {
+        "nom_entreprise": "Caroline Test Company",
+        "statut": "A traiter",
+        "pays_origine": "France",
+        "domaine_activite": "FinTech",
+        "typologie": "Startup",
+        "objet": "Solution de paiement innovante",
+        "cas_usage": "Paiements mobiles sécurisés",
+        "technologie": "Blockchain",
+        "source": "VivaTech 2025",
+        "date_entree_sourcing": "2024-12-19",
+        "interet": True,
+        "date_presentation_metiers": "2024-12-25",
+        "pilote": "Caroline Dubois",
+        "actions_commentaires": "Test de création par Caroline",
+        "date_prochaine_action": "2025-01-15"
+    }
+    
+    response = requests.post(f"{API_URL}/sourcing", json=caroline_sourcing_data)
+    if response.status_code == 200:
+        partner = response.json()
+        sourcing_id = partner['id']
+        print(f"✅ SOURCING CREATION SUCCESS: Created partner '{partner['nom_entreprise']}'")
+        print(f"   - ID: {sourcing_id}")
+        print(f"   - Status: {partner['statut']}")
+        print(f"   - Domain: {partner['domaine_activite']}")
+        print(f"   - Pilot: {partner['pilote']}")
+        
+        # Verify partner appears in list
+        list_response = requests.get(f"{API_URL}/sourcing")
+        if list_response.status_code == 200:
+            partners = list_response.json()
+            caroline_partner = next((p for p in partners if p['id'] == sourcing_id), None)
+            if caroline_partner:
+                print(f"✅ VERIFICATION SUCCESS: Partner appears in sourcing list")
+            else:
+                print(f"❌ VERIFICATION FAILED: Partner not found in sourcing list")
+        
+        # Test 2: POST /api/dealflow with Caroline's exact scenario
+        print("\n2. Testing POST /api/dealflow with realistic Caroline data")
+        caroline_dealflow_data = {
+            "nom": "Caroline Dealflow Test",
+            "statut": "En cours avec les métiers",
+            "domaine": "FinTech",
+            "typologie": "Startup",
+            "objet": "Plateforme fintech avancée",
+            "source": "Réseau Caroline",
+            "pilote": "Caroline Dubois",
+            "metiers_concernes": "DSI, Finance, Innovation",
+            "date_reception_fichier": "2024-12-19",
+            "date_pre_qualification": "2024-12-22",
+            "date_presentation_meetup_referents": "2024-12-28",
+            "actions_commentaires": "Test de création dealflow par Caroline",
+            "date_prochaine_action": "2025-01-20"
+        }
+        
+        response = requests.post(f"{API_URL}/dealflow", json=caroline_dealflow_data)
+        if response.status_code == 200:
+            partner = response.json()
+            dealflow_id = partner['id']
+            print(f"✅ DEALFLOW CREATION SUCCESS: Created partner '{partner['nom']}'")
+            print(f"   - ID: {dealflow_id}")
+            print(f"   - Status: {partner['statut']}")
+            print(f"   - Domain: {partner['domaine']}")
+            print(f"   - Pilot: {partner['pilote']}")
+            
+            # Verify partner appears in list
+            list_response = requests.get(f"{API_URL}/dealflow")
+            if list_response.status_code == 200:
+                partners = list_response.json()
+                caroline_partner = next((p for p in partners if p['id'] == dealflow_id), None)
+                if caroline_partner:
+                    print(f"✅ VERIFICATION SUCCESS: Partner appears in dealflow list")
+                else:
+                    print(f"❌ VERIFICATION FAILED: Partner not found in dealflow list")
+            
+            return sourcing_id, dealflow_id
+        else:
+            print(f"❌ DEALFLOW CREATION FAILED: {response.status_code}")
+            print(f"   Error: {response.text}")
+            return sourcing_id, None
+        
+    else:
+        print(f"❌ SOURCING CREATION FAILED: {response.status_code}")
+        print(f"   Error: {response.text}")
+        return None, None
+
+def test_caroline_company_enrichment():
+    """Test Caroline's new company enrichment endpoint"""
+    print("\n=== TESTING CAROLINE'S NEW COMPANY ENRICHMENT ENDPOINT ===")
+    print("Testing POST /api/enrich-company endpoint with various company names")
+    
+    # Test companies Caroline mentioned
+    test_companies = [
+        {"query": "Google", "expected_success": True},
+        {"query": "Microsoft", "expected_success": True},
+        {"query": "Test Company", "expected_success": True},
+        {"query": "Société Générale", "expected_success": True},  # French company for SIRENE API
+        {"query": "BNP Paribas", "expected_success": True},       # Another French company
+        {"query": "NonExistentCompany12345", "expected_success": False}  # Should fail gracefully
+    ]
+    
+    successful_tests = 0
+    total_tests = len(test_companies)
+    
+    for i, test_case in enumerate(test_companies, 1):
+        company_name = test_case["query"]
+        expected_success = test_case["expected_success"]
+        
+        print(f"\n{i}. Testing company: '{company_name}'")
+        
+        # Test with just company name
+        enrichment_request = {
+            "query": company_name
+        }
+        
+        response = requests.post(f"{API_URL}/enrich-company", json=enrichment_request)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Check response structure
+            required_fields = ["success", "company_data", "error_message", "api_source"]
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if not missing_fields:
+                print(f"✅ Response structure correct for '{company_name}'")
+                
+                if data["success"]:
+                    print(f"✅ Enrichment SUCCESS for '{company_name}'")
+                    print(f"   - API Source: {data.get('api_source', 'unknown')}")
+                    
+                    company_data = data.get("company_data", {})
+                    if company_data:
+                        print(f"   - Company Name: {company_data.get('name', 'N/A')}")
+                        print(f"   - Industry: {company_data.get('industry', 'N/A')}")
+                        print(f"   - Country: {company_data.get('country', 'N/A')}")
+                        print(f"   - Domain: {company_data.get('domain', 'N/A')}")
+                        print(f"   - Founded: {company_data.get('year_founded', 'N/A')}")
+                        print(f"   - Employees: {company_data.get('employees_count', 'N/A')}")
+                        
+                        # Check if we got meaningful data
+                        meaningful_fields = ['name', 'industry', 'country', 'domain']
+                        filled_fields = [field for field in meaningful_fields if company_data.get(field)]
+                        
+                        if len(filled_fields) >= 2:
+                            print(f"✅ Meaningful data retrieved ({len(filled_fields)}/4 key fields)")
+                            successful_tests += 1
+                        else:
+                            print(f"⚠️ Limited data retrieved ({len(filled_fields)}/4 key fields)")
+                            if expected_success:
+                                successful_tests += 0.5  # Partial success
+                    else:
+                        print(f"⚠️ No company data returned for '{company_name}'")
+                        
+                else:
+                    print(f"⚠️ Enrichment failed for '{company_name}': {data.get('error_message', 'Unknown error')}")
+                    if not expected_success:
+                        print(f"✅ Expected failure handled gracefully")
+                        successful_tests += 1
+                        
+            else:
+                print(f"❌ Missing response fields for '{company_name}': {missing_fields}")
+                
+        else:
+            print(f"❌ HTTP Error for '{company_name}': {response.status_code}")
+            print(f"   Error: {response.text}")
+    
+    # Test with domain parameter
+    print(f"\n{total_tests + 1}. Testing enrichment with domain parameter")
+    enrichment_with_domain = {
+        "query": "Google",
+        "domain": "google.com"
+    }
+    
+    response = requests.post(f"{API_URL}/enrich-company", json=enrichment_with_domain)
+    if response.status_code == 200:
+        data = response.json()
+        if data["success"]:
+            print(f"✅ Enrichment with domain parameter successful")
+            print(f"   - API Source: {data.get('api_source', 'unknown')}")
+            successful_tests += 1
+        else:
+            print(f"⚠️ Enrichment with domain failed: {data.get('error_message')}")
+    else:
+        print(f"❌ HTTP Error with domain parameter: {response.status_code}")
+    
+    # Summary
+    total_tests += 1  # Include domain test
+    success_rate = (successful_tests / total_tests) * 100
+    
+    print(f"\n=== COMPANY ENRICHMENT TEST SUMMARY ===")
+    print(f"✅ Successful tests: {successful_tests}/{total_tests} ({success_rate:.1f}%)")
+    
+    if success_rate >= 70:
+        print(f"✅ COMPANY ENRICHMENT ENDPOINT WORKING - Ready for Caroline's use")
+        return True
+    else:
+        print(f"❌ COMPANY ENRICHMENT NEEDS ATTENTION - Success rate below 70%")
+        return False
+
 def main():
     """Main test execution function"""
     print("\n" + "=" * 80)
