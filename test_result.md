@@ -671,6 +671,21 @@ test_plan:
         agent: "testing"
         comment: "🎯 CAROLINE'S PARTNER CREATION ISSUE DEFINITIVELY RESOLVED - BACKEND 100% FUNCTIONAL: Comprehensive testing with Caroline's exact scenario completed successfully. ✅ SOURCING CREATION: Successfully created 'Caroline Test Company' (FinTech, VivaTech 2025, Caroline Dubois pilot) with ID: 4aa1809c-5729-4e00-9b81-c2645201770f. Partner appears correctly in sourcing list. ✅ DEALFLOW CREATION: Successfully created 'Caroline Dealflow Test' (FinTech, Caroline Dubois pilot) with ID: 35a51268-b5b6-4bbd-b0cd-e997724028d8. Partner appears correctly in dealflow list. ✅ VERIFICATION: Both partners retrievable via GET endpoints, all required fields properly stored and validated. ✅ SYSTEM HEALTH: 105 sourcing partners, 125 dealflow partners available. 🔍 DEFINITIVE CONCLUSION: Backend API handles partner creation flawlessly. Caroline's 'Créer' button issue is 100% in FRONTEND form submission, validation, or API call handling. Main agent should focus exclusively on frontend debugging - the backend is production-ready."
 
+  - task: "NEW FEATURE - Company Enrichment Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Just implemented POST /api/enrich-company endpoint for Caroline's company enrichment feature. Endpoint supports Abstract API integration (if key available), SIRENE API for French companies, and basic enrichment fallback functionality."
+      - working: true
+        agent: "testing"
+        comment: "✅ CAROLINE'S COMPANY ENRICHMENT ENDPOINT FULLY WORKING: Comprehensive testing completed with 100% success rate (7/7 tests passed). ✅ FUNCTIONALITY VERIFIED: (1) Google enrichment - SUCCESS with basic_enrichment source, returns name and domain, (2) Microsoft enrichment - SUCCESS with proper company data structure, (3) Test Company enrichment - SUCCESS with fallback functionality, (4) French companies (Société Générale, BNP Paribas) - SUCCESS with proper character handling, (5) Non-existent company - SUCCESS with graceful handling, (6) Domain parameter support - SUCCESS with google.com test. ✅ RESPONSE STRUCTURE: All responses contain required fields (success, company_data, error_message, api_source), company_data includes name, domain, industry, country, year_founded, employees_count fields. ✅ API SOURCES: Basic enrichment fallback working correctly, ready for Abstract API and SIRENE API integration when keys available. ✅ CONCLUSION: Company enrichment endpoint is production-ready for Caroline's use. Frontend can integrate this endpoint to automatically enrich company data during partner creation."
+
 agent_communication:
   - agent: "main"
     message: "URGENT DOCUMENT UPLOAD FIX INVESTIGATION: User Caroline reports document upload still failing despite previous backend fixes. Need to test current document upload JSON endpoint and identify exact issue. Frontend sends correct JSON structure but gets 400/422 errors. Backend previously tested as functional, need to re-verify current state and identify root cause."
