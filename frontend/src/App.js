@@ -3056,14 +3056,72 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
             <label className="block text-sm font-medium mb-2">
               Nom entreprise <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              name="nom_entreprise"
-              value={formData.nom_entreprise}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Nom de l'entreprise"
-            />
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                name="nom_entreprise"
+                value={formData.nom_entreprise}
+                onChange={handleChange}
+                className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Nom de l'entreprise"
+              />
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!formData.nom_entreprise || formData.nom_entreprise.length < 3) {
+                    alert('Veuillez saisir au moins 3 caractères pour enrichir les données');
+                    return;
+                  }
+                  
+                  clearError();
+                  const enrichedData = await enrichCompany(formData.nom_entreprise);
+                  
+                  if (enrichedData) {
+                    // Auto-fill form fields with enriched data
+                    setFormData(prev => ({
+                      ...prev,
+                      domaine_activite: enrichedData.industry || prev.domaine_activite,
+                      pays_origine: enrichedData.country || prev.pays_origine,
+                      typologie: enrichedData.company_type === 'startup' ? 'Startup' : 
+                                enrichedData.company_type === 'private' ? 'PME' : 
+                                enrichedData.employees_count && enrichedData.employees_count > 250 ? 'Scale-up' : 
+                                prev.typologie,
+                      objet: enrichedData.description || prev.objet,
+                      technologie: enrichedData.industry && enrichedData.industry.toLowerCase().includes('tech') ? 
+                                  enrichedData.industry : prev.technologie
+                    }));
+                    
+                    alert(`✅ Données enrichies avec succès !\n\n📊 Source: ${enrichedData.name || 'N/A'}\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}`);
+                  }
+                }}
+                disabled={isEnriching || !formData.nom_entreprise || formData.nom_entreprise.length < 3}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isEnriching || !formData.nom_entreprise || formData.nom_entreprise.length < 3
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                }`}
+                title="Enrichir automatiquement les données de l'entreprise"
+              >
+                {isEnriching ? (
+                  <span className="flex items-center space-x-1">
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>...</span>
+                  </span>
+                ) : (
+                  '🔍 Enrichir'
+                )}
+              </button>
+            </div>
+            
+            {/* Phase 6 - Enrichment Error Display */}
+            {enrichmentError && (
+              <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                ⚠️ {enrichmentError}
+              </div>
+            )}
             
             {/* Phase 5 - Duplicate Detection Alert */}
             {showDuplicateAlert && duplicates.length > 0 && (
