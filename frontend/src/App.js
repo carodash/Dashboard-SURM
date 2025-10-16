@@ -3032,6 +3032,8 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     // Préparation des données pour l'API
     const apiData = { ...formData };
     
+    console.log("🔄 CONVERSION TAGS - Avant:", apiData.tags_strategiques, typeof apiData.tags_strategiques);
+    
     // Conversion des tags stratégiques (string -> array)
     if (typeof apiData.tags_strategiques === 'string') {
       apiData.tags_strategiques = apiData.tags_strategiques
@@ -3040,6 +3042,8 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
         .filter(tag => tag.length > 0);
     }
     
+    console.log("🔄 CONVERSION TAGS - Après:", apiData.tags_strategiques);
+    
     // Conversion des dates vides en null
     Object.keys(apiData).forEach(key => {
       if (key.includes('date') && apiData[key] === '') {
@@ -3047,8 +3051,17 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
       }
     });
 
-    console.log("📤 Données pour l'API:", apiData);
-    onSubmit(apiData);
+    console.log("📤 Données pour l'API (finales):", apiData);
+    console.log("📤 Fonction onSubmit:", typeof onSubmit);
+    
+    try {
+      console.log("🚀 APPEL onSubmit...");
+      onSubmit(apiData);
+      console.log("✅ onSubmit appelé avec succès");
+    } catch (error) {
+      console.error("❌ ERREUR lors de onSubmit:", error);
+      alert("❌ Erreur lors de la soumission: " + error.message);
+    }
   };
 
   return (
