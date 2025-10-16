@@ -3715,6 +3715,232 @@ def test_urgent_kanban_response_format():
     
     return partner_id, partner_2_id
 
+def test_caroline_enrichment_feature():
+    """Test URGENT CAROLINE ENRICHMENT FIX - Caroline's critical feature request"""
+    print("\n=== TESTING CAROLINE'S ENRICHMENT FEATURE ===")
+    print("Caroline reports enrichment returns all 'N/A' values and wants at minimum")
+    print("the 'Objet' field filled with LinkedIn/Crunchbase-like data.")
+    
+    # Test 1: Caroline's likely queries - Google
+    print("\n1. Testing Caroline's query: 'Google'")
+    test_data = {"query": "Google"}
+    response = requests.post(f"{API_URL}/enrich-company", json=test_data)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("success"):
+            company_data = data.get("company_data", {})
+            print(f"✅ Google enrichment SUCCESS:")
+            print(f"   - Name: {company_data.get('name', 'N/A')}")
+            print(f"   - Industry: {company_data.get('industry', 'N/A')}")
+            print(f"   - Country: {company_data.get('country', 'N/A')}")
+            print(f"   - Description: {company_data.get('description', 'N/A')[:100]}...")
+            print(f"   - API Source: {data.get('api_source', 'N/A')}")
+            
+            # Verify Caroline's "Objet" field requirement
+            description = company_data.get('description', '')
+            if description and description != 'N/A' and len(description) > 20:
+                print("✅ CAROLINE'S REQUIREMENT MET: Description suitable for 'Objet' field")
+            else:
+                print("❌ CAROLINE'S REQUIREMENT NOT MET: Description too short or N/A")
+        else:
+            print(f"❌ Google enrichment FAILED: {data.get('error_message', 'Unknown error')}")
+    else:
+        print(f"❌ Google enrichment request failed: {response.status_code} - {response.text}")
+    
+    # Test 2: Caroline's likely queries - Microsoft
+    print("\n2. Testing Caroline's query: 'Microsoft'")
+    test_data = {"query": "Microsoft"}
+    response = requests.post(f"{API_URL}/enrich-company", json=test_data)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("success"):
+            company_data = data.get("company_data", {})
+            print(f"✅ Microsoft enrichment SUCCESS:")
+            print(f"   - Name: {company_data.get('name', 'N/A')}")
+            print(f"   - Industry: {company_data.get('industry', 'N/A')}")
+            print(f"   - Country: {company_data.get('country', 'N/A')}")
+            print(f"   - Description: {company_data.get('description', 'N/A')[:100]}...")
+            
+            # Verify meaningful data for Caroline
+            if (company_data.get('industry') == 'Technology' and 
+                company_data.get('country') == 'United States' and
+                len(company_data.get('description', '')) > 50):
+                print("✅ CAROLINE'S REQUIREMENT MET: Detailed Microsoft data provided")
+            else:
+                print("❌ CAROLINE'S REQUIREMENT NOT MET: Insufficient Microsoft data")
+        else:
+            print(f"❌ Microsoft enrichment FAILED: {data.get('error_message', 'Unknown error')}")
+    else:
+        print(f"❌ Microsoft enrichment request failed: {response.status_code}")
+    
+    # Test 3: Caroline's likely queries - PayPal
+    print("\n3. Testing Caroline's query: 'PayPal'")
+    test_data = {"query": "PayPal"}
+    response = requests.post(f"{API_URL}/enrich-company", json=test_data)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("success"):
+            company_data = data.get("company_data", {})
+            print(f"✅ PayPal enrichment SUCCESS:")
+            print(f"   - Name: {company_data.get('name', 'N/A')}")
+            print(f"   - Industry: {company_data.get('industry', 'N/A')}")
+            print(f"   - Country: {company_data.get('country', 'N/A')}")
+            print(f"   - Description: {company_data.get('description', 'N/A')[:100]}...")
+            
+            # Verify FinTech classification for Caroline
+            if (company_data.get('industry') == 'FinTech' and 
+                'payment' in company_data.get('description', '').lower()):
+                print("✅ CAROLINE'S REQUIREMENT MET: PayPal correctly classified as FinTech")
+            else:
+                print("❌ CAROLINE'S REQUIREMENT NOT MET: PayPal not properly classified")
+        else:
+            print(f"❌ PayPal enrichment FAILED: {data.get('error_message', 'Unknown error')}")
+    else:
+        print(f"❌ PayPal enrichment request failed: {response.status_code}")
+    
+    # Test 4: Caroline's likely queries - BNP Paribas (French company)
+    print("\n4. Testing Caroline's query: 'BNP Paribas'")
+    test_data = {"query": "BNP Paribas"}
+    response = requests.post(f"{API_URL}/enrich-company", json=test_data)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("success"):
+            company_data = data.get("company_data", {})
+            print(f"✅ BNP Paribas enrichment SUCCESS:")
+            print(f"   - Name: {company_data.get('name', 'N/A')}")
+            print(f"   - Industry: {company_data.get('industry', 'N/A')}")
+            print(f"   - Country: {company_data.get('country', 'N/A')}")
+            print(f"   - Description: {company_data.get('description', 'N/A')[:100]}...")
+            
+            # Verify French FinTech classification for Caroline
+            if (company_data.get('industry') == 'FinTech' and 
+                company_data.get('country') == 'France' and
+                'bank' in company_data.get('description', '').lower()):
+                print("✅ CAROLINE'S REQUIREMENT MET: BNP Paribas correctly classified as French FinTech")
+            else:
+                print("❌ CAROLINE'S REQUIREMENT NOT MET: BNP Paribas not properly classified")
+        else:
+            print(f"❌ BNP Paribas enrichment FAILED: {data.get('error_message', 'Unknown error')}")
+    else:
+        print(f"❌ BNP Paribas enrichment request failed: {response.status_code}")
+    
+    # Test 5: Caroline's likely queries - Unknown Startup Company
+    print("\n5. Testing Caroline's query: 'Unknown Startup Company'")
+    test_data = {"query": "Unknown Startup Company"}
+    response = requests.post(f"{API_URL}/enrich-company", json=test_data)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("success"):
+            company_data = data.get("company_data", {})
+            print(f"✅ Unknown Startup enrichment SUCCESS:")
+            print(f"   - Name: {company_data.get('name', 'N/A')}")
+            print(f"   - Industry: {company_data.get('industry', 'N/A')}")
+            print(f"   - Description: {company_data.get('description', 'N/A')[:100]}...")
+            
+            # Verify generic but useful description for Caroline
+            description = company_data.get('description', '')
+            if (description and description != 'N/A' and 
+                len(description) > 30 and 
+                'company' in description.lower()):
+                print("✅ CAROLINE'S REQUIREMENT MET: Generic but useful description provided")
+            else:
+                print("❌ CAROLINE'S REQUIREMENT NOT MET: Description not useful for unknown company")
+        else:
+            print(f"❌ Unknown Startup enrichment FAILED: {data.get('error_message', 'Unknown error')}")
+    else:
+        print(f"❌ Unknown Startup enrichment request failed: {response.status_code}")
+    
+    # Test 6: Verify Response Format for Caroline's forms
+    print("\n6. Testing response format for Caroline's form integration")
+    test_data = {"query": "TestCompany", "domain": "testcompany.com"}
+    response = requests.post(f"{API_URL}/enrich-company", json=test_data)
+    if response.status_code == 200:
+        data = response.json()
+        
+        # Check required fields for Caroline's forms
+        required_fields = ["success", "company_data", "api_source"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if not missing_fields:
+            print("✅ Response format correct for Caroline's forms")
+            
+            if data.get("success") and data.get("company_data"):
+                company_data = data["company_data"]
+                company_fields = ["name", "industry", "country", "description"]
+                missing_company_fields = [field for field in company_fields if field not in company_data]
+                if not missing_company_fields:
+                    print("✅ Company data contains all required fields for Caroline")
+                    print(f"   - All fields present: {company_fields}")
+                else:
+                    print(f"❌ Missing company fields for Caroline: {missing_company_fields}")
+            else:
+                print("❌ Success=false or missing company_data")
+        else:
+            print(f"❌ Missing required response fields for Caroline: {missing_fields}")
+    else:
+        print(f"❌ Response format test failed: {response.status_code}")
+    
+    # Test 7: Test Description Quality for Caroline's "Objet" field
+    print("\n7. Testing description quality for Caroline's 'Objet' field")
+    
+    test_companies = [
+        ("Stripe", "FinTech payment processing"),
+        ("Airbnb", "travel and lodging platform"),
+        ("Tesla", "electric vehicle and clean energy"),
+        ("Zoom", "video communications platform"),
+        ("Salesforce", "customer relationship management")
+    ]
+    
+    quality_scores = []
+    for company, expected_keywords in test_companies:
+        test_data = {"query": company}
+        response = requests.post(f"{API_URL}/enrich-company", json=test_data)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("success"):
+                description = data.get("company_data", {}).get("description", "")
+                
+                # Check if description is business-appropriate for Caroline
+                is_meaningful = len(description) > 50
+                contains_keywords = any(keyword in description.lower() for keyword in expected_keywords.split())
+                is_professional = not any(word in description.lower() for word in ["test", "dummy", "placeholder"])
+                
+                quality_score = sum([is_meaningful, contains_keywords, is_professional])
+                quality_scores.append(quality_score)
+                
+                print(f"   {company}: Quality {quality_score}/3 - {description[:80]}...")
+            else:
+                print(f"   {company}: FAILED - {data.get('error_message', 'Unknown error')}")
+        else:
+            print(f"   {company}: REQUEST FAILED - {response.status_code}")
+    
+    if quality_scores:
+        avg_quality = sum(quality_scores) / len(quality_scores)
+        if avg_quality >= 2.0:
+            print(f"✅ CAROLINE'S REQUIREMENT MET: Average description quality {avg_quality:.1f}/3.0")
+        else:
+            print(f"❌ CAROLINE'S REQUIREMENT NOT MET: Average description quality {avg_quality:.1f}/3.0")
+    
+    # Test 8: Test API Source Verification
+    print("\n8. Testing API source verification for Caroline")
+    test_data = {"query": "Innovation Solutions"}
+    response = requests.post(f"{API_URL}/enrich-company", json=test_data)
+    if response.status_code == 200:
+        data = response.json()
+        api_source = data.get("api_source", "")
+        if api_source == "enhanced_basic_enrichment":
+            print("✅ CAROLINE'S FIX CONFIRMED: Using enhanced_basic_enrichment source")
+            print("   This ensures Caroline always gets meaningful data (not N/A)")
+        else:
+            print(f"⚠️ Different API source used: {api_source}")
+    else:
+        print(f"❌ API source test failed: {response.status_code}")
+    
+    print("\n=== CAROLINE'S ENRICHMENT FEATURE TESTING COMPLETED ===")
+    print("🎯 CRITICAL FOR CAROLINE: Enrichment must provide meaningful 'Objet' field data")
+    print("📋 CAROLINE'S USE CASE: Auto-fill forms with LinkedIn/Crunchbase-like company data")
+    
+    return True
+
 def main():
     """Run all tests"""
     print("🚀 Starting SURM Backend API Tests - Including Phase 1, Phase 2 & Phase 3 Features")
