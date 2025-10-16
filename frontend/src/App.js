@@ -3689,19 +3689,42 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                     clearError();
                     const enrichedData = await enrichCompany(formData.nom);
                     
+                    console.log('🔍 ENRICHISSEMENT DEALFLOW - Données reçues:', enrichedData);
+                    
                     if (enrichedData) {
-                      // Auto-fill form fields with enriched data
-                      setFormData(prev => ({
-                        ...prev,
-                        domaine: enrichedData.industry || prev.domaine,
-                        typologie: enrichedData.company_type === 'startup' ? 'Startup' : 
-                                  enrichedData.company_type === 'private' ? 'PME' : 
-                                  enrichedData.employees_count && enrichedData.employees_count > 250 ? 'Scale-up' : 
-                                  prev.typologie,
-                        objet: enrichedData.description || prev.objet
-                      }));
+                      // Debug: Log current form data before update
+                      console.log('📋 DEALFLOW AVANT ENRICHISSEMENT:', formData);
                       
-                      alert(`✅ Données enrichies avec succès !\n\n📊 Source: ${enrichedData.name || 'N/A'}\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}`);
+                      // Auto-fill form fields with enriched data
+                      const updatedData = {
+                        ...formData,
+                        domaine: enrichedData.industry && (!formData.domaine || formData.domaine === '') 
+                          ? enrichedData.industry : formData.domaine,
+                        typologie: enrichedData.company_type && (!formData.typologie || formData.typologie === '') ? 
+                          (enrichedData.company_type === 'startup' ? 'Startup' : 
+                           enrichedData.company_type === 'private' ? 'PME' : 
+                           enrichedData.employees_count && enrichedData.employees_count > 250 ? 'Scale-up' : 
+                           formData.typologie) : formData.typologie,
+                        objet: enrichedData.description && (!formData.objet || formData.objet === '') 
+                          ? enrichedData.description : formData.objet
+                      };
+                      
+                      console.log('📋 DEALFLOW APRÈS ENRICHISSEMENT:', updatedData);
+                      
+                      setFormData(updatedData);
+                      
+                      // Count filled fields
+                      const filledFields = [];
+                      if (enrichedData.industry && (!formData.domaine || formData.domaine === '')) filledFields.push('Domaine');
+                      if (enrichedData.description && (!formData.objet || formData.objet === '')) filledFields.push('Description');
+                      
+                      if (filledFields.length > 0) {
+                        alert(`✅ Données enrichies avec succès !\n\n🏢 Champs remplis: ${filledFields.join(', ')}\n\n📊 Source: ${enrichedData.name || 'N/A'}\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}`);
+                      } else {
+                        alert(`ℹ️ Enrichissement réussi mais aucun nouveau champ à remplir.\n\n📊 Données trouvées:\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}`);
+                      }
+                    } else {
+                      alert('❌ Aucune donnée trouvée pour enrichir cette entreprise. Essayez avec le nom de domaine ou vérifiez l\'orthographe.');
                     }
                   }}
                   disabled={isEnriching || !formData.nom || formData.nom.length < 3}
