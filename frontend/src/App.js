@@ -2980,10 +2980,13 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
   // Soumission simple et robuste
   const handleSubmit = (e) => {
+    console.log("🚀 DÉBUT HANDLESUBMIT - Event reçu:", e);
     e.preventDefault();
     
     console.log("🔍 NOUVEAU FORMULAIRE SOURCING - Démarrage...");
     console.log("📋 Données du formulaire:", formData);
+    console.log("📋 Type de données formData:", typeof formData);
+    console.log("📋 Clés du formulaire:", Object.keys(formData));
     
     // Vérification des champs requis
     const requiredFields = {
