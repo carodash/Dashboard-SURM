@@ -3002,13 +3002,19 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
     const missingFields = [];
     Object.entries(requiredFields).forEach(([field, label]) => {
-      if (!formData[field] || formData[field].trim() === "") {
+      const value = formData[field];
+      console.log(`🔍 VALIDATION - ${label}: "${value}"`);
+      if (!value || (typeof value === 'string' && value.trim() === "")) {
         missingFields.push(label);
+        console.log(`❌ CHAMP MANQUANT: ${label}`);
       }
     });
 
+    console.log(`📊 VALIDATION RÉSULTATS: ${missingFields.length} champs manquants`);
+
     if (missingFields.length > 0) {
-      alert(`Veuillez remplir les champs obligatoires :\n• ${missingFields.join('\n• ')}`);
+      alert(`❌ Veuillez remplir les champs obligatoires :\n• ${missingFields.join('\n• ')}\n\n📋 Debug: Vérifiez que tous les champs marqués d'un * sont remplis.`);
+      console.log("❌ FORM SUBMISSION STOPPED - Missing required fields:", missingFields);
       return;
     }
 
