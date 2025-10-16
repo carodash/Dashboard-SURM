@@ -570,7 +570,7 @@ metadata:
 
 test_plan:
   current_focus: 
-    - "URGENT - Caroline's Critical Bug Fixes - Transition & CSV Export"
+    - "URGENT - Caroline's Enrichment Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
