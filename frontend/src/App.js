@@ -5460,15 +5460,36 @@ const Dashboard = () => {
   };
 
   const handleCreateSourcing = async (formData) => {
+    console.log("🎯 HANDLECREATESOURCING - Début fonction");
+    console.log("📥 Données reçues:", formData);
+    console.log("🌐 API_URL:", API_URL);
+    
     setLoading(true);
     try {
-      await axios.post(`${API_URL}/sourcing`, formData);
+      console.log("🚀 Envoi POST /api/sourcing...");
+      const response = await axios.post(`${API_URL}/sourcing`, formData);
+      console.log("✅ POST /api/sourcing - Succès:", response.status);
+      console.log("📊 Réponse:", response.data);
+      
+      console.log("🔄 Actualisation des données...");
       await fetchSourcingPartners();
       await fetchStatistics();
+      
+      console.log("✅ Fermeture du formulaire...");
       setShowSourcingForm(false);
+      
+      alert("✅ Partenaire créé avec succès !");
+      
     } catch (error) {
-      console.error("Error creating sourcing partner:", error);
+      console.error("❌ ERREUR création sourcing partner:", error);
+      console.error("❌ Status:", error.response?.status);
+      console.error("❌ Data:", error.response?.data);
+      console.error("❌ Headers:", error.response?.headers);
+      
+      const errorMsg = error.response?.data?.detail || error.message || "Erreur inconnue";
+      alert(`❌ Erreur lors de la création :\n${errorMsg}\n\nVérifiez les logs dans la console pour plus de détails.`);
     } finally {
+      console.log("🏁 HANDLECREATESOURCING - Fin fonction");
       setLoading(false);
     }
   };
