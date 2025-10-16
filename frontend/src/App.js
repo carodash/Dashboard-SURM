@@ -3157,16 +3157,31 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                     
                     setFormData(updatedData);
                     
-                    // Count how many fields were actually filled
+                    // Count how many fields were actually filled and show mapping details
                     const filledFields = [];
-                    if (enrichedData.industry && (!formData.domaine_activite || formData.domaine_activite === '')) filledFields.push('Domaine d\'activité');
-                    if (enrichedData.country && (!formData.pays_origine || formData.pays_origine === '')) filledFields.push('Pays d\'origine');
-                    if (enrichedData.description && (!formData.objet || formData.objet === '')) filledFields.push('Description');
+                    const mappingDetails = [];
+                    
+                    if (enrichedData.industry && (!formData.domaine_activite || formData.domaine_activite === '')) {
+                      filledFields.push('Domaine d\'activité');
+                      mappingDetails.push(`🎯 ${enrichedData.industry} → ${updatedData.domaine_activite}`);
+                    }
+                    if (enrichedData.country && (!formData.pays_origine || formData.pays_origine === '')) {
+                      filledFields.push('Pays d\'origine');
+                      mappingDetails.push(`🌍 ${enrichedData.country} → ${updatedData.pays_origine}`);
+                    }
+                    if (enrichedData.description && (!formData.objet || formData.objet === '')) {
+                      filledFields.push('Description');
+                      mappingDetails.push(`📝 Description ajoutée (${enrichedData.description.length} caractères)`);
+                    }
+                    if (enrichedData.company_type && (!formData.typologie || formData.typologie === '')) {
+                      filledFields.push('Typologie');
+                      mappingDetails.push(`🏢 ${enrichedData.company_type} → ${updatedData.typologie}`);
+                    }
                     
                     if (filledFields.length > 0) {
-                      alert(`✅ Données enrichies avec succès !\n\n🏢 Champs remplis: ${filledFields.join(', ')}\n\n📊 Source: ${enrichedData.name || 'N/A'}\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}`);
+                      alert(`✅ Données enrichies avec succès !\n\n🏢 Champs remplis: ${filledFields.join(', ')}\n\n🔄 Mappings effectués:\n${mappingDetails.join('\n')}\n\n📊 Données source:\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}`);
                     } else {
-                      alert(`ℹ️ Enrichissement réussi mais aucun nouveau champ à remplir.\n\n📊 Données trouvées:\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}\n\n(Les champs sont peut-être déjà remplis)`);
+                      alert(`ℹ️ Enrichissement réussi mais aucun nouveau champ à remplir.\n\n📊 Données trouvées:\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}\n\n💡 Conseil: Videz les champs que vous souhaitez enrichir automatiquement.`);
                     }
                   } else {
                     alert('❌ Aucune donnée trouvée pour enrichir cette entreprise. Essayez avec le nom de domaine (ex: google.com) ou vérifiez l\'orthographe.');
