@@ -3947,7 +3947,14 @@ def main():
     print("=" * 60)
     
     try:
-        # URGENT: Test Kanban Response Format Fix FIRST
+        # URGENT: Caroline's Enrichment Feature Test (Priority #1)
+        print("\n" + "🚨" * 40)
+        print("🚨 URGENT - CAROLINE'S ENRICHMENT FIX TESTING")
+        print("🚨" * 40)
+        
+        test_caroline_enrichment_feature()
+        
+        # URGENT: Test Kanban Response Format Fix
         print("\n" + "🚨" * 40)
         print("🚨 URGENT - KANBAN RESPONSE FORMAT FIX TESTING")
         print("🚨" * 40)
