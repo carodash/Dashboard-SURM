@@ -3076,22 +3076,48 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                   clearError();
                   const enrichedData = await enrichCompany(formData.nom_entreprise);
                   
+                  console.log('🔍 ENRICHISSEMENT - Données reçues:', enrichedData);
+                  
                   if (enrichedData) {
-                    // Auto-fill form fields with enriched data
-                    setFormData(prev => ({
-                      ...prev,
-                      domaine_activite: enrichedData.industry || prev.domaine_activite,
-                      pays_origine: enrichedData.country || prev.pays_origine,
-                      typologie: enrichedData.company_type === 'startup' ? 'Startup' : 
-                                enrichedData.company_type === 'private' ? 'PME' : 
-                                enrichedData.employees_count && enrichedData.employees_count > 250 ? 'Scale-up' : 
-                                prev.typologie,
-                      objet: enrichedData.description || prev.objet,
-                      technologie: enrichedData.industry && enrichedData.industry.toLowerCase().includes('tech') ? 
-                                  enrichedData.industry : prev.technologie
-                    }));
+                    // Debug: Log current form data before update
+                    console.log('📋 AVANT ENRICHISSEMENT:', formData);
                     
-                    alert(`✅ Données enrichies avec succès !\n\n📊 Source: ${enrichedData.name || 'N/A'}\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}`);
+                    // Auto-fill form fields with enriched data
+                    const updatedData = {
+                      ...formData,
+                      // Only update if we have data and current field is empty or default
+                      domaine_activite: enrichedData.industry && (!formData.domaine_activite || formData.domaine_activite === '') 
+                        ? enrichedData.industry : formData.domaine_activite,
+                      pays_origine: enrichedData.country && (!formData.pays_origine || formData.pays_origine === '') 
+                        ? enrichedData.country : formData.pays_origine,
+                      typologie: enrichedData.company_type && (!formData.typologie || formData.typologie === '') ? 
+                        (enrichedData.company_type === 'startup' ? 'Startup' : 
+                         enrichedData.company_type === 'private' ? 'PME' : 
+                         enrichedData.employees_count && enrichedData.employees_count > 250 ? 'Scale-up' : 
+                         formData.typologie) : formData.typologie,
+                      objet: enrichedData.description && (!formData.objet || formData.objet === '') 
+                        ? enrichedData.description : formData.objet,
+                      technologie: enrichedData.industry && enrichedData.industry.toLowerCase().includes('tech') && (!formData.technologie || formData.technologie === '') 
+                        ? enrichedData.industry : formData.technologie
+                    };
+                    
+                    console.log('📋 APRÈS ENRICHISSEMENT:', updatedData);
+                    
+                    setFormData(updatedData);
+                    
+                    // Count how many fields were actually filled
+                    const filledFields = [];
+                    if (enrichedData.industry && (!formData.domaine_activite || formData.domaine_activite === '')) filledFields.push('Domaine d\'activité');
+                    if (enrichedData.country && (!formData.pays_origine || formData.pays_origine === '')) filledFields.push('Pays d\'origine');
+                    if (enrichedData.description && (!formData.objet || formData.objet === '')) filledFields.push('Description');
+                    
+                    if (filledFields.length > 0) {
+                      alert(`✅ Données enrichies avec succès !\n\n🏢 Champs remplis: ${filledFields.join(', ')}\n\n📊 Source: ${enrichedData.name || 'N/A'}\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}`);
+                    } else {
+                      alert(`ℹ️ Enrichissement réussi mais aucun nouveau champ à remplir.\n\n📊 Données trouvées:\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}\n\n(Les champs sont peut-être déjà remplis)`);
+                    }
+                  } else {
+                    alert('❌ Aucune donnée trouvée pour enrichir cette entreprise. Essayez avec le nom de domaine (ex: google.com) ou vérifiez l\'orthographe.');
                   }
                 }}
                 disabled={isEnriching || !formData.nom_entreprise || formData.nom_entreprise.length < 3}
