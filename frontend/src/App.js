@@ -3088,22 +3088,68 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                     // Debug: Log current form data before update
                     console.log('📋 AVANT ENRICHISSEMENT:', formData);
                     
-                    // Auto-fill form fields with enriched data
+                    // Smart mapping function for enriched data to dropdown values
+                    const mapIndustryToDomain = (industry) => {
+                      if (!industry) return null;
+                      const industryLower = industry.toLowerCase();
+                      
+                      // Smart mapping to DOMAINES_ACTIVITE
+                      if (industryLower.includes('fintech') || industryLower.includes('financial technology')) return 'FinTech';
+                      if (industryLower.includes('insurtech') || industryLower.includes('insurance')) return 'InsurTech';
+                      if (industryLower.includes('legaltech') || industryLower.includes('legal')) return 'LegalTech';
+                      if (industryLower.includes('edtech') || industryLower.includes('education')) return 'EdTech';
+                      if (industryLower.includes('healthtech') || industryLower.includes('health') || industryLower.includes('medical')) return 'DigitalHealth';
+                      if (industryLower.includes('proptech') || industryLower.includes('real estate')) return 'PropTech';
+                      if (industryLower.includes('martech') || industryLower.includes('marketing')) return 'MarTech';
+                      if (industryLower.includes('retailtech') || industryLower.includes('retail')) return 'RetailTech';
+                      if (industryLower.includes('mobility') || industryLower.includes('transport')) return 'Mobility';
+                      if (industryLower.includes('cyber') || industryLower.includes('security')) return 'CyberSecurity';
+                      if (industryLower.includes('data') || industryLower.includes('analytics')) return 'Data';
+                      if (industryLower.includes('clean') || industryLower.includes('green') || industryLower.includes('environment')) return 'CleanTech';
+                      if (industryLower.includes('climate')) return 'ClimateTech';
+                      if (industryLower.includes('tech') || industryLower.includes('technology') || industryLower.includes('software')) return 'Tech';
+                      if (industryLower.includes('consult')) return 'Conseil';
+                      
+                      return 'Autre'; // Default fallback
+                    };
+
+                    const mapCountryToPays = (country) => {
+                      if (!country) return null;
+                      const countryLower = country.toLowerCase();
+                      
+                      if (countryLower.includes('france') || countryLower.includes('french')) return 'France';
+                      if (countryLower.includes('germany') || countryLower.includes('allemagne')) return 'Allemagne';
+                      if (countryLower.includes('united states') || countryLower.includes('usa') || countryLower.includes('america')) return 'États-Unis';
+                      if (countryLower.includes('united kingdom') || countryLower.includes('uk') || countryLower.includes('britain')) return 'Royaume-Uni';
+                      if (countryLower.includes('spain') || countryLower.includes('espagne')) return 'Espagne';
+                      if (countryLower.includes('italy') || countryLower.includes('italie')) return 'Italie';
+                      if (countryLower.includes('switzerland') || countryLower.includes('suisse')) return 'Suisse';
+                      if (countryLower.includes('belgium') || countryLower.includes('belgique')) return 'Belgique';
+                      
+                      return 'Autre'; // Default fallback
+                    };
+
+                    // Auto-fill form fields with enriched data using smart mapping
                     const updatedData = {
                       ...formData,
-                      // Only update if we have data and current field is empty or default
-                      domaine_activite: enrichedData.industry && (!formData.domaine_activite || formData.domaine_activite === '') 
-                        ? enrichedData.industry : formData.domaine_activite,
-                      pays_origine: enrichedData.country && (!formData.pays_origine || formData.pays_origine === '') 
-                        ? enrichedData.country : formData.pays_origine,
-                      typologie: enrichedData.company_type && (!formData.typologie || formData.typologie === '') ? 
-                        (enrichedData.company_type === 'startup' ? 'Startup' : 
-                         enrichedData.company_type === 'private' ? 'PME' : 
+                      // Smart domain mapping
+                      domaine_activite: (!formData.domaine_activite || formData.domaine_activite === '') && enrichedData.industry
+                        ? mapIndustryToDomain(enrichedData.industry) : formData.domaine_activite,
+                      // Smart country mapping
+                      pays_origine: (!formData.pays_origine || formData.pays_origine === '') && enrichedData.country
+                        ? mapCountryToPays(enrichedData.country) : formData.pays_origine,
+                      // Typologie mapping
+                      typologie: (!formData.typologie || formData.typologie === '') && enrichedData.company_type ? 
+                        (enrichedData.company_type === 'startup' || enrichedData.company_type.toLowerCase().includes('startup') ? 'Startup' : 
+                         enrichedData.company_type === 'private' || enrichedData.company_type.toLowerCase().includes('private') ? 'PME' : 
                          enrichedData.employees_count && enrichedData.employees_count > 250 ? 'Scale-up' : 
-                         formData.typologie) : formData.typologie,
-                      objet: enrichedData.description && (!formData.objet || formData.objet === '') 
-                        ? enrichedData.description : formData.objet,
-                      technologie: enrichedData.industry && enrichedData.industry.toLowerCase().includes('tech') && (!formData.technologie || formData.technologie === '') 
+                         'Startup') : formData.typologie, // Default to Startup if uncertain
+                      // Description
+                      objet: (!formData.objet || formData.objet === '') && enrichedData.description
+                        ? enrichedData.description.substring(0, 200) + (enrichedData.description.length > 200 ? '...' : '') : formData.objet,
+                      // Technology - only fill if it's tech-related
+                      technologie: (!formData.technologie || formData.technologie === '') && enrichedData.industry && 
+                        enrichedData.industry.toLowerCase().includes('tech') 
                         ? enrichedData.industry : formData.technologie
                     };
                     
