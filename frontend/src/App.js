@@ -5492,8 +5492,25 @@ const Dashboard = () => {
       console.error("❌ Data:", error.response?.data);
       console.error("❌ Headers:", error.response?.headers);
       
-      const errorMsg = error.response?.data?.detail || error.message || "Erreur inconnue";
-      alert(`❌ Erreur lors de la création :\n${errorMsg}\n\nVérifiez les logs dans la console pour plus de détails.`);
+      const errorDetail = error.response?.data?.detail;
+      let errorMsg = error.message || "Erreur inconnue";
+      
+      if (errorDetail) {
+        if (Array.isArray(errorDetail)) {
+          // Pydantic validation errors (array of error objects)
+          const validationErrors = errorDetail.map(err => 
+            `• ${err.loc ? err.loc.join('.') : 'field'}: ${err.msg}`
+          ).join('\n');
+          errorMsg = `Erreurs de validation :\n${validationErrors}`;
+        } else if (typeof errorDetail === 'string') {
+          errorMsg = errorDetail;
+        } else {
+          errorMsg = JSON.stringify(errorDetail, null, 2);
+        }
+      }
+      
+      alert(`❌ Erreur lors de la création (Status: ${error.response?.status}) :\n\n${errorMsg}\n\n💡 Conseil: Vérifiez que tous les champs obligatoires sont remplis correctement.`);
+      console.log("📊 ERREUR COMPLÈTE:", error.response?.data);
     } finally {
       console.log("🏁 HANDLECREATESOURCING - Fin fonction");
       setLoading(false);
