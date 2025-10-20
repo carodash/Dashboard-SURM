@@ -3050,6 +3050,23 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
         apiData[key] = null;
       }
     });
+    
+    // Fix evaluation fields - convert empty/placeholder values to null
+    if (apiData.score_maturite === '' || apiData.score_maturite === 'Non évalué' || !apiData.score_maturite) {
+      apiData.score_maturite = null;
+    }
+    if (apiData.priorite_strategique === '' || apiData.priorite_strategique === 'Non définie' || !apiData.priorite_strategique) {
+      apiData.priorite_strategique = null;
+    }
+    if (apiData.score_potentiel === '' || apiData.score_potentiel === 'Non évalué' || !apiData.score_potentiel) {
+      apiData.score_potentiel = null;
+    }
+    
+    console.log("🔄 NETTOYAGE CHAMPS ÉVALUATION - Après:", {
+      score_maturite: apiData.score_maturite,
+      priorite_strategique: apiData.priorite_strategique,
+      score_potentiel: apiData.score_potentiel
+    });
 
     console.log("📤 Données pour l'API (finales):", apiData);
     console.log("📤 Fonction onSubmit:", typeof onSubmit);
