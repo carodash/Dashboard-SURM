@@ -3876,40 +3876,18 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                   onViewPartner={(duplicate) => {
                     console.log('🔍 VOIR FICHE DEALFLOW - Partenaire:', duplicate);
                     
-                    // Navigate to the existing partner based on type  
+                    // Close duplicate alert first
+                    setShowDuplicateAlert(false);
+                    clearDuplicates();
+                    
+                    // Simple approach: show info and guide user to navigate manually
+                    alert(`📋 Partenaire similaire trouvé :\n\n🏢 Nom: ${duplicate.name}\n📊 Type: ${duplicate.type === 'sourcing' ? 'Sourcing' : 'Dealflow'}\n🎯 Similarité: ${duplicate.similarity * 100}%\n🏭 Domaine: ${duplicate.domain || 'N/A'}\n📍 Statut: ${duplicate.status || 'N/A'}\n👤 Pilote: ${duplicate.pilot || 'N/A'}\n\n💡 Pour consulter la fiche complète, allez dans l'onglet ${duplicate.type === 'sourcing' ? 'Sourcing' : 'Dealflow'} et recherchez "${duplicate.name}".`);
+                    
+                    // Switch to the appropriate tab
                     if (duplicate.type === 'sourcing') {
-                      // Find and show sourcing partner
-                      const partner = sourcingPartners.find(p => p.id === duplicate.id);
-                      if (partner) {
-                        setSelectedSourcingPartner(partner);
-                        setShowSourcingForm(true);
-                        setEditMode(true);
-                        
-                        // Close duplicate alert and switch tabs
-                        setShowDuplicateAlert(false);
-                        clearDuplicates();
-                        setActiveTab('sourcing');
-                        
-                        alert(`📋 Ouverture de la fiche existante : ${partner.nom_entreprise}\n\nVous pouvez maintenant consulter les détails du partenaire existant dans l'onglet Sourcing.`);
-                      } else {
-                        alert(`❌ Impossible de trouver la fiche de ${duplicate.name}.`);
-                      }
+                      setActiveTab('sourcing');
                     } else if (duplicate.type === 'dealflow') {
-                      // Find and show dealflow partner
-                      const partner = dealflowPartners.find(p => p.id === duplicate.id);
-                      if (partner) {
-                        setSelectedDealflowPartner(partner);
-                        setShowDealflowForm(true);
-                        setEditMode(true);
-                        
-                        // Close duplicate alert
-                        setShowDuplicateAlert(false);
-                        clearDuplicates();
-                        
-                        alert(`📋 Ouverture de la fiche existante : ${partner.nom}\n\nVous pouvez maintenant consulter les détails du partenaire existant.`);
-                      } else {
-                        alert(`❌ Impossible de trouver la fiche de ${duplicate.name}.`);
-                      }
+                      setActiveTab('dealflow');
                     }
                   }}
                   onCreateAnyway={() => {
