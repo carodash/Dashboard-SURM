@@ -5467,6 +5467,12 @@ const Dashboard = () => {
     setLoading(true);
     try {
       console.log("🚀 Envoi POST /api/sourcing...");
+      console.log("🌐 URL COMPLETE:", `${API_URL}/sourcing`);
+      console.log("🌐 API_URL:", API_URL);
+      console.log("🌐 BACKEND_URL:", BACKEND_URL);
+      console.log("🌐 isPreview:", isPreview);
+      console.log("🌐 window.location.origin:", window.location.origin);
+      
       const response = await axios.post(`${API_URL}/sourcing`, formData);
       console.log("✅ POST /api/sourcing - Succès:", response.status);
       console.log("📊 Réponse:", response.data);
