@@ -3896,8 +3896,43 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                 <DuplicateAlert
                   duplicates={duplicates}
                   onViewPartner={(duplicate) => {
-                    // Could implement a view partner modal here
-                    console.log('View partner:', duplicate);
+                    console.log('🔍 VOIR FICHE DEALFLOW - Partenaire:', duplicate);
+                    
+                    // Navigate to the existing partner based on type  
+                    if (duplicate.type === 'sourcing') {
+                      // Find and show sourcing partner
+                      const partner = sourcingPartners.find(p => p.id === duplicate.id);
+                      if (partner) {
+                        setSelectedSourcingPartner(partner);
+                        setShowSourcingForm(true);
+                        setEditMode(true);
+                        
+                        // Close duplicate alert and switch tabs
+                        setShowDuplicateAlert(false);
+                        clearDuplicates();
+                        setActiveTab('sourcing');
+                        
+                        alert(`📋 Ouverture de la fiche existante : ${partner.nom_entreprise}\n\nVous pouvez maintenant consulter les détails du partenaire existant dans l'onglet Sourcing.`);
+                      } else {
+                        alert(`❌ Impossible de trouver la fiche de ${duplicate.name}.`);
+                      }
+                    } else if (duplicate.type === 'dealflow') {
+                      // Find and show dealflow partner
+                      const partner = dealflowPartners.find(p => p.id === duplicate.id);
+                      if (partner) {
+                        setSelectedDealflowPartner(partner);
+                        setShowDealflowForm(true);
+                        setEditMode(true);
+                        
+                        // Close duplicate alert
+                        setShowDuplicateAlert(false);
+                        clearDuplicates();
+                        
+                        alert(`📋 Ouverture de la fiche existante : ${partner.nom}\n\nVous pouvez maintenant consulter les détails du partenaire existant.`);
+                      } else {
+                        alert(`❌ Impossible de trouver la fiche de ${duplicate.name}.`);
+                      }
+                    }
                   }}
                   onCreateAnyway={() => {
                     setForcingCreation(true);
