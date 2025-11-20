@@ -2912,7 +2912,7 @@ const QuickViewResults = ({ isVisible, viewData, onClose }) => {
   );
 };
 
-const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [] }) => {
+const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [], onChangeTab }) => {
   // État simple avec tous les champs requis + évaluation stratégique complète
   const [formData, setFormData] = useState({
     nom_entreprise: initialData?.nom_entreprise || "",
