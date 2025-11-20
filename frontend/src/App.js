@@ -3589,7 +3589,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
   );
 };
 
-const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [] }) => {
+const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [], onChangeTab }) => {
   const [formData, setFormData] = useState({
     nom: initialData?.nom || "",
     statut: initialData?.statut || "En cours avec l'équipe inno",
