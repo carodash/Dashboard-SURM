@@ -3886,10 +3886,12 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                     alert(`📋 Partenaire similaire trouvé :\n\n🏢 Nom: ${duplicate.name}\n📊 Type: ${duplicate.type === 'sourcing' ? 'Sourcing' : 'Dealflow'}\n🎯 Similarité: ${duplicate.similarity * 100}%\n🏭 Domaine: ${duplicate.domain || 'N/A'}\n📍 Statut: ${duplicate.status || 'N/A'}\n👤 Pilote: ${duplicate.pilot || 'N/A'}\n\n💡 Pour consulter la fiche complète, allez dans l'onglet ${duplicate.type === 'sourcing' ? 'Sourcing' : 'Dealflow'} et recherchez "${duplicate.name}".`);
                     
                     // Switch to the appropriate tab
-                    if (duplicate.type === 'sourcing') {
-                      setActiveTab('sourcing');
-                    } else if (duplicate.type === 'dealflow') {
-                      setActiveTab('dealflow');
+                    if (onChangeTab) {
+                      if (duplicate.type === 'sourcing') {
+                        onChangeTab('sourcing');
+                      } else if (duplicate.type === 'dealflow') {
+                        onChangeTab('dealflow');
+                      }
                     }
                   }}
                   onCreateAnyway={() => {
