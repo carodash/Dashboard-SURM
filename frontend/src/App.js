@@ -6763,6 +6763,7 @@ const Dashboard = () => {
             setShowSourcingForm(false);
             setEditingPartner(null);
           }}
+          onChangeTab={setActiveTab}
         />
       )}
 
