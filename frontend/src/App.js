@@ -6776,6 +6776,7 @@ const Dashboard = () => {
             setShowDealflowForm(false);
             setEditingPartner(null);
           }}
+          onChangeTab={setActiveTab}
         />
       )}
 
