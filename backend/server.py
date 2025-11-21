@@ -28,6 +28,26 @@ db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
 app = FastAPI()
+from fastapi.middleware.cors import CORSMiddleware
+# ... (votre code d'import existant)
+
+app = FastAPI(...) 
+# ------------------ AJOUTEZ CES LIGNES ------------------
+origins = [
+    "https://dashboard-surm-1.onrender.com",  # L'URL de votre Frontend
+    "http://localhost:3000", # Pour le développement local futur
+    "http://localhost:8000",
+    "http://localhost:8080"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# ------------------ FIN DE L'AJOUT ------------------
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
