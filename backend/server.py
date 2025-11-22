@@ -26,12 +26,11 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+# Create the main app
+app = FastAPI(title="SURM Dashboard API", description="API pour la gestion des partenaires de sourcing.")
+
 from fastapi.middleware.cors import CORSMiddleware
 # ... (votre code d'import existant)
-
-app = FastAPI(title="SURM Dashboard API", description="API pour la gestion des partenaires de sourcing.")
 # ------------------ AJOUTEZ CES LIGNES ------------------
 origins = [
     "https://dashboard-surm-1.onrender.com",  # L'URL de votre Frontend
