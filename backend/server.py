@@ -31,7 +31,7 @@ app = FastAPI()
 from fastapi.middleware.cors import CORSMiddleware
 # ... (votre code d'import existant)
 
-app = FastAPI(...) 
+app = FastAPI(title="SURM Dashboard API", description="API pour la gestion des partenaires de sourcing.")
 # ------------------ AJOUTEZ CES LIGNES ------------------
 origins = [
     "https://dashboard-surm-1.onrender.com",  # L'URL de votre Frontend
