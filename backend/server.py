@@ -785,6 +785,7 @@ async def get_sourcing_partners(user_id: str = "default_user"):
     # Add inactivity status to each partner
     partners_with_status = []
     for partner in partners:
+        partner['id'] = str(partner.pop('_id'))
         partner_with_status = add_inactivity_status(partner)
         partners_with_status.append(SourcingPartner(**partner_with_status))
     
