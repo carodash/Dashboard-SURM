@@ -2331,7 +2331,7 @@ async def get_kanban_data(user_id: str = "default_user"):
     # Process sourcing partners
     for partner in sourcing_partners:
             # CORRECTION 1: Convertir l'ObjectId en string 'id' et le supprimer de la source
-        if '_id' in partner:
+            if '_id' in partner:
             partner['id'] = str(partner.pop('_id')) 
         
         partner_with_status = add_inactivity_status(partner)
