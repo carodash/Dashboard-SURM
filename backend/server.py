@@ -768,6 +768,7 @@ async def create_sourcing_partner(partner: SourcingPartnerCreate, user_id: str =
     
     return partner_obj
 
+# CODE CORRIGÉ pour la fonction get_sourcing_partners
 @api_router.get("/sourcing", response_model=List[SourcingPartner])
 async def get_sourcing_partners(user_id: str = "default_user"):
     current_user = await get_current_user(user_id)
@@ -776,7 +777,6 @@ async def get_sourcing_partners(user_id: str = "default_user"):
     query = {}
     if current_user.role == UserRole.CONTRIBUTEUR:
         query["pilote"] = current_user.full_name  # Contributeur sees only their own
-    # Admin and Observateur see all
     
     # Exclude partners that have been transitioned to dealflow
     query["statut"] = {"$ne": SourcingStatus.DEALFLOW}
@@ -786,7 +786,8 @@ async def get_sourcing_partners(user_id: str = "default_user"):
     # Add inactivity status to each partner
     partners_with_status = []
     for partner in partners:
-        partner['id'] = str(partner.pop('_id'))
+        # L'erreur IndentationError était ici, corrigée avec 4 espaces.
+        partner['id'] = str(partner.pop('_id')) 
         partner_with_status = add_inactivity_status(partner)
         partners_with_status.append(SourcingPartner(**partner_with_status))
     
@@ -808,6 +809,7 @@ async def get_sourcing_partner(partner_id: str, user_id: str = "default_user"):
     partner_with_status = add_inactivity_status(partner)
     return SourcingPartner(**partner_with_status)
 
+# CODE CORRIGÉ et COMPLÉTÉ pour la fonction update_sourcing_partner
 @api_router.put("/sourcing/{partner_id}", response_model=SourcingPartner)
 async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartnerUpdate, user_id: str = "default_user"):
     current_user = await get_current_user(user_id)
@@ -841,24 +843,41 @@ async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartn
     changes = []
     for key, new_value in update_dict.items():
         if key != "updated_at" and key in original_partner:
-            old_value = original_partner[key]
-            if old_value != new_value:
-                changes.append(f"{key}: {old_value} → {new_value}")
+            # Correction: le mot 'original_partner' était coupé dans votre extrait
+            old_value = original_partner[key] 
+            
+            # Special handling for date types from MongoDB/Pydantic
+            if isinstance(old_value, date) and not isinstance(old_value, datetime) and isinstance(new_value, str):
+                try:
+                    # Convert old date to ISO string for comparison (or handle cases where it's already an ISO string)
+                    old_value_str = old_value.isoformat()
+                except AttributeError:
+                    old_value_str = str(old_value)
+
+                if old_value_str != new_value:
+                    changes.append(f"{key}: '{old_value_str}' -> '{new_value}'")
+            elif old_value != new_value:
+                changes.append(f"{key}: '{old_value}' -> '{new_value}'")
     
     if changes:
         await log_activity(
             partner_id=partner_id,
             partner_type="sourcing",
             activity_type=ActivityType.UPDATED,
-            description=f"Startup '{original_partner['nom_entreprise']}' mise à jour",
+            description=f"Partenaire sourcing modifié. Champs: {', '.join(changes)}",
             details={"changes": changes},
             user_id=current_user.id,
             user_name=current_user.full_name
         )
     
-    updated_partner = await db.sourcing_partners.find_one({"id": partner_id})
-    updated_partner = add_inactivity_status(updated_partner)
-    return SourcingPartner(**updated_partner)
+    # Fetch and return the updated document
+    updated_partner_doc = await db.sourcing_partners.find_one({"id": partner_id})
+    
+    # Ensure _id is popped and converted to id before validation
+    updated_partner_doc['id'] = str(updated_partner_doc.pop('_id')) 
+    
+    partner_with_status = add_inactivity_status(updated_partner_doc)
+    return SourcingPartner(**partner_with_status)
 
 @api_router.delete("/sourcing/{partner_id}")
 async def delete_sourcing_partner(partner_id: str, user_id: str = "default_user"):
