@@ -2376,9 +2376,9 @@ async def get_kanban_data(user_id: str = "default_user"):
             pass
     
     # Process dealflow partners
-    for partner in dealflow_partners:
-        # CORRECTION 3: Convertir l'ObjectId en string 'id' et le supprimer de la source
-        if '_id' in partner:
+    for partner in dealflow_partners:
+        # CORRECTION 3: Convertir l'ObjectId en string 'id' et le supprimer de la source
+        if '_id' in partner:
             partner['id'] = str(partner.pop('_id'))
             
         partner_with_status = add_inactivity_status(partner)
