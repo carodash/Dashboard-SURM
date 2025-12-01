@@ -53,7 +53,7 @@ api_router = APIRouter(prefix="/api")
 
 # Enums for statuses
 class SourcingStatus(str, Enum):
-    A_TRAITER = "A traiter"
+        A_TRAITER = "A traiter"
     CLOS = "Clos"
     DEALFLOW = "Dealflow"
     KLAXOON = "Klaxoon"
