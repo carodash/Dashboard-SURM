@@ -2561,7 +2561,7 @@ async def move_kanban_partner(
         }
     
     else:
-        raise HTTPException(status_code=400, detail="Invalid transition between partner types")
+    raise HTTPException(status_code=400, detail="Invalid transition between partner types")
 
 # PHASE 4 - SYNTHETIC REPORTS & EXPORTS ENDPOINTS
 @api_router.get("/synthetic-report")
