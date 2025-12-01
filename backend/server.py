@@ -780,7 +780,7 @@ async def get_sourcing_partners(user_id: str = "default_user"):
     # Exclude partners that have been transitioned to dealflow
     query["statut"] = {"$ne": SourcingStatus.DEALFLOW}
     
-    partners = await db.sourcing_partners.find(query).to_list(1000)
+    partners = await db.sourcing_partners.find(query).to_list(2000)
     
     # Add inactivity status to each partner
     partners_with_status = []
