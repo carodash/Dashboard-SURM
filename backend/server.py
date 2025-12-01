@@ -2440,7 +2440,7 @@ async def get_kanban_data(user_id: str = "default_user"):
         }
     }
     
-    return sanitize_json_data(kanban_data)
+    return clean_nans(kanban_data)
 
 @api_router.post("/kanban-move")
 async def move_kanban_partner(
