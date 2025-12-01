@@ -57,7 +57,7 @@ class SourcingStatus(str, Enum):
     CLOS = "Clos"
     DEALFLOW = "Dealflow"
     KLAXOON = "Klaxoon"
-    EN_COURS = "En Cours" # <-- DOIT ÊTRE PRÉSENT
+    EN_COURS = "EN COURS" # <-- ATTENTION: Mettez "EN COURS" en majuscules pour correspondre à vos données
 
 class DealflowStatus(str, Enum):
     CLOS = "Clos"
@@ -2348,27 +2348,31 @@ async def get_kanban_data(user_id: str = "default_user"):
     
     # Process sourcing partners
     for partner in sourcing_partners:
-            # CORRECTION 1: Convertir l'ObjectId en string 'id' et le supprimer de la source
-            if '_id' in partner:
-        partner['id'] = str(partner.pop('_id'))
+        # CORRECTION 2: Convertir l'ObjectId en string 'id'
+        partner_id = str(partner.get('_id') or partner.get('id'))
+        
+        if '_id' in partner:
+            del partner['_id']
+        partner['id'] = partner_id
+        
         partner_with_status = add_inactivity_status(partner)
-        
-        # Map to Kanban columns
-        status = partner.get("statut", "A traiter")
-        if status == "A traiter":
-            kanban_data["columns"]["sourcing_a_traiter"]["partners"].append({
-                **partner_with_status,
-                "partner_type": "sourcing",
-                "kanban_id": f"sourcing_{str(partner.get('_id') or partner.get('id'))}", # <-- CORRECTION
-            
-        elif status == "Klaxoon":
-            kanban_data["columns"]["sourcing_klaxoon"]["partners"].append({
-                **partner_with_status,
-                "partner_type": "sourcing", 
-                "kanban_id": f"sourcing_{str(partner.get('_id') or partner.get('id'))}", # <-- CORRECTION
-                
+        
+        # Map to Kanban columns
+        status = partner.get("statut", "A traiter")
+        
+        if status == "A traiter":
+            kanban_data["columns"]["sourcing_a_traiter"]["partners"].append({
+                **partner_with_status,
+                "partner_type": "sourcing",
+                "kanban_id": f"sourcing_{partner_id}"
+            })
+        elif status == "Klaxoon":
+            kanban_data["columns"]["sourcing_klaxoon"]["partners"].append({
+                **partner_with_status,
+                "partner_type": "sourcing", 
+                "kanban_id": f"sourcing_{partner_id}"
+            })
         elif status == "Dealflow":
-            # These will be handled by dealflow processing
             pass
     
     # Process dealflow partners
