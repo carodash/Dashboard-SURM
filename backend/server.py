@@ -2463,15 +2463,15 @@ async def move_kanban_partner(
     # Get current partner
     collection = db.sourcing_partners if partner_type == "sourcing" else db.dealflow_partners
     try:
-        object_id = ObjectId(partner_id)
-    except:
-        # Si l'ID n'est pas un ObjectId valide, lever une erreur
-        raise HTTPException(status_code=400, detail="Invalid partner ID format")
-    
-    partner = await collection.find_one({"_id": object_id}) # <-- Recherche corrigée
-
-    if not partner:
-        raise HTTPException(status_code=404, detail="Partner not found")
+        object_id = ObjectId(partner_id)
+    except:
+        # Si l'ID n'est pas un ObjectId valide, lever une erreur
+        raise HTTPException(status_code=400, detail="Invalid partner ID format")
+    
+    partner = await collection.find_one({"_id": object_id}) # <-- Recherche corrigée
+    
+    if not partner:
+        raise HTTPException(status_code=404, detail="Partner not found")
     
     # Check permissions
     if not can_edit_partner(current_user.role, partner.get("pilote"), current_user.full_name):
@@ -2536,11 +2536,11 @@ async def move_kanban_partner(
         }
     
     # Handle status change within same type
-    elif partner_type == target_type:
-        await collection.update_one(
-            {"_id": object_id}, # ✅ CORRECTION: Mise à jour sur _id
-            {"$set": {"statut": new_status, "updated_at": datetime.utcnow()}}
-        )
+elif partner_type == target_type:
+  await collection.update_one(
+      {"_id": object_id}, # ✅ CORRECTION: Mise à jour sur _id
+      {"$set": {"statut": new_status, "updated_at": datetime.utcnow()}}
+      )
         
         # Log status change
         await log_activity(
