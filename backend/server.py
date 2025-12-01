@@ -53,10 +53,11 @@ api_router = APIRouter(prefix="/api")
 
 # Enums for statuses
 class SourcingStatus(str, Enum):
-    A_TRAITER = "A traiter"
-    CLOS = "Clos"
-    DEALFLOW = "Dealflow"
-    KLAXOON = "Klaxoon"
+    A_TRAITER = "A traiter"
+    CLOS = "Clos"
+    DEALFLOW = "Dealflow"
+    KLAXOON = "Klaxoon"
+    EN_COURS = "EN COURS" # <-- AJOUTEZ CETTE LIGNE
 
 class DealflowStatus(str, Enum):
     CLOS = "Clos"
@@ -2340,14 +2341,14 @@ async def get_kanban_data(user_id: str = "default_user"):
             kanban_data["columns"]["sourcing_a_traiter"]["partners"].append({
                 **partner_with_status,
                 "partner_type": "sourcing",
-                "kanban_id": f"sourcing_{partner['id']}" # CORRECTION 2 : Utiliser la nouvelle clé 'id'
-            })
+                "kanban_id": f"sourcing_{str(partner.get('_id') or partner.get('id'))}", # <-- CORRECTION
+            
         elif status == "Klaxoon":
             kanban_data["columns"]["sourcing_klaxoon"]["partners"].append({
                 **partner_with_status,
                 "partner_type": "sourcing", 
-                "kanban_id": f"sourcing_{partner['id']}" # CORRECTION 2 (bis) : Utiliser la nouvelle clé 'id'
-            })
+                "kanban_id": f"sourcing_{str(partner.get('_id') or partner.get('id'))}", # <-- CORRECTION
+                
         elif status == "Dealflow":
             # These will be handled by dealflow processing
             pass
