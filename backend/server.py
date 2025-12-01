@@ -57,7 +57,7 @@ class SourcingStatus(str, Enum):
     CLOS = "Clos"
     DEALFLOW = "Dealflow"
     KLAXOON = "Klaxoon"
-    EN_COURS = "EN COURS" # <-- DOIT ÊTRE PRÉSENT
+    EN_COURS = "En Cours" # <-- DOIT ÊTRE PRÉSENT
 
 class DealflowStatus(str, Enum):
     CLOS = "Clos"
