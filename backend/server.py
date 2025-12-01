@@ -2327,46 +2327,47 @@ async def get_kanban_data(user_id: str = "default_user"):
     }
     
     # Process sourcing partners
-    for partner in sourcing_partners:
-        # Remove MongoDB ObjectId
-        if '_id' in partner:
-            del partner['_id']
-        
-        partner_with_status = add_inactivity_status(partner)
-        
-        # Map to Kanban columns
-        status = partner.get("statut", "A traiter")
-        if status == "A traiter":
-            kanban_data["columns"]["sourcing_a_traiter"]["partners"].append({
-                **partner_with_status,
-                "partner_type": "sourcing",
-                "kanban_id": f"sourcing_{str(partner['_id'])}"
-            })
-        elif status == "Klaxoon":
-            kanban_data["columns"]["sourcing_klaxoon"]["partners"].append({
-                **partner_with_status,
-                "partner_type": "sourcing", 
-                "kanban_id": f"sourcing_{str(partner['_id'])}"
-            })
+    for partner in sourcing_partners:
+        # CORRECTION 1: Convertir l'ObjectId en string 'id' et le supprimer de la source
+        if '_id' in partner:
+            partner['id'] = str(partner.pop('_id')) 
+        
+        partner_with_status = add_inactivity_status(partner)
+        
+        # Map to Kanban columns
+        status = partner.get("statut", "A traiter")
+        if status == "A traiter":
+            kanban_data["columns"]["sourcing_a_traiter"]["partners"].append({
+                **partner_with_status,
+                "partner_type": "sourcing",
+                "kanban_id": f"sourcing_{partner['id']}" # CORRECTION 2 : Utiliser la nouvelle clé 'id'
+            })
+        elif status == "Klaxoon":
+            kanban_data["columns"]["sourcing_klaxoon"]["partners"].append({
+                **partner_with_status,
+                "partner_type": "sourcing", 
+                "kanban_id": f"sourcing_{partner['id']}" # CORRECTION 2 (bis) : Utiliser la nouvelle clé 'id'
+            })
         elif status == "Dealflow":
             # These will be handled by dealflow processing
             pass
     
     # Process dealflow partners
-    for partner in dealflow_partners:
-        # Remove MongoDB ObjectId
-        if '_id' in partner:
-            del partner['_id']
-            
-        partner_with_status = add_inactivity_status(partner)
-        
-        # Map to Kanban columns based on dealflow status
-        status = partner.get("statut", "En cours avec l'équipe inno")
-        kanban_partner = {
-            **partner_with_status,
-            "partner_type": "dealflow",
-            "kanban_id": f"dealflow_{partner['id']}"
-        }
+    for partner in dealflow_partners:
+        # CORRECTION 3: Convertir l'ObjectId en string 'id' et le supprimer de la source
+        if '_id' in partner:
+            partner['id'] = str(partner.pop('_id'))
+            
+        partner_with_status = add_inactivity_status(partner)
+        
+        # Map to Kanban columns based on dealflow status
+        status = partner.get("statut", "En cours avec l'équipe inno")
+        kanban_partner = {
+            **partner_with_status,
+            "partner_type": "dealflow",
+            # Ceci fonctionne maintenant car la clé 'id' existe
+            "kanban_id": f"dealflow_{partner['id']}" 
+        }
         
         if status == "En cours avec l'équipe inno":
             kanban_data["columns"]["prequalification"]["partners"].append(kanban_partner)
