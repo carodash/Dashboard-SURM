@@ -17,6 +17,22 @@ import requests
 import json
 import json
 from bson.objectid import ObjectId
+import math
+
+def clean_nans(obj):
+    """
+    Remplace tous les float NaN par 0 (ou None) dans
+    des structures imbriquées (dict, list, etc.).
+    """
+    if isinstance(obj, float):
+        if math.isnan(obj):
+            return 0  # ou None, si tu préfères
+        return obj
+    if isinstance(obj, dict):
+        return {k: clean_nans(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [clean_nans(v) for v in obj]
+    return obj
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
