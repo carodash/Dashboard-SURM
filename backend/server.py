@@ -3045,9 +3045,6 @@ async def global_search(query: str, user_id: str = "default_user"):
         }
     }
 
-# Include the router in the main app
-app.include_router(api_router)
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
