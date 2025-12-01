@@ -2340,13 +2340,13 @@ async def get_kanban_data(user_id: str = "default_user"):
             kanban_data["columns"]["sourcing_a_traiter"]["partners"].append({
                 **partner_with_status,
                 "partner_type": "sourcing",
-                "kanban_id": f"sourcing_{partner['id']}"
+                "kanban_id": f"sourcing_{str(partner['_id'])}"
             })
         elif status == "Klaxoon":
             kanban_data["columns"]["sourcing_klaxoon"]["partners"].append({
                 **partner_with_status,
                 "partner_type": "sourcing", 
-                "kanban_id": f"sourcing_{partner['id']}"
+                "kanban_id": f"sourcing_{str(partner['_id'])}"
             })
         elif status == "Dealflow":
             # These will be handled by dealflow processing
