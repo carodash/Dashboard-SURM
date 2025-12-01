@@ -2378,19 +2378,23 @@ async def get_kanban_data(user_id: str = "default_user"):
     # Process dealflow partners
     for partner in dealflow_partners:
         # CORRECTION 3: Convertir l'ObjectId en string 'id' et le supprimer de la source
+        # Ajout d'une gestion de fallback si '_id' n'est pas là (pour les données déjà créées)
+        partner_id = str(partner.get('_id') or partner.get('id'))
+        
         if '_id' in partner:
-            partner['id'] = str(partner.pop('_id'))
-            
-        partner_with_status = add_inactivity_status(partner)
-        
-        # Map to Kanban columns based on dealflow status
-        status = partner.get("statut", "En cours avec l'équipe inno")
-        kanban_partner = {
-            **partner_with_status,
-            "partner_type": "dealflow",
-            # Ceci fonctionne maintenant car la clé 'id' existe
-            "kanban_id": f"dealflow_{partner['id']}" 
-        }
+            del partner['_id']
+        partner['id'] = partner_id
+            
+        partner_with_status = add_inactivity_status(partner)
+        
+        # Map to Kanban columns based on dealflow status
+        status = partner.get("statut", "En cours avec l'équipe inno")
+        kanban_partner = {
+            **partner_with_status,
+            "partner_type": "dealflow",
+            # Ceci fonctionne car la clé 'id' est garantie d'exister
+            "kanban_id": f"dealflow_{partner['id']}" 
+        }
         
         if status == "En cours avec l'équipe inno":
             kanban_data["columns"]["prequalification"]["partners"].append(kanban_partner)
