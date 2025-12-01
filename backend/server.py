@@ -2461,8 +2461,8 @@ async def move_kanban_partner(
     target_type = new_status_info["type"]
     
     # Get current partner
-    collection = db.sourcing_partners if partner_type == "sourcing" else db.dealflow_partners
-    try:
+    collection = db.sourcing_partners if partner_type == "sourcing" else db.dealflow_partners
+    try:
         object_id = ObjectId(partner_id)
     except:
         # Si l'ID n'est pas un ObjectId valide, lever une erreur
