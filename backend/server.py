@@ -2477,7 +2477,7 @@ async def move_kanban_partner(
     if not can_edit_partner(current_user.role, partner.get("pilote"), current_user.full_name):
         raise HTTPException(status_code=403, detail="Not authorized to move this partner")
     
-    # Handle transition from sourcing to dealflow
+        # Handle transition from sourcing to dealflow
     if partner_type == "sourcing" and target_type == "dealflow":
         # Create dealflow partner
         dealflow_data = {
@@ -2500,23 +2500,23 @@ async def move_kanban_partner(
             "enriched_data": partner.get("enriched_data", {}),
             "custom_fields": partner.get("custom_fields", {})
         }
-        
+
         dealflow_partner = DealflowPartner(**dealflow_data)
-        
+
         # Save to dealflow
         dealflow_data_for_db = dealflow_partner.dict()
         for key, value in dealflow_data_for_db.items():
             if isinstance(value, date) and not isinstance(value, datetime):
                 dealflow_data_for_db[key] = value.isoformat()
-        
+
         await db.dealflow_partners.insert_one(dealflow_data_for_db)
-        
+
         # Update sourcing status to Dealflow
         await db.sourcing_partners.update_one(
             {"id": partner_id},
             {"$set": {"statut": "Dealflow", "updated_at": datetime.utcnow()}}
         )
-        
+
         # Log transition
         await log_activity(
             partner_id=partner_id,
@@ -2527,21 +2527,21 @@ async def move_kanban_partner(
             user_id=current_user.id,
             user_name=current_user.full_name
         )
-        
+
         return {
-            "message": "Partner transitioned to dealflow successfully", 
+            "message": "Partner transitioned to dealflow successfully",
             "new_partner_id": dealflow_partner.id,
             "new_status": new_status,
             "partner_type": target_type
         }
-    
+
     # Handle status change within same type
-elif partner_type == target_type:
-  await collection.update_one(
-      {"_id": object_id}, # ✅ CORRECTION: Mise à jour sur _id
-      {"$set": {"statut": new_status, "updated_at": datetime.utcnow()}}
-      )
-        
+    elif partner_type == target_type:
+        await collection.update_one(
+            {"_id": object_id},
+            {"$set": {"statut": new_status, "updated_at": datetime.utcnow()}}
+        )
+
         # Log status change
         await log_activity(
             partner_id=partner_id,
@@ -2552,16 +2552,17 @@ elif partner_type == target_type:
             user_id=current_user.id,
             user_name=current_user.full_name
         )
-        
+
         return {
             "message": "Partner status updated successfully",
             "new_status": new_status,
             "partner_type": partner_type,
             "partner_id": partner_id
         }
-    
+
     else:
-    raise HTTPException(status_code=400, detail="Invalid transition between partner types")
+        raise HTTPException(status_code=400, detail="Invalid transition between partner types")
+
 
 # PHASE 4 - SYNTHETIC REPORTS & EXPORTS ENDPOINTS
 @api_router.get("/synthetic-report")
