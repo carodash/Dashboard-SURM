@@ -3044,6 +3044,9 @@ async def global_search(query: str, user_id: str = "default_user"):
             "dealflow_count": len(dealflow_matches)
         }
     }
+    
+# NOUVEAU CODE : Ajoutez le paramètre 'prefix'
+app.include_router(api_router, prefix="/api")
 
 # Configure logging
 logging.basicConfig(
