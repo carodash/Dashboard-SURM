@@ -1325,7 +1325,7 @@ async def create_dealflow_partner(partner: DealflowPartnerCreate):
 
 @api_router.get("/dealflow", response_model=List[DealflowPartner])
 async def get_dealflow_partners():
-    partners = await db.dealflow_partners.find().to_list(None)
+    partners = await db.dealflow_partners.find().to_list(10000)
     
     # Add inactivity status to each partner
     partners_with_status = []
@@ -1484,8 +1484,8 @@ async def transition_to_dealflow(sourcing_id: str, dealflow_data: Dict[str, Any]
 @api_router.get("/statistics", response_model=DashboardStats)
 async def get_dashboard_statistics():
     # Get all partners
-    sourcing_partners = await db.sourcing_partners.find().to_list(None)
-    dealflow_partners = await db.dealflow_partners.find().to_list(None)
+    sourcing_partners = await db.sourcing_partners.find().to_list(10000)
+    dealflow_partners = await db.dealflow_partners.find().to_list(10000)
     
     # Calculate quarterly entries
     quarterly_entries = {}
@@ -1831,8 +1831,8 @@ async def get_monthly_evolution(start_date: str = None, end_date: str = None):
         raise HTTPException(status_code=400, detail=f"Invalid date format: {str(e)}")
     
     # Get all partners
-    sourcing_partners = await db.sourcing_partners.find().to_list(None)
-    dealflow_partners = await db.dealflow_partners.find().to_list(None)
+    sourcing_partners = await db.sourcing_partners.find().to_list(10000)
+    dealflow_partners = await db.dealflow_partners.find().to_list(10000)
     
     monthly_data = {}
     
@@ -1937,8 +1937,8 @@ async def get_enhanced_distribution(filter_by: str = None, filter_value: str = N
             raise HTTPException(status_code=400, detail=f"Invalid end_date format: {end_date}")
     
     # Get all partners
-    sourcing_partners = await db.sourcing_partners.find().to_list(None)
-    dealflow_partners = await db.dealflow_partners.find().to_list(None)
+    sourcing_partners = await db.sourcing_partners.find().to_list(10000)
+    dealflow_partners = await db.dealflow_partners.find().to_list(10000)
     
     # Apply filters
     if start_dt and end_dt:
@@ -2061,7 +2061,7 @@ async def create_user(user: UserCreate):
 @api_router.get("/users", response_model=List[User])
 async def get_users():
     """Get all users"""
-    users = await db.users.find().to_list(None)
+    users = await db.users.find().to_list(10000)
     return [User(**user) for user in users]
 
 @api_router.get("/users/{user_id}", response_model=User)
@@ -2180,11 +2180,11 @@ async def get_my_startups(user_id: str = "default_user"):
     
     # Get sourcing partners assigned to user
     sourcing_query = {"pilote": current_user.full_name}
-    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(None)
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(10000)
     
     # Get dealflow partners assigned to user
     dealflow_query = {"pilote": current_user.full_name}
-    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(None)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(10000)
     
     # Convert MongoDB documents to proper format and add inactivity status
     sourcing_with_status = []
@@ -2228,8 +2228,8 @@ async def get_my_startups(user_id: str = "default_user"):
 async def get_partners_by_pilote():
     """Get partners grouped by pilote for filtering"""
     # Get all sourcing partners
-    sourcing_partners = await db.sourcing_partners.find().to_list(None)
-    dealflow_partners = await db.dealflow_partners.find().to_list(None)
+    sourcing_partners = await db.sourcing_partners.find().to_list(10000)
+    dealflow_partners = await db.dealflow_partners.find().to_list(10000)
     
     pilotes = {}
     
@@ -2293,8 +2293,8 @@ async def get_kanban_data(user_id: str = "default_user"):
         sourcing_query["pilote"] = current_user.full_name
         dealflow_query["pilote"] = current_user.full_name
     
-    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(None)
-    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(None)
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(10000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(10000)
     
     # Organize data by Kanban columns
     kanban_data = {
@@ -2594,8 +2594,8 @@ async def get_synthetic_report(user_id: str = "default_user"):
         sourcing_query["pilote"] = current_user.full_name
         dealflow_query["pilote"] = current_user.full_name
     
-    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(None)
-    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(None)
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(10000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(10000)
     
     # Initialize report structure
     report = {
@@ -2750,8 +2750,8 @@ async def get_my_startups_quick_view(user_id: str = "default_user"):
     sourcing_query = {"pilote": current_user.full_name}
     dealflow_query = {"pilote": current_user.full_name}
     
-    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(None)
-    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(None)
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(10000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(10000)
     
     # Clean and add status
     sourcing_clean = []
@@ -2788,8 +2788,8 @@ async def get_startups_to_follow_up(threshold_days: int = 90, user_id: str = "de
         sourcing_query["pilote"] = current_user.full_name
         dealflow_query["pilote"] = current_user.full_name
     
-    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(None)
-    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(None)
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(10000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(10000)
     
     today = datetime.utcnow()
     threshold_date = today - timedelta(days=threshold_days)
@@ -2877,8 +2877,8 @@ async def get_startups_with_documents(user_id: str = "default_user"):
         sourcing_query["pilote"] = current_user.full_name
         dealflow_query["pilote"] = current_user.full_name
     
-    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(None)
-    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(None)
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(10000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(10000)
     
     # Filter partners with documents/enriched data
     sourcing_with_docs = []
@@ -2949,7 +2949,7 @@ async def get_startups_in_experimentation(user_id: str = "default_user"):
         dealflow_query["pilote"] = current_user.full_name
     
     # Only dealflow partners can be in experimentation
-    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(None)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(10000)
     
     # Filter partners in experimentation phase
     experimentation_statuses = [
@@ -3004,8 +3004,8 @@ async def global_search(query: str, user_id: str = "default_user"):
         sourcing_query["pilote"] = current_user.full_name
         dealflow_query["pilote"] = current_user.full_name
     
-    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(None)
-    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(None)
+    sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(10000)
+    dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(10000)
     
     # Search function
     def matches_query(partner, partner_type):
