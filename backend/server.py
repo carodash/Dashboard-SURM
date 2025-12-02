@@ -3045,8 +3045,8 @@ async def global_search(query: str, user_id: str = "default_user"):
         }
     }
     
-# NOUVEAU CODE : Ajoutez le paramètre 'prefix'
-app.include_router(api_router, prefix="/api")
+# Inclure le router SANS prefix supplémentaire
+app.include_router(api_router)
 
 # Configure logging
 logging.basicConfig(
