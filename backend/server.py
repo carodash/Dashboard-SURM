@@ -50,6 +50,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # ------------------ AJOUTEZ CES LIGNES ------------------
 origins = [
     "https://dashboard-surm-1.onrender.com",  # L'URL de votre Frontend
+    "https://dashboard-surm.onrender.com",
     "http://localhost:3000", # Pour le développement local futur
     "http://localhost:8000",
     "http://localhost:8080"
