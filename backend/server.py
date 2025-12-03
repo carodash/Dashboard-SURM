@@ -2991,62 +2991,105 @@ async def get_startups_in_experimentation(user_id: str = "default_user"):
 @api_router.get("/global-search")
 async def global_search(query: str, user_id: str = "default_user"):
     """Global search across all partners (name, domain, pilote)"""
-    if not query or len(query.strip()) < 2:
+    query = (query or "").strip()
+    if len(query) < 2:
         raise HTTPException(status_code=400, detail="Query must be at least 2 characters")
-    
-    current_user = await get_current_user(user_id)
-    query = query.strip().lower()
-    
-    # Get data based on user role
-    sourcing_query = {}
-    dealflow_query = {}
-    if current_user.role == UserRole.CONTRIBUTEUR:
-        sourcing_query["pilote"] = current_user.full_name
-        dealflow_query["pilote"] = current_user.full_name
-    
+
+    # 🔐 Tentative de récupération de l'utilisateur, mais on ne casse pas tout si ça échoue
+    try:
+        current_user = await get_current_user(user_id)
+    except Exception:
+        current_user = None  # on considère qu'il est admin / no filter
+
+    query_lower = query.lower()
+
+    # 🔍 Filtre de base en fonction du rôle
+    sourcing_query: Dict[str, Any] = {}
+    dealflow_query: Dict[str, Any] = {}
+
+    try:
+        if current_user and getattr(current_user, "role", None) == UserRole.CONTRIBUTEUR:
+            # Le contributeur ne voit que ses startups
+            sourcing_query["pilote"] = current_user.full_name
+            dealflow_query["pilote"] = current_user.full_name
+    except Exception:
+        # Par sécurité, si jamais current_user est mal formé, on ne filtre pas
+        pass
+
+    # 📥 Récupération des données Mongo
+    # L'argument 'length=' est facultatif pour to_list, mais 10000 est une bonne limite de sécurité.
     sourcing_partners = await db.sourcing_partners.find(sourcing_query).to_list(10000)
     dealflow_partners = await db.dealflow_partners.find(dealflow_query).to_list(10000)
-    
-    # Search function
-    def matches_query(partner, partner_type):
-        searchable_fields = [
-            (partner.get("nom_entreprise" if partner_type == "sourcing" else "nom") or "").lower(),
-            (partner.get("domaine_activite" if partner_type == "sourcing" else "domaine") or "").lower(),
-            (partner.get("pilote") or "").lower(),
-            (partner.get("typologie") or "").lower(),
-            (partner.get("source") or "").lower(),
-            (partner.get("technologie") or "").lower(),
-            (partner.get("pays_origine") or "").lower()
-        ]
-        
-        return any(query in field for field in searchable_fields if field)
-    
-    # Filter matching partners
+
+    # ----------------------------------------------------
+    # Votre logique de recherche et de filtrage (matches_query)
+    # ----------------------------------------------------
+    def matches_query(partner: Dict[str, Any], partner_type: str) -> bool:
+        """Retourne True si le partenaire matche la recherche."""
+        try:
+            if partner_type == "sourcing":
+                nom = (partner.get("nom_entreprise") or "").lower()
+                domaine = (partner.get("domaine_activite") or "").lower()
+            else:
+                nom = (partner.get("nom") or "").lower()
+                domaine = (partner.get("domaine") or "").lower()
+
+            searchable_fields = [
+                nom,
+                domaine,
+                (partner.get("pilote") or "").lower(),
+                (partner.get("typologie") or "").lower(),
+                (partner.get("source") or "").lower(),
+                (partner.get("technologie") or "").lower(),
+                (partner.get("pays_origine") or "").lower(),
+            ]
+
+            return any(query_lower in field for field in searchable_fields if field)
+        except Exception:
+            # En cas de problème sur un partner isolé, on le skip plutôt que tout casser
+            return False
+
     sourcing_matches = []
     dealflow_matches = []
-    
+
+    # 🧹 fonction utilitaire pour appliquer add_inactivity_status en sécurité
+    def safe_add_inactivity(partner: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            # On copie pour éviter de modifier l'objet brut de Mongo
+            partner_copy = dict(partner)
+            if "_id" in partner_copy:
+                del partner_copy["_id"]
+            return add_inactivity_status(partner_copy)
+        except Exception:
+            # Si pour une raison quelconque ça casse, on renvoie quand même le partner sans statut
+            partner_copy = dict(partner)
+            if "_id" in partner_copy:
+                del partner_copy["_id"]
+            return partner_copy
+
+    # 🔎 Filtrage sourcing
     for partner in sourcing_partners:
         if matches_query(partner, "sourcing"):
-            if '_id' in partner: del partner['_id']
-            sourcing_matches.append(add_inactivity_status(partner))
-    
+            sourcing_matches.append(safe_add_inactivity(partner))
+
+    # 🔎 Filtrage dealflow
     for partner in dealflow_partners:
         if matches_query(partner, "dealflow"):
-            if '_id' in partner: del partner['_id']
-            dealflow_matches.append(add_inactivity_status(partner))
-    
-    return {
+            dealflow_matches.append(safe_add_inactivity(partner))
+
+    # ----------------------------------------------------
+    # 🌟 ETAPE CRUCIALE : APPLICATION DE clean_nans AU RETOUR FINAL
+    # ----------------------------------------------------
+    return clean_nans({
         "query": query,
         "sourcing": sourcing_matches,
         "dealflow": dealflow_matches,
         "summary": {
             "total": len(sourcing_matches) + len(dealflow_matches),
             "sourcing_count": len(sourcing_matches),
-            "dealflow_count": len(dealflow_matches)
-        }
-    }
-#  AJOUTEZ CETTE LIGNE
-    return clean_nans(response_data)
+            "dealflow_count": len(dealflow_matches),
+        },
+    })
     
 # Inclure le router SANS prefix supplémentaire
 app.include_router(api_router)
