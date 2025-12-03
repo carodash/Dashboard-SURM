@@ -3045,6 +3045,8 @@ async def global_search(query: str, user_id: str = "default_user"):
             "dealflow_count": len(dealflow_matches)
         }
     }
+#  AJOUTEZ CETTE LIGNE
+    return clean_nans(response_data)
     
 # Inclure le router SANS prefix supplémentaire
 app.include_router(api_router)
