@@ -3,6 +3,51 @@ import "./App.css";
 import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
+// --- BLOC DE STYLE POUR LES VIGNETTES ---
+const cardStyles = document.createElement('style');
+cardStyles.innerHTML = `
+  .startup-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+  }
+  .startup-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    height: 100%;
+    min-height: 250px;
+  }
+  .startup-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+    border-color: #3b82f6;
+  }
+  .card-badge {
+    align-self: flex-start;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 99px;
+    margin-bottom: 12px;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+  }
+`;
+document.head.appendChild(cardStyles);
+
 // Custom hook for horizontal scrolling with mouse wheel (optimized)
 const useHorizontalScroll = () => {
   const ref = useRef();
@@ -5199,6 +5244,43 @@ const EnrichedDataModal = ({ isOpen, onClose, partner, partnerType }) => {
   );
 };
 
+const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, onComments, onDocs, onTransition }) => {
+  const name = partner.nom_entreprise || partner.nom;
+  const description = partner.objet || partner.actions_commentaires || "Aucune description.";
+  
+  return (
+    <div className={`startup-card ${isSelected ? 'ring-2 ring-blue-500' : ''}`} onClick={() => onSelect(partner.id)}>
+      <div className="flex justify-between items-start">
+        <span className="card-badge bg-blue-100 text-blue-800">{partner.statut}</span>
+        <input type="checkbox" checked={isSelected} readOnly className="rounded" />
+      </div>
+
+      <div className="flex items-center space-x-3 mb-3">
+        <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center font-bold text-gray-400 border">
+          {name ? name[0] : "?"}
+        </div>
+        <h3 className="font-bold text-gray-900 truncate">{name}</h3>
+      </div>
+
+      <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">{description}</p>
+
+      <div className="flex flex-wrap gap-1 mb-4">
+        {partner.domaine_activite && <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded">{partner.domaine_activite}</span>}
+        {partner.typologie && <span className="text-[10px] bg-purple-50 text-purple-600 px-2 py-0.5 rounded">{partner.typologie}</span>}
+      </div>
+
+      <div className="flex gap-2 pt-3 border-t border-gray-100">
+        <button onClick={(e) => {e.stopPropagation(); onEdit(partner)}} className="text-xs text-blue-600 hover:underline">Modifier</button>
+        <button onClick={(e) => {e.stopPropagation(); onTimeline(partner, type)}} className="text-xs text-orange-600 hover:underline">Timeline</button>
+        <button onClick={(e) => {e.stopPropagation(); onDocs(partner, type)}} className="text-xs text-blue-400 hover:underline">Docs</button>
+        {type === 'sourcing' && (
+          <button onClick={(e) => {e.stopPropagation(); onTransition(partner.id)}} className="text-xs text-green-600 font-bold hover:underline">→ Dealflow</button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   // Phase 6 - Advanced Column Filtering & Sorting State
   const [columnFilters, setColumnFilters] = useState({});
@@ -6426,139 +6508,22 @@ const Dashboard = () => {
               tableId="sourcing-table" 
               title="Table Sourcing"
             >
-              <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      {/* Restore dynamic column configuration with Excel-like filters */}
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.length === filteredSourcingPartners.length && filteredSourcingPartners.length > 0}
-                          onChange={() => handleSelectAll(filteredSourcingPartners)}
-                          className="rounded"
-                        />
-                      </th>
-                      {Object.entries(columnConfig.sourcing).map(([key, config]) => 
-                        config.visible ? (
-                          <FilterableTableHeader
-                            key={key}
-                            column={key}
-                            label={config.label}
-                            data={sourcingPartners}
-                            activeFilters={columnFilters}
-                            onFilterChange={handleColumnFilterChange}
-                            onSort={handleColumnSort}
-                            sortConfig={columnSortConfig}
-                          />
-                        ) : null
-                      )}
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredSourcingPartners.map((partner) => (
-                      <tr key={partner.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <input
-                            type="checkbox"
-                            checked={selectedItems.includes(partner.id)}
-                            onChange={() => handleSelectItem(partner.id)}
-                            className="rounded"
-                          />
-                        </td>
-                        {Object.entries(columnConfig.sourcing).map(([key, config]) => 
-                          config.visible ? (
-                            <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {key === 'nom_entreprise' && (
-                                <div className="flex items-center">
-                                  <span className="font-medium">{partner[key]}</span>
-                                  {partner.enriched_data && (
-                                    <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                      Enrichi
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                              {key !== 'nom_entreprise' && renderTableCell(partner, key, config)}
-                            </td>
-                          ) : null
-                        )}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex flex-wrap gap-2">
-                            {hasPermission('update') && (
-                              <button
-                                onClick={() => {
-                                  setEditingPartner(partner);
-                                  setShowSourcingForm(true);
-                                }}
-                                className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded"
-                              >
-                                Modifier
-                              </button>
-                            )}
-                            {hasPermission('delete') && (
-                              <button
-                                onClick={() => handleDeleteSourcing(partner.id)}
-                                className="text-red-600 hover:text-red-900 hover:bg-red-50 px-2 py-1 rounded"
-                              >
-                                Supprimer
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleEnrichData(partner.id, "sourcing")}
-                              disabled={loading}
-                              className="text-green-600 hover:text-green-900 hover:bg-green-50 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {loading ? "Enrichissement..." : "Enrichir"}
-                            </button>
-                            {partner.enriched_data && Object.keys(partner.enriched_data).length > 0 && (
-                              <button
-                                onClick={() => handleShowEnrichedData(partner, "sourcing")}
-                                className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 px-2 py-1 rounded"
-                              >
-                                📊 Voir données
-                              </button>
-                            )}
-                            {partner.statut !== "Dealflow" && (
-                              <button
-                                onClick={() => handleTransitionToDealflow(partner.id)}
-                                className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 px-2 py-1 rounded font-medium"
-                                title="Transition rapide vers Dealflow"
-                              >
-                                🔄 → Dealflow
-                              </button>
-                            )}
-                            {/* Phase 1 - Timeline Button */}
-                            <button
-                              onClick={() => handleShowTimeline(partner, 'sourcing')}
-                              className="text-orange-600 hover:text-orange-900 hover:bg-orange-50 px-2 py-1 rounded"
-                              title="Voir l'historique des actions"
-                            >
-                              📋 Timeline
-                            </button>
-                            {/* Phase 3 - Private Comments Button */}
-                            <button
-                              onClick={() => handleShowComments(partner, 'sourcing')}
-                              className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 px-2 py-1 rounded"
-                              title="Commentaires privés"
-                            >
-                              💬 Notes
-                            </button>
-                            <button
-                              onClick={() => handleOpenDocuments(partner, 'sourcing')}
-                              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded"
-                              title="Documents et pièces jointes"
-                            >
-                              📎 Documents
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="startup-grid">
+  {filteredSourcingPartners.map((partner) => (
+    <StartupCard 
+      key={partner.id} 
+      partner={partner}
+      type="sourcing"
+      isSelected={selectedItems.includes(partner.id)}
+      onSelect={handleSelectItem}
+      onEdit={(p) => { setEditingPartner(p); setShowSourcingForm(true); }}
+      onTimeline={handleShowTimeline}
+      onComments={handleShowComments}
+      onDocs={handleOpenDocuments}
+      onTransition={handleTransitionToDealflow}
+    />
+  ))}
+</div>
               
               {filteredSourcingPartners.length === 0 && (
                 <div className="text-center py-12">
@@ -6619,130 +6584,21 @@ const Dashboard = () => {
               tableId="dealflow-table" 
               title="Table Dealflow"
             >
-              <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      {/* Apply Excel-like filters to Dealflow columns */}
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <input
-                          type="checkbox"
-                          checked={selectedItems.length === filteredDealflowPartners.length && filteredDealflowPartners.length > 0}
-                          onChange={() => handleSelectAll(filteredDealflowPartners)}
-                          className="rounded"
-                        />
-                      </th>
-                      {Object.entries(columnConfig.dealflow).map(([key, config]) => 
-                        config.visible ? (
-                          <FilterableTableHeader
-                            key={key}
-                            column={key}
-                            label={config.label}
-                            data={dealflowPartners}
-                            activeFilters={columnFilters}
-                            onFilterChange={handleColumnFilterChange}
-                            onSort={handleColumnSort}
-                            sortConfig={columnSortConfig}
-                          />
-                        ) : null
-                      )}
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredDealflowPartners.map((partner) => (
-                      <tr key={partner.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <input
-                            type="checkbox"
-                            checked={selectedItems.includes(partner.id)}
-                            onChange={() => handleSelectItem(partner.id)}
-                            className="rounded"
-                          />
-                        </td>
-                        {Object.entries(columnConfig.dealflow).map(([key, config]) => 
-                          config.visible ? (
-                            <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {key === 'nom' && (
-                                <div className="flex items-center">
-                                  <span className="font-medium">{partner[key]}</span>
-                                  {partner.enriched_data && (
-                                    <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                      Enrichi
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                              {key !== 'nom' && renderTableCell(partner, key, config)}
-                            </td>
-                          ) : null
-                        )}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex flex-wrap gap-2">
-                            {hasPermission('update') && (
-                              <button
-                                onClick={() => {
-                                  setEditingPartner(partner);
-                                  setShowDealflowForm(true);
-                                }}
-                                className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded"
-                              >
-                                Modifier
-                              </button>
-                            )}
-                            {hasPermission('delete') && (
-                              <button
-                                onClick={() => handleDeleteDealflow(partner.id)}
-                                className="text-red-600 hover:text-red-900 hover:bg-red-50 px-2 py-1 rounded"
-                              >
-                                Supprimer
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleEnrichData(partner.id, "dealflow")}
-                              disabled={loading}
-                              className="text-green-600 hover:text-green-900 hover:bg-green-50 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {loading ? "Enrichissement..." : "Enrichir"}
-                            </button>
-                            {partner.enriched_data && Object.keys(partner.enriched_data).length > 0 && (
-                              <button
-                                onClick={() => handleShowEnrichedData(partner, "dealflow")}
-                                className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 px-2 py-1 rounded"
-                              >
-                                📊 Voir données
-                              </button>
-                            )}
-                            {/* Phase 1 - Timeline Button */}
-                            <button
-                              onClick={() => handleShowTimeline(partner, 'dealflow')}
-                              className="text-orange-600 hover:text-orange-900 hover:bg-orange-50 px-2 py-1 rounded"
-                              title="Voir l'historique des actions"
-                            >
-                              📋 Timeline
-                            </button>
-                            {/* Phase 3 - Private Comments Button */}
-                            <button
-                              onClick={() => handleShowComments(partner, 'dealflow')}
-                              className="text-purple-600 hover:text-purple-900 hover:bg-purple-50 px-2 py-1 rounded"
-                              title="Commentaires privés"
-                            >
-                              💬 Notes
-                            </button>
-                            <button
-                              onClick={() => handleOpenDocuments(partner, 'dealflow')}
-                              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 px-2 py-1 rounded"
-                              title="Documents et pièces jointes"
-                            >
-                              📎 Documents
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="startup-grid">
+  {filteredDealflowPartners.map((partner) => (
+    <StartupCard 
+      key={partner.id} 
+      partner={partner}
+      type="dealflow"
+      isSelected={selectedItems.includes(partner.id)}
+      onSelect={handleSelectItem}
+      onEdit={(p) => { setEditingPartner(p); setShowDealflowForm(true); }}
+      onTimeline={handleShowTimeline}
+      onComments={handleShowComments}
+      onDocs={handleOpenDocuments}
+    />
+  ))}
+</div>
               
               {filteredDealflowPartners.length === 0 && (
                 <div className="text-center py-12">
