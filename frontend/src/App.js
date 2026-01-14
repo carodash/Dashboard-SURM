@@ -5677,35 +5677,43 @@ const Dashboard = () => {
   };
 
   const handleEditSourcing = async (formData) => {
-    setLoading(true);
-    try {
-      await axios.put(`${API_URL}/sourcing/${editingPartner.id}`, formData);
-      await fetchSourcingPartners();
-      await fetchStatistics();
-      setEditingPartner(null);
-      setShowSourcingForm(false);
-    } catch (error) {
-      console.error("Error updating sourcing partner:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    const partnerId = editingPartner?.id;
+    // On force l'URL sans le slash final si nécessaire
+    await axios.put(`${API_URL}/sourcing/${partnerId}`, formData);
+    
+    await fetchSourcingPartners();
+    await fetchStatistics();
+    setEditingPartner(null);
+    setShowSourcingForm(false);
+    alert("✅ Succès : Partenaire mis à jour !");
+  } catch (error) {
+    console.error("Erreur API:", error.response);
+    alert(`Erreur ${error.response?.status || 'Inconnue'}: Impossible de modifier.`);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleEditDealflow = async (formData) => {
-    setLoading(true);
-    try {
-      await axios.put(`${API_URL}/dealflow/${editingPartner.id}`, formData);
-      await fetchDealflowPartners();
-      await fetchStatistics();
-      setEditingPartner(null);
-      setShowDealflowForm(false);
-    } catch (error) {
-      console.error("Error updating dealflow partner:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+const handleEditDealflow = async (formData) => {
+  setLoading(true);
+  try {
+    const partnerId = editingPartner?.id;
+    await axios.put(`${API_URL}/dealflow/${partnerId}`, formData);
+    
+    await fetchDealflowPartners();
+    await fetchStatistics();
+    setEditingPartner(null);
+    setShowDealflowForm(false);
+    alert("✅ Succès : Partenaire Dealflow mis à jour !");
+  } catch (error) {
+    console.error("Erreur API:", error.response);
+    alert("Erreur lors de la modification.");
+  } finally {
+    setLoading(false);
+  }
+};
   const handleDeleteSourcing = async (id) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer ce partenaire ?")) {
       try {
