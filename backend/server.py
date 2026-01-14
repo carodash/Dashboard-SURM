@@ -1238,11 +1238,15 @@ async def enrich_company_endpoint(request: CompanyEnrichmentRequest):
                     enriched_data.description = info['description']
                     break
             
-            # If no specific match, create generic description
-           if not company_info:
-                # Au lieu de deviner, on laisse vide pour que l'utilisateur sache qu'il n'y a pas d'info
-                enriched_data.industry = 'À préciser'
-                enriched_data.description = "Aucune information trouvée lors de l'enrichissement automatique."
+            # --- REMPLACEZ LE BLOC GÉNÉRIQUE PAR CELUI-CI ---
+if not company_info or not company_info.get('description'):
+    # On laisse vide au lieu d'inventer
+    enriched_data.description = "Recherche en cours ou information non disponible."
+    enriched_data.industry = "À préciser"
+else:
+    # On utilise la vraie info trouvée par le moteur
+    enriched_data.description = company_info.get('description')
+    enriched_data.industry = company_info.get('industry', 'Technology')
             
             # Set basic company data
             enriched_data.company_type = 'private'
