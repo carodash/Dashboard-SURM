@@ -1239,27 +1239,10 @@ async def enrich_company_endpoint(request: CompanyEnrichmentRequest):
                     break
             
             # If no specific match, create generic description
-            if not company_info:
-                # Determine likely industry from company name patterns
-                if any(term in query_clean for term in ['tech', 'software', 'digital', 'platform', 'app']):
-                    enriched_data.industry = 'Technology'
-                    enriched_data.description = f"{company_name} is a technology company providing innovative digital solutions and services."
-                elif any(term in query_clean for term in ['finance', 'bank', 'pay', 'money', 'credit']):
-                    enriched_data.industry = 'FinTech'
-                    enriched_data.description = f"{company_name} is a financial services company providing banking and payment solutions."
-                elif any(term in query_clean for term in ['consult', 'advisory', 'service']):
-                    enriched_data.industry = 'Consulting'
-                    enriched_data.description = f"{company_name} is a consulting firm providing professional advisory and implementation services."
-                elif any(term in query_clean for term in ['health', 'medical', 'care']):
-                    enriched_data.industry = 'DigitalHealth'
-                    enriched_data.description = f"{company_name} is a healthcare company providing medical services and health technology solutions."
-                elif any(term in query_clean for term in ['education', 'learning', 'school']):
-                    enriched_data.industry = 'EdTech'
-                    enriched_data.description = f"{company_name} is an educational technology company providing digital learning solutions."
-                else:
-                    # Generic business description
-                    enriched_data.industry = 'Technology'
-                    enriched_data.description = f"{company_name} is an innovative company providing specialized products and services in their industry."
+           if not company_info:
+                # Au lieu de deviner, on laisse vide pour que l'utilisateur sache qu'il n'y a pas d'info
+                enriched_data.industry = 'À préciser'
+                enriched_data.description = "Aucune information trouvée lors de l'enrichissement automatique."
             
             # Set basic company data
             enriched_data.company_type = 'private'
