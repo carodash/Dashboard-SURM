@@ -5248,10 +5248,26 @@ const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, 
   const name = partner.nom_entreprise || partner.nom;
   const description = partner.objet || partner.actions_commentaires || "Aucune description.";
   
+  // 1. AJOUT : Cette fonction définit quelle couleur utiliser pour chaque statut
+  const getStatusColor = (status) => {
+    const mapping = {
+      "A traiter": "bg-yellow-100 text-yellow-800",
+      "Clos": "bg-red-100 text-red-800",
+      "Dealflow": "bg-green-100 text-green-800",
+      "En cours avec les métiers": "bg-blue-100 text-blue-800",
+      "En cours avec l'équipe inno": "bg-green-100 text-green-800",
+      "Klaxoon": "bg-blue-100 text-blue-800"
+    };
+    return mapping[status] || "bg-gray-100 text-gray-800"; // Gris par défaut si inconnu
+  };
+
   return (
     <div className={`startup-card ${isSelected ? 'ring-2 ring-blue-500' : ''}`} onClick={() => onSelect(partner.id)}>
       <div className="flex justify-between items-start">
-        <span className="card-badge bg-blue-100 text-blue-800">{partner.statut}</span>
+        {/* 2. MODIFICATION : On utilise getStatusColor(partner.statut) au lieu de bg-blue-100 */}
+        <span className={`card-badge ${getStatusColor(partner.statut)}`}>
+          {partner.statut}
+        </span>
         <input type="checkbox" checked={isSelected} readOnly className="rounded" />
       </div>
 
