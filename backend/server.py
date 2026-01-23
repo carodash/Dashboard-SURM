@@ -1238,42 +1238,37 @@ async def enrich_company_endpoint(request: CompanyEnrichmentRequest):
                     enriched_data.description = info['description']
                     break
             
-            # --- REMPLACEZ LE BLOC GÉNÉRIQUE PAR CELUI-CI ---
-if not company_info or not company_info.get('description'):
-    # On laisse vide au lieu d'inventer
-    enriched_data.description = "Recherche en cours ou information non disponible."
-    enriched_data.industry = "À préciser"
-else:
-    # On utilise la vraie info trouvée par le moteur
-    enriched_data.description = company_info.get('description')
-    enriched_data.industry = company_info.get('industry', 'Technology')
+            # --- REMPLACEZ À PARTIR DE LA LIGNE 1242 ---
+            if not company_info or not company_info.get('description'):
+                enriched_data.description = "Recherche en cours ou information non disponible."
+                enriched_data.industry = "À préciser"
+            else:
+                enriched_data.description = company_info.get('description')
+                enriched_data.industry = company_info.get('industry', 'Technology')
             
-            # Set basic company data
+            # Paramètres par défaut
             enriched_data.company_type = 'private'
-            enriched_data.employees_count = 100  # Reasonable default
+            enriched_data.employees_count = 100
             
-            # Always return enriched data (this ensures Caroline gets at least basic info)
             return CompanyEnrichmentResponse(
                 success=True,
                 company_data=enriched_data,
                 api_source="enhanced_basic_enrichment"
             )
-                
+
         except Exception as e:
             print(f"Enhanced basic enrichment error: {str(e)}")
-        
-        # If all methods fail
-        return CompanyEnrichmentResponse(
-            success=False,
-            error_message="Aucune donnée trouvée pour cette entreprise. Vérifiez le nom ou essayez avec le domaine web."
-        )
-        
+            return CompanyEnrichmentResponse(
+                success=False,
+                error_message="Aucune donnée trouvée. Vérifiez le nom ou le domaine."
+            )
+            
     except Exception as e:
         return CompanyEnrichmentResponse(
             success=False,
             error_message=f"Erreur lors de l'enrichissement: {str(e)}"
         )
-
+        
 # DEALFLOW ENDPOINTS
 @api_router.post("/dealflow", response_model=DealflowPartner)
 async def create_dealflow_partner(partner: DealflowPartnerCreate):
