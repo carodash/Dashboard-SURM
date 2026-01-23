@@ -5677,43 +5677,56 @@ const Dashboard = () => {
   };
 
   const handleEditSourcing = async (formData) => {
-  setLoading(true);
-  try {
-    const partnerId = editingPartner?.id;
-    // On force l'URL sans le slash final si nécessaire
-    await axios.put(`${API_URL}/sourcing/${partnerId}`, formData);
-    
-    await fetchSourcingPartners();
-    await fetchStatistics();
-    setEditingPartner(null);
-    setShowSourcingForm(false);
-    alert("✅ Succès : Partenaire mis à jour !");
-  } catch (error) {
-    console.error("Erreur API:", error.response);
-    alert(`Erreur ${error.response?.status || 'Inconnue'}: Impossible de modifier.`);
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      // Cette ligne est magique : elle cherche l'ID sous toutes ses formes possibles
+      const partnerId = editingPartner?.id || editingPartner?._id || editingPartner?._id?.$oid;
+      
+      if (!partnerId) {
+        alert("Erreur : Impossible de trouver l'identifiant de ce partenaire.");
+        return;
+      }
 
-const handleEditDealflow = async (formData) => {
-  setLoading(true);
-  try {
-    const partnerId = editingPartner?.id;
-    await axios.put(`${API_URL}/dealflow/${partnerId}`, formData);
-    
-    await fetchDealflowPartners();
-    await fetchStatistics();
-    setEditingPartner(null);
-    setShowDealflowForm(false);
-    alert("✅ Succès : Partenaire Dealflow mis à jour !");
-  } catch (error) {
-    console.error("Erreur API:", error.response);
-    alert("Erreur lors de la modification.");
-  } finally {
-    setLoading(false);
-  }
-};
+      await axios.put(`${API_URL}/sourcing/${partnerId}`, formData);
+      
+      await fetchSourcingPartners();
+      await fetchStatistics();
+      setEditingPartner(null);
+      setShowSourcingForm(false);
+      alert("✅ Modification enregistrée !");
+    } catch (error) {
+      console.error("Erreur détaillée:", error);
+      alert("La modification a échoué. Le serveur ne reconnaît pas l'adresse.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditDealflow = async (formData) => {
+    setLoading(true);
+    try {
+      const partnerId = editingPartner?.id || editingPartner?._id || editingPartner?._id?.$oid;
+      
+      if (!partnerId) {
+        alert("Erreur : Identifiant introuvable.");
+        return;
+      }
+
+      await axios.put(`${API_URL}/dealflow/${partnerId}`, formData);
+      
+      await fetchDealflowPartners();
+      await fetchStatistics();
+      setEditingPartner(null);
+      setShowDealflowForm(false);
+      alert("✅ Modification enregistrée !");
+    } catch (error) {
+      console.error("Erreur détaillée:", error);
+      alert("Erreur lors de la modification du Dealflow.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const handleDeleteSourcing = async (id) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer ce partenaire ?")) {
       try {
