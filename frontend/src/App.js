@@ -5679,15 +5679,19 @@ const Dashboard = () => {
   const handleEditSourcing = async (formData) => {
     setLoading(true);
     try {
-      // Cette ligne est magique : elle cherche l'ID sous toutes ses formes possibles
-      const partnerId = editingPartner?.id || editingPartner?._id || editingPartner?._id?.$oid;
+      // On récupère l'ID le plus proprement possible
+      const partnerId = editingPartner?.id || editingPartner?._id;
       
       if (!partnerId) {
-        alert("Erreur : Impossible de trouver l'identifiant de ce partenaire.");
+        alert("Erreur : Identifiant du partenaire manquant.");
         return;
       }
 
-      await axios.put(`${API_URL}/sourcing/${partnerId}`, formData);
+      // On construit l'URL manuellement pour éviter toute erreur de variable
+      const cleanUrl = `${API_URL.replace(/\/$/, "")}/sourcing/${partnerId}`;
+      console.log("📤 Tentative d'envoi vers :", cleanUrl);
+
+      await axios.put(cleanUrl, formData);
       
       await fetchSourcingPartners();
       await fetchStatistics();
@@ -5695,8 +5699,8 @@ const Dashboard = () => {
       setShowSourcingForm(false);
       alert("✅ Modification enregistrée !");
     } catch (error) {
-      console.error("Erreur détaillée:", error);
-      alert("La modification a échoué. Le serveur ne reconnaît pas l'adresse.");
+      console.error("Erreur détaillée modification:", error);
+      alert(`La modification a échoué (Erreur ${error.response?.status}). Vérifiez la console.`);
     } finally {
       setLoading(false);
     }
@@ -5705,14 +5709,15 @@ const Dashboard = () => {
   const handleEditDealflow = async (formData) => {
     setLoading(true);
     try {
-      const partnerId = editingPartner?.id || editingPartner?._id || editingPartner?._id?.$oid;
+      const partnerId = editingPartner?.id || editingPartner?._id;
       
       if (!partnerId) {
-        alert("Erreur : Identifiant introuvable.");
+        alert("Erreur : Identifiant manquant.");
         return;
       }
 
-      await axios.put(`${API_URL}/dealflow/${partnerId}`, formData);
+      const cleanUrl = `${API_URL.replace(/\/$/, "")}/dealflow/${partnerId}`;
+      await axios.put(cleanUrl, formData);
       
       await fetchDealflowPartners();
       await fetchStatistics();
@@ -5720,7 +5725,7 @@ const Dashboard = () => {
       setShowDealflowForm(false);
       alert("✅ Modification enregistrée !");
     } catch (error) {
-      console.error("Erreur détaillée:", error);
+      console.error("Erreur détaillée modification:", error);
       alert("Erreur lors de la modification du Dealflow.");
     } finally {
       setLoading(false);
