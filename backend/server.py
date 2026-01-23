@@ -832,7 +832,7 @@ async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartn
     current_user = await get_current_user(user_id)
     
     # On cherche soit par 'id', soit par '_id' pour être sûr de trouver la fiche
-original_partner = await db.sourcing_partners.find_one({"$or": [{"id": partner_id}, {"_id": partner_id}]})
+    original_partner = await db.sourcing_partners.find_one({"$or": [{"id": partner_id}, {"_id": partner_id}]})
     
     # Check edit permissions
     if not can_edit_partner(current_user.role, original_partner.get("pilote"), current_user.full_name):
