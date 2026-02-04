@@ -5677,34 +5677,35 @@ const Dashboard = () => {
   };
 
   const handleEditSourcing = async (formData) => {
-    setLoading(true);
-    try {
-      // On récupère l'ID le plus proprement possible
-      const partnerId = editingPartner?.id || editingPartner?._id;
-      
-      if (!partnerId) {
-        alert("Erreur : Identifiant du partenaire manquant.");
-        return;
-      }
+  setLoading(true);
+  try {
+    const partnerId = editingPartner?.id || editingPartner?._id;
 
-      // On construit l'URL manuellement pour éviter toute erreur de variable
-      const cleanUrl = `${API_URL.replace(/\/$/, "")}/sourcing/${partnerId}`;
-      console.log("📤 Tentative d'envoi vers :", cleanUrl);
-
-      await axios.put(cleanUrl, formData);
-      
-      await fetchSourcingPartners();
-      await fetchStatistics();
-      setEditingPartner(null);
-      setShowSourcingForm(false);
-      alert("✅ Modification enregistrée !");
-    } catch (error) {
-      console.error("Erreur détaillée modification:", error);
-      alert(`La modification a échoué (Erreur ${error.response?.status}). Vérifiez la console.`);
-    } finally {
-      setLoading(false);
+    if (!partnerId) {
+      alert("Erreur : Identifiant du partenaire manquant.");
+      return;
     }
-  };
+
+    const baseUrl = API_URL.replace(/\/$/, "");
+    const userId = encodeURIComponent(currentUser?.name || currentUser?.email || "default_user");
+    const cleanUrl = `${baseUrl}/sourcing/${partnerId}?user_id=${userId}`;
+
+    console.log("📤 Tentative d'envoi vers :", cleanUrl);
+
+    await axios.put(cleanUrl, formData);
+
+    await fetchSourcingPartners();
+    await fetchStatistics();
+    setEditingPartner(null);
+    setShowSourcingForm(false);
+    alert("✅ Modification enregistrée !");
+  } catch (error) {
+    console.error("Erreur détaillée modification:", error);
+    alert(`La modification a échoué (Erreur ${error.response?.status}). Vérifiez la console.`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleEditDealflow = async (formData) => {
     setLoading(true);
