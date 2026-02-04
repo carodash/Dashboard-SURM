@@ -1,6 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Body, Request
 from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
@@ -17,6 +16,7 @@ import requests
 import json
 import json
 from bson.objectid import ObjectId
+from bson.errors import InvalidId
 import math
 
 def clean_nans(obj):
@@ -842,8 +842,16 @@ async def get_sourcing_partner(partner_id: str, user_id: str = "default_user"):
 async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartnerUpdate, user_id: str = "default_user"):
     current_user = await get_current_user(user_id)
     
-    # On cherche soit par 'id', soit par '_id' pour être sûr de trouver la fiche
-    original_partner = await db.sourcing_partners.find_one({"$or": [{"id": partner_id}, {"_id": partner_id}]})
+    # 1) Construire un filtre robuste (id OU _id ObjectId)
+try:
+    query = {"$or": [{"id": partner_id}, {"_id": ObjectId(partner_id)}]}
+except (InvalidId, TypeError):
+    query = {"id": partner_id}
+
+original_partner = await db.sourcing_partners.find_one(query)
+
+if original_partner is None:
+    raise HTTPException(status_code=404, detail="Partner not found")
     
     # Check edit permissions
     if not can_edit_partner(current_user.role, original_partner.get("pilote"), current_user.full_name):
@@ -857,10 +865,7 @@ async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartn
         if isinstance(value, date) and not isinstance(value, datetime):
             update_dict[key] = value.isoformat()
     
-    result = await db.sourcing_partners.update_one(
-        {"id": partner_id},
-        {"$set": update_dict}
-    )
+    result = await db.sourcing_partners.update_one(query, {"$set": update_dict})
     
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Partner not found")
@@ -896,11 +901,10 @@ async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartn
             user_name=current_user.full_name
         )
     
-    # Fetch and return the updated document
-    updated_partner_doc = await db.sourcing_partners.find_one({"id": partner_id})
+    updated_partner_doc = await db.sourcing_partners.find_one(query)
     
-    # Ensure _id is popped and converted to id before validation
-    updated_partner_doc['id'] = str(updated_partner_doc.pop('_id')) 
+    if "_id" in updated_partner_doc and ("id" not in updated_partner_doc or not updated_partner_doc["id"]):
+    updated_partner_doc["id"] = str(updated_partner_doc["_id"])
     
     partner_with_status = add_inactivity_status(updated_partner_doc)
     return SourcingPartner(**partner_with_status)
