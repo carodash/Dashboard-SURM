@@ -55,11 +55,13 @@ default_origins = [
     "http://localhost:8000",
     "http://localhost:8080",
 ]
+
 configured_origins = [
     origin.strip()
     for origin in os.environ.get("CORS_ALLOW_ORIGINS", "").split(",")
     if origin.strip()
 ]
+
 cors_allow_origins = configured_origins or default_origins
 cors_allow_origin_regex = os.environ.get("CORS_ALLOW_ORIGIN_REGEX")
 
