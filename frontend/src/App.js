@@ -5690,7 +5690,7 @@ const Dashboard = () => {
     const userId = encodeURIComponent(currentUser?.name || currentUser?.email || "default_user");
     const cleanUrl = `${baseUrl}/sourcing/${partnerId}?user_id=${userId}`;
 
-    console.log("📤 Tentative d'envoi vers :", cleanUrl);
+    console.log("✅ URL finale PUT :", cleanUrl);
 
     await axios.put(cleanUrl, formData);
 
