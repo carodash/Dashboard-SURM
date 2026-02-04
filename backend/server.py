@@ -46,23 +46,32 @@ db = client[os.environ['DB_NAME']]
 app = FastAPI(title="SURM Dashboard API", description="API pour la gestion des partenaires de sourcing.")
 
 from fastapi.middleware.cors import CORSMiddleware
-# ... (votre code d'import existant)
-# ------------------ AJOUTEZ CES LIGNES ------------------
-origins = [
-    "https://dashboard-surm-1.onrender.com",  # L'URL de votre Frontend
+
+# Configuration CORS
+default_origins = [
+    "https://dashboard-surm-1.onrender.com",
     "https://dashboard-surm.onrender.com",
-    "http://localhost:3000", # Pour le développement local futur
+    "http://localhost:3000",
     "http://localhost:8000",
-    "http://localhost:8080"
+    "http://localhost:8080",
 ]
+configured_origins = [
+    origin.strip()
+    for origin in os.environ.get("CORS_ALLOW_ORIGINS", "").split(",")
+    if origin.strip()
+]
+cors_allow_origins = configured_origins or default_origins
+cors_allow_origin_regex = os.environ.get("CORS_ALLOW_ORIGIN_REGEX")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=cors_allow_origins,
+    allow_origin_regex=cors_allow_origin_regex,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # ------------------ FIN DE L'AJOUT ------------------
 
 # Create a router with the /api prefix
