@@ -1086,116 +1086,111 @@ class CompanyEnrichmentResponse(BaseModel):
 @api_router.post("/enrich-company", response_model=CompanyEnrichmentResponse)
 async def enrich_company_endpoint(request: CompanyEnrichmentRequest):
     """Enrich company data using free APIs"""
-try:
-    # ===============================
-    # Method 0: Tavily (Web Search)
-    # ===============================
-    if has_tavily():
-        try:
-            query = request.query.strip()
-            country_hint = "France"
-            tavily_query = f"{query} {country_hint} site officiel"
+    try:
+        # ===============================
+        # Method 0: Tavily (Web Search)
+        # ===============================
+        if has_tavily():
+            try:
+                query = request.query.strip()
+                country_hint = "France"
+                tavily_query = f"{query} {country_hint} site officiel"
 
-            res = tavily_client.search(
-                query=tavily_query,
-                max_results=5,
-                include_answer=True,
-                include_raw_content=False
-            )
+                res = tavily_client.search(
+                    query=tavily_query,
+                    max_results=5,
+                    include_answer=True,
+                    include_raw_content=False
+                )
 
-            results = res.get("results", []) or []
-            urls = [r.get("url") for r in results if r.get("url")]
+                results = res.get("results", []) or []
+                urls = [r.get("url") for r in results if r.get("url")]
 
-            if not urls:
-                raise Exception("No Tavily results")
+                if not urls:
+                    raise Exception("No Tavily results")
 
-            website_url = None
-            for u in urls:
-                if u and not any(x in u for x in [
-                    "societe.com",
-                    "pappers.fr",
-                    "verif.com",
-                    "manageo.fr",
-                    "annuaire",
-                    "wikipedia"
-                ]):
-                    website_url = u
-                    break
+                website_url = None
+                for u in urls:
+                    if u and not any(x in u for x in [
+                        "societe.com", "pappers.fr", "verif.com", "manageo.fr",
+                        "annuaire", "wikipedia"
+                    ]):
+                        website_url = u
+                        break
 
-            if not website_url:
-                website_url = urls[0]
+                if not website_url:
+                    website_url = urls[0]
 
-            if website_url and not website_url.startswith("http"):
-                website_url = "https://" + website_url
+                if website_url and not website_url.startswith("http"):
+                    website_url = "https://" + website_url
 
-            enriched_data = EnrichedCompanyData(
-                name=request.query.title(),
-                domain=request.domain,
-                website=website_url,
-                description=res.get("answer") or "Résumé indisponible.",
-                country="France"
-            )
+                enriched_data = EnrichedCompanyData(
+                    name=request.query.title(),
+                    domain=request.domain,
+                    website=website_url,
+                    description=res.get("answer") or "Résumé indisponible.",
+                    country="France"
+                )
 
-            return CompanyEnrichmentResponse(
-                success=True,
-                company_data=enriched_data,
-                api_source="tavily_web_search"
-            )
+                return CompanyEnrichmentResponse(
+                    success=True,
+                    company_data=enriched_data,
+                    api_source="tavily_web_search"
+                )
 
-        except Exception as e:
-            print(f"Tavily error: {str(e)}")
-        
-        # Method 2: Try French SIRENE API (free for French companies)
+            except Exception as e:
+                print(f"Tavily error: {str(e)}")
+
+        # ===============================
+        # Method 2: French SIRENE API
+        # ===============================
         try:
             sirene_url = "https://api.insee.fr/entreprises/sirene/V3/siret"
-            headers = {
-                'Accept': 'application/json'
-            }
+            headers = {'Accept': 'application/json'}
             params = {
-                'q': f"denominationUniteLegale:\"{request.query}\"",
+                'q': f'denominationUniteLegale:"{request.query}"',
                 'nombre': 1
             }
-            
+
             response = requests.get(sirene_url, headers=headers, params=params, timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                
                 if 'etablissements' in data and len(data['etablissements']) > 0:
                     etablissement = data['etablissements'][0]
                     unite_legale = etablissement.get('uniteLegale', {})
-                    
-                    # Map SIRENE data to our format
+
                     enriched_data = EnrichedCompanyData(
                         name=unite_legale.get('denominationUniteLegale'),
                         industry=etablissement.get('libelleSecteurActiviteUniteLegale'),
                         country="France",
                         country_code="FR",
                         company_type="private" if unite_legale.get('categorieJuridiqueUniteLegale') else None,
-                        year_founded=int(unite_legale.get('dateCreationUniteLegale', '0')[:4]) if unite_legale.get('dateCreationUniteLegale') else None
+                        year_founded=int(unite_legale.get('dateCreationUniteLegale', '0')[:4])
+                        if unite_legale.get('dateCreationUniteLegale') else None
                     )
-                    
+
                     return CompanyEnrichmentResponse(
                         success=True,
                         company_data=enriched_data,
                         api_source="sirene_api"
                     )
-                    
+
         except Exception as e:
-            print(f"SIRENE API error: {str(e)}")
-        
-        # Method 3: Enhanced Basic Enrichment (always provides useful data)
+            print(f"SIRENE API error: {str(e)}")     
+
+        # ===============================
+        # Method 3: Enhanced Basic Enrichment
+        # ===============================
         try:
-            # Extract potential domain and create basic data
             query_clean = request.query.lower().strip()
             company_name = request.query.title()
-            
-            # Create comprehensive enriched data based on company name patterns
+
             enriched_data = EnrichedCompanyData(
                 name=company_name,
                 domain=request.domain if request.domain else f"{query_clean.replace(' ', '').replace('-', '')}.com"
             )
-            
-            # Enhanced industry detection with many more patterns
+
+            # (votre industry_keywords et logique existante ici)
             industry_keywords = {
                 # Famous tech companies
                 'google': {'industry': 'Technology', 'country': 'United States', 'description': 'Leading global technology company specializing in search, cloud computing, and digital advertising services.'},
@@ -1260,18 +1255,12 @@ try:
                     enriched_data.description = info['description']
                     break
             
-            # --- REMPLACEZ À PARTIR DE LA LIGNE 1242 ---
             if not company_info or not company_info.get('description'):
-                enriched_data.description = "Recherche en cours ou information non disponible."
-                enriched_data.industry = "À préciser"
-            else:
-                enriched_data.description = company_info.get('description')
-                enriched_data.industry = company_info.get('industry', 'Technology')
-            
-            # Paramètres par défaut
+            enriched_data.description = "Recherche en cours ou information non disponible."
+            enriched_data.industry = "À préciser"
             enriched_data.company_type = 'private'
             enriched_data.employees_count = 100
-            
+
             return CompanyEnrichmentResponse(
                 success=True,
                 company_data=enriched_data,
@@ -1284,13 +1273,12 @@ try:
                 success=False,
                 error_message="Aucune donnée trouvée. Vérifiez le nom ou le domaine."
             )
-            
-        except Exception as e:
-            return CompanyEnrichmentResponse(
+
+    except Exception as e:
+        return CompanyEnrichmentResponse(
             success=False,
             error_message=f"Erreur lors de l'enrichissement: {str(e)}"
-            )
-        
+        )                
 # DEALFLOW ENDPOINTS
 @api_router.post("/dealflow", response_model=DealflowPartner)
 async def create_dealflow_partner(partner: DealflowPartnerCreate):
