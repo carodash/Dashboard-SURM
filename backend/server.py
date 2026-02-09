@@ -1285,11 +1285,11 @@ try:
                 error_message="Aucune donnée trouvée. Vérifiez le nom ou le domaine."
             )
             
-    except Exception as e:
-        return CompanyEnrichmentResponse(
+        except Exception as e:
+            return CompanyEnrichmentResponse(
             success=False,
             error_message=f"Erreur lors de l'enrichissement: {str(e)}"
-        )
+            )
         
 # DEALFLOW ENDPOINTS
 @api_router.post("/dealflow", response_model=DealflowPartner)
