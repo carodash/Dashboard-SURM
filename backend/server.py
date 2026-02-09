@@ -18,6 +18,12 @@ import json
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 import math
+from tavily import TavilyClient
+
+tavily_client = TavilyClient(api_key=os.environ.get("TAVILY_API_KEY", ""))
+
+def has_tavily():
+    return bool(os.environ.get("TAVILY_API_KEY"))
 
 def clean_nans(obj):
     """
@@ -1080,55 +1086,64 @@ class CompanyEnrichmentResponse(BaseModel):
 @api_router.post("/enrich-company", response_model=CompanyEnrichmentResponse)
 async def enrich_company_endpoint(request: CompanyEnrichmentRequest):
     """Enrich company data using free APIs"""
-    
-    try:
-        # Method 1: Try Abstract API with free tier (if API key available)
-        abstract_key = os.environ.get('ABSTRACT_API_KEY')
-        if abstract_key:
-            try:
-                # Extract domain from query or use provided domain
-                domain = request.domain
-                if not domain:
-                    # Try to extract domain from company name
-                    query_lower = request.query.lower().replace(' ', '').replace('-', '')
-                    if '.' in query_lower and any(ext in query_lower for ext in ['.com', '.fr', '.org', '.net']):
-                        domain = query_lower
-                    else:
-                        # Create potential domain
-                        domain = f"{query_lower.replace(' ', '').replace('-', '')}.com"
-                
-                # Call Abstract API
-                url = "https://companyenrichment.abstractapi.com/v1/"
-                params = {
-                    'api_key': abstract_key,
-                    'domain': domain
-                }
-                
-                response = requests.get(url, params=params, timeout=10)
-                if response.status_code == 200:
-                    data = response.json()
-                    
-                    enriched_data = EnrichedCompanyData(
-                        name=data.get('name'),
-                        domain=data.get('domain'),
-                        industry=data.get('industry'),
-                        employees_count=data.get('employees_count'),
-                        country=data.get('country'),
-                        country_code=data.get('country_code'),
-                        year_founded=data.get('year_founded'),
-                        company_type=data.get('type'),
-                        description=data.get('description'),
-                        website=data.get('domain')
-                    )
-                    
-                    return CompanyEnrichmentResponse(
-                        success=True,
-                        company_data=enriched_data,
-                        api_source="abstract_api"
-                    )
-                    
-            except Exception as e:
-                print(f"Abstract API error: {str(e)}")
+try:
+    # ===============================
+    # Method 0: Tavily (Web Search)
+    # ===============================
+    if has_tavily():
+        try:
+            query = request.query.strip()
+            country_hint = "France"
+            tavily_query = f"{query} {country_hint} site officiel"
+
+            res = tavily_client.search(
+                query=tavily_query,
+                max_results=5,
+                include_answer=True,
+                include_raw_content=False
+            )
+
+            results = res.get("results", []) or []
+            urls = [r.get("url") for r in results if r.get("url")]
+
+            if not urls:
+                raise Exception("No Tavily results")
+
+            website_url = None
+            for u in urls:
+                if u and not any(x in u for x in [
+                    "societe.com",
+                    "pappers.fr",
+                    "verif.com",
+                    "manageo.fr",
+                    "annuaire",
+                    "wikipedia"
+                ]):
+                    website_url = u
+                    break
+
+            if not website_url:
+                website_url = urls[0]
+
+            if website_url and not website_url.startswith("http"):
+                website_url = "https://" + website_url
+
+            enriched_data = EnrichedCompanyData(
+                name=request.query.title(),
+                domain=request.domain,
+                website=website_url,
+                description=res.get("answer") or "Résumé indisponible.",
+                country="France"
+            )
+
+            return CompanyEnrichmentResponse(
+                success=True,
+                company_data=enriched_data,
+                api_source="tavily_web_search"
+            )
+
+        except Exception as e:
+            print(f"Tavily error: {str(e)}")
         
         # Method 2: Try French SIRENE API (free for French companies)
         try:
