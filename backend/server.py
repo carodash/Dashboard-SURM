@@ -1254,10 +1254,13 @@ async def enrich_company_endpoint(request: CompanyEnrichmentRequest):
                     enriched_data.country = info.get('country', 'United States')  # Default to US
                     enriched_data.description = info['description']
                     break
-            
             if not company_info or not company_info.get('description'):
-            enriched_data.description = "Recherche en cours ou information non disponible."
-            enriched_data.industry = "À préciser"
+                enriched_data.description = "Recherche en cours ou information non disponible."
+                enriched_data.industry = "À préciser"
+            else:
+                enriched_data.description = company_info.get('description')
+                enriched_data.industry = company_info.get('industry', 'Technology')
+
             enriched_data.company_type = 'private'
             enriched_data.employees_count = 100
 
