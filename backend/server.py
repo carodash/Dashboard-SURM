@@ -837,59 +837,50 @@ async def get_sourcing_partner(partner_id: str, user_id: str = "default_user"):
     partner_with_status = add_inactivity_status(partner)
     return SourcingPartner(**partner_with_status)
 
-# CODE CORRIGÉ et COMPLÉTÉ pour la fonction update_sourcing_partner
+from bson.errors import InvalidId
+
 @api_router.put("/sourcing/{partner_id}", response_model=SourcingPartner)
-async def update_sourcing_partner(partner_id: str, partner_update: SourcingPartnerUpdate, user_id: str = "default_user"):
+async def update_sourcing_partner(
+    partner_id: str,
+    partner_update: SourcingPartnerUpdate,
+    user_id: str = "default_user"
+):
     current_user = await get_current_user(user_id)
-    
+
     # 1) Construire un filtre robuste (id OU _id ObjectId)
-try:
-    query = {"$or": [{"id": partner_id}, {"_id": ObjectId(partner_id)}]}
-except (InvalidId, TypeError):
-    query = {"id": partner_id}
+    try:
+        query = {"$or": [{"id": partner_id}, {"_id": ObjectId(partner_id)}]}
+    except (InvalidId, TypeError):
+        query = {"id": partner_id}
 
-original_partner = await db.sourcing_partners.find_one(query)
+    original_partner = await db.sourcing_partners.find_one(query)
+    if original_partner is None:
+        raise HTTPException(status_code=404, detail="Partner not found")
 
-if original_partner is None:
-    raise HTTPException(status_code=404, detail="Partner not found")
-    
     # Check edit permissions
     if not can_edit_partner(current_user.role, original_partner.get("pilote"), current_user.full_name):
         raise HTTPException(status_code=403, detail="Not authorized to edit this partner")
-    
+
     update_dict = {k: v for k, v in partner_update.dict().items() if v is not None}
     update_dict["updated_at"] = datetime.utcnow()
-    
+
     # Convert date objects to strings for MongoDB storage
-    for key, value in update_dict.items():
+    for key, value in list(update_dict.items()):
         if isinstance(value, date) and not isinstance(value, datetime):
             update_dict[key] = value.isoformat()
-    
+
     result = await db.sourcing_partners.update_one(query, {"$set": update_dict})
-    
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Partner not found")
-    
+
     # Log update activity with changes
     changes = []
     for key, new_value in update_dict.items():
         if key != "updated_at" and key in original_partner:
-            # Correction: le mot 'original_partner' était coupé dans votre extrait
-            old_value = original_partner[key] 
-            
-            # Special handling for date types from MongoDB/Pydantic
-            if isinstance(old_value, date) and not isinstance(old_value, datetime) and isinstance(new_value, str):
-                try:
-                    # Convert old date to ISO string for comparison (or handle cases where it's already an ISO string)
-                    old_value_str = old_value.isoformat()
-                except AttributeError:
-                    old_value_str = str(old_value)
-
-                if old_value_str != new_value:
-                    changes.append(f"{key}: '{old_value_str}' -> '{new_value}'")
-            elif old_value != new_value:
+            old_value = original_partner.get(key)
+            if old_value != new_value:
                 changes.append(f"{key}: '{old_value}' -> '{new_value}'")
-    
+
     if changes:
         await log_activity(
             partner_id=partner_id,
@@ -900,12 +891,15 @@ if original_partner is None:
             user_id=current_user.id,
             user_name=current_user.full_name
         )
-    
+
+    # Relire et renvoyer
     updated_partner_doc = await db.sourcing_partners.find_one(query)
-    
+    if updated_partner_doc is None:
+        raise HTTPException(status_code=404, detail="Partner not found")
+
     if "_id" in updated_partner_doc and ("id" not in updated_partner_doc or not updated_partner_doc["id"]):
-    updated_partner_doc["id"] = str(updated_partner_doc["_id"])
-    
+        updated_partner_doc["id"] = str(updated_partner_doc["_id"])
+
     partner_with_status = add_inactivity_status(updated_partner_doc)
     return SourcingPartner(**partner_with_status)
 
