@@ -1200,13 +1200,31 @@ async def enrich_company_endpoint(request: CompanyEnrichmentRequest):
                 if website_url and not website_url.startswith("http"):
                     website_url = "https://" + website_url
 
+                # ===============================
+                # Étape 5 : Enrichissement OpenAI (FR)
+                # ===============================
+                tavily_answer = res.get("answer")
+                tavily_urls = urls
+
+                ai = llm_enrich_fr(
+                    company_name=request.query,
+                    website_url=website_url,
+                    tavily_answer=tavily_answer,
+                    tavily_urls=tavily_urls
+                )
+
+                description_fr = (ai.get("description_fr") or "").strip()
+                technologies = ai.get("technologies") or []
+                use_cases = ai.get("use_cases_insurance") or []
+
                 enriched_data = EnrichedCompanyData(
                     name=request.query.title(),
                     domain=request.domain,
                     website=website_url,
-                    description=res.get("answer") or "Résumé indisponible.",
+                    description=description_fr or (tavily_answer or "Résumé indisponible."),
                     country="France"
                 )
+
 
                 return CompanyEnrichmentResponse(
                     success=True,
