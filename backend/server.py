@@ -19,11 +19,19 @@ from bson.objectid import ObjectId
 from bson.errors import InvalidId
 import math
 from tavily import TavilyClient
+from openai import OpenAI
 
 tavily_client = TavilyClient(api_key=os.environ.get("TAVILY_API_KEY", ""))
 
 def has_tavily():
     return bool(os.environ.get("TAVILY_API_KEY"))
+
+openai_client = None
+if os.environ.get("OPENAI_API_KEY"):
+    openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+
+def has_openai():
+    return openai_client is not None
 
 def clean_nans(obj):
     """
@@ -39,6 +47,74 @@ def clean_nans(obj):
     if isinstance(obj, list):
         return [clean_nans(v) for v in obj]
     return obj
+    
+# ===============================
+# OpenAI client & helpers
+# ===============================
+
+openai_client = None
+if os.environ.get("OPENAI_API_KEY"):
+    openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+
+def has_openai():
+    return openai_client is not None
+
+
+def llm_enrich_fr(company_name: str, website_url: str | None,
+                  tavily_answer: str | None, tavily_urls: list[str]) -> dict:
+    """
+    Retour attendu:
+    {
+      "description_fr": str,
+      "technologies": [str, ...],
+      "use_cases_insurance": [str, ...]
+    }
+    """
+    if not has_openai():
+        return {}
+
+    urls_str = "\n".join(tavily_urls[:5]) if tavily_urls else ""
+
+    prompt = f"""
+Tu es analyste Open Innovation dans l'assurance.
+
+À partir des informations suivantes, retourne UNIQUEMENT un JSON valide
+(sans texte autour) avec les clés suivantes :
+- description_fr : 2 à 3 phrases en français (ton professionnel)
+- technologies : liste de technologies utilisées
+- use_cases_insurance : liste de cas d'usages concrets pour un assureur
+
+Startup : {company_name}
+Site : {website_url or "inconnu"}
+Résumé web : {tavily_answer or "indisponible"}
+Liens :
+{urls_str}
+
+Contraintes :
+- JSON strict
+- listes pour technologies et use_cases_insurance
+"""
+
+    try:
+        resp = openai_client.chat.completions.create(
+            model=os.environ.get("OPENAI_MODEL", "gpt-4o-mini"),
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2,
+        )
+        content = resp.choices[0].message.content.strip()
+        data = json.loads(content)
+
+        if not isinstance(data, dict):
+            return {}
+
+        data.setdefault("description_fr", "")
+        data.setdefault("technologies", [])
+        data.setdefault("use_cases_insurance", [])
+        return data
+
+    except Exception as e:
+        print(f"OpenAI enrich error: {str(e)}")
+        return {}
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
