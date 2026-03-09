@@ -6273,102 +6273,115 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">SURM Dashboard</h1>
-            
-            {/* Phase 4 - Global Search Bar */}
-            <GlobalSearchBar 
+  <div className="min-h-screen bg-gray-50">
+    <div className="bg-white border-b border-surm-border shadow-sm">
+      <div className="max-w-[1600px] mx-auto px-6 py-4">
+        <div className="flex items-center justify-between gap-6">
+          {/* Bloc gauche : titre */}
+          <div className="min-w-[220px]">
+            <h1 className="text-2xl font-bold text-surm-navy leading-tight">
+              SURM
+            </h1>
+            <p className="text-sm font-semibold text-surm-navy leading-tight">
+              Dashboard
+            </p>
+          </div>
+
+          {/* Bloc centre : recherche + vues */}
+          <div className="flex items-center gap-3 flex-1 justify-center">
+            <GlobalSearchBar
               onSearch={handleGlobalSearch}
               onQuickView={handleQuickView}
             />
-            
-            {/* Main Navigation - 5 primary tabs */}
-            <nav className="hidden md:flex space-x-6">
+          </div>
+
+          {/* Bloc droite : navigation + user */}
+          <div className="flex items-center gap-3">
+            <nav className="hidden xl:flex items-center gap-2">
               <button
                 onClick={() => setActiveTab("dashboard")}
-                className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
+                className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
                   activeTab === "dashboard"
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "bg-surm-pink/10 text-surm-navy"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 <span>📊</span>
                 <span>Dashboard</span>
               </button>
-              
+
               <button
                 onClick={() => setActiveTab("kanban")}
-                className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
+                className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
                   activeTab === "kanban"
                     ? "bg-orange-100 text-orange-700"
-                    : "text-gray-500 hover:text-gray-700"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 <span>📋</span>
                 <span>Kanban</span>
               </button>
-              
+
               <button
                 onClick={() => setActiveTab("sourcing")}
-                className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
+                className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
                   activeTab === "sourcing"
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "bg-surm-pink/10 text-surm-navy"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 <span>🔎</span>
                 <span>Sourcing</span>
               </button>
-              
+
               <button
                 onClick={() => setActiveTab("dealflow")}
-                className={`px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 ${
+                className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
                   activeTab === "dealflow"
                     ? "bg-green-100 text-green-700"
-                    : "text-gray-500 hover:text-gray-700"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 <span>🔁</span>
                 <span>Dealflow</span>
               </button>
             </nav>
-            
-            {/* Right side - User info + Hamburger Menu */}
-            <div className="flex items-center space-x-4">
-              {/* User Status */}
-              <div className="flex items-center bg-gray-100 rounded-lg px-3 py-1">
+
+            <div className="flex items-center gap-3">
+              <div className="hidden lg:flex items-center bg-gray-100 rounded-xl px-3 py-2">
                 <span className="text-xs text-gray-600 mr-2">
                   {USER_ROLES[currentUser.role]?.label}
                 </span>
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               </div>
-              
-              {/* Hamburger Menu */}
+
               <div className="relative">
                 <button
                   onClick={() => setShowHamburgerMenu(!showHamburgerMenu)}
-                  className="px-3 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center space-x-1"
+                  className="px-3 py-2 text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 flex items-center space-x-2"
                 >
                   <span>☰</span>
                   <span className="hidden lg:inline text-sm">Plus</span>
                 </button>
-                
+
                 {showHamburgerMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-surm-border z-50">
                     <div className="py-2">
-                      {/* Quick Views */}
-                      <div className="px-4 py-1 text-xs font-medium text-gray-400 uppercase tracking-wide">Vues Rapides</div>
+                      <div className="px-4 py-1 text-xs font-medium text-gray-400 uppercase tracking-wide">
+                        Vues Rapides
+                      </div>
+
                       <button
-                        onClick={() => { setActiveTab("my-startups"); setShowHamburgerMenu(false); }}
+                        onClick={() => {
+                          setActiveTab("my-startups");
+                          setShowHamburgerMenu(false);
+                        }}
                         className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center space-x-2 text-sm"
                       >
                         <span>🌟</span>
                         <span>Mes Startups</span>
                       </button>
-                      
+
                       <div className="relative">
                         <button
                           onClick={() => setShowQuickMenu(!showQuickMenu)}
@@ -6378,15 +6391,25 @@ const Dashboard = () => {
                             <span>⚡</span>
                             <span>Vues</span>
                           </div>
-                          <span className={`text-xs transition-transform ${showQuickMenu ? 'rotate-90' : ''}`}>›</span>
+                          <span
+                            className={`text-xs transition-transform ${
+                              showQuickMenu ? "rotate-90" : ""
+                            }`}
+                          >
+                            ›
+                          </span>
                         </button>
-                        
+
                         {showQuickMenu && (
                           <div className="ml-6 border-l border-gray-200 pl-2">
-                            {quickViews.map(view => (
+                            {quickViews.map((view) => (
                               <button
                                 key={view.id}
-                                onClick={() => { handleQuickViewSelect(view.id); setShowHamburgerMenu(false); setShowQuickMenu(false); }}
+                                onClick={() => {
+                                  handleQuickViewSelect(view.id);
+                                  setShowHamburgerMenu(false);
+                                  setShowQuickMenu(false);
+                                }}
                                 className="w-full text-left px-2 py-1 hover:bg-gray-50 text-xs text-gray-600"
                               >
                                 {view.label}
@@ -6395,35 +6418,48 @@ const Dashboard = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       <hr className="my-2" />
-                      
-                      {/* Reports */}
-                      <div className="px-4 py-1 text-xs font-medium text-gray-400 uppercase tracking-wide">Rapports</div>
+
+                      <div className="px-4 py-1 text-xs font-medium text-gray-400 uppercase tracking-wide">
+                        Rapports
+                      </div>
                       <button
-                        onClick={() => { setActiveTab("reports"); setShowHamburgerMenu(false); }}
+                        onClick={() => {
+                          setActiveTab("reports");
+                          setShowHamburgerMenu(false);
+                        }}
                         className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center space-x-2 text-sm"
                       >
                         <span>📑</span>
                         <span>Rapports</span>
                       </button>
-                      
+
                       <hr className="my-2" />
-                      
-                      {/* Admin Functions */}
-                      <div className="px-4 py-1 text-xs font-medium text-gray-400 uppercase tracking-wide">Administration</div>
-                      {hasPermission('manage_config') && (
+
+                      <div className="px-4 py-1 text-xs font-medium text-gray-400 uppercase tracking-wide">
+                        Administration
+                      </div>
+
+                      {hasPermission("manage_config") && (
                         <button
-                          onClick={() => { setShowSettings(true); setShowHamburgerMenu(false); }}
+                          onClick={() => {
+                            setShowSettings(true);
+                            setShowHamburgerMenu(false);
+                          }}
                           className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center space-x-2 text-sm"
                         >
                           <span>⚙️</span>
                           <span>Paramètres</span>
                         </button>
                       )}
-                      {hasPermission('manage_users') && (
+
+                      {hasPermission("manage_users") && (
                         <button
-                          onClick={() => { setShowUserRoleManager(true); setShowHamburgerMenu(false); }}
+                          onClick={() => {
+                            setShowUserRoleManager(true);
+                            setShowHamburgerMenu(false);
+                          }}
                           className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center space-x-2 text-sm"
                         >
                           <span>👥</span>
@@ -6436,56 +6472,60 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          
-          {/* Mobile Navigation */}
-          <div className="md:hidden border-t pt-2 pb-2">
-            <div className="flex space-x-2 overflow-x-auto">
-              <button
-                onClick={() => setActiveTab("dashboard")}
-                className={`px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap ${
-                  activeTab === "dashboard"
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                📊 Dashboard
-              </button>
-              <button
-                onClick={() => setActiveTab("kanban")}
-                className={`px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap ${
-                  activeTab === "kanban"
-                    ? "bg-orange-100 text-orange-700"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                📋 Kanban
-              </button>
-              <button
-                onClick={() => setActiveTab("sourcing")}
-                className={`px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap ${
-                  activeTab === "sourcing"
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                🔎 Sourcing
-              </button>
-              <button
-                onClick={() => setActiveTab("dealflow")}
-                className={`px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap ${
-                  activeTab === "dealflow"
-                    ? "bg-green-100 text-green-700"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                🔁 Dealflow
-              </button>
-            </div>
+        </div>
+
+        {/* Navigation mobile */}
+        <div className="xl:hidden border-t border-surm-border mt-4 pt-3">
+          <div className="flex space-x-2 overflow-x-auto pb-1">
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${
+                activeTab === "dashboard"
+                  ? "bg-surm-pink/10 text-surm-navy"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              📊 Dashboard
+            </button>
+
+            <button
+              onClick={() => setActiveTab("kanban")}
+              className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${
+                activeTab === "kanban"
+                  ? "bg-orange-100 text-orange-700"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              📋 Kanban
+            </button>
+
+            <button
+              onClick={() => setActiveTab("sourcing")}
+              className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${
+                activeTab === "sourcing"
+                  ? "bg-surm-pink/10 text-surm-navy"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              🔎 Sourcing
+            </button>
+
+            <button
+              onClick={() => setActiveTab("dealflow")}
+              className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${
+                activeTab === "dealflow"
+                  ? "bg-green-100 text-green-700"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              🔁 Dealflow
+            </button>
           </div>
         </div>
       </div>
+    </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === "kanban" && (
           <KanbanBoard isVisible={true} />
         )}
