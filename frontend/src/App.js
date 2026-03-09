@@ -3037,16 +3037,9 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     const requiredFields = {
       nom_entreprise: "Nom entreprise",
       statut: "Statut", 
-      pays_origine: "Pays d'origine",
-      domaine_activite: "Domaine d'activité",
-      typologie: "Typologie",
-      objet: "Objet",
-      cas_usage: "Cas d'usage",
-      technologie: "Technologie",
       source: "Source",
       date_entree_sourcing: "Date d'entrée sourcing",
-      pilote: "Pilote"
-    };
+      };
 
     const missingFields = [];
     Object.entries(requiredFields).forEach(([field, label]) => {
@@ -3350,7 +3343,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Pays d'origine <span className="text-red-500">*</span>
+                Pays d'origine 
               </label>
               <input
                 type="text"
@@ -3365,7 +3358,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              Domaine d'activité <span className="text-red-500">*</span>
+              Domaine d'activité 
             </label>
             <select
               name="domaine_activite"
@@ -3383,7 +3376,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">
-                Typologie <span className="text-red-500">*</span>
+                Typologie 
               </label>
               <input
                 type="text"
@@ -3397,7 +3390,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Technologie <span className="text-red-500">*</span>
+                Technologie 
               </label>
               <input
                 type="text"
@@ -3412,7 +3405,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              Objet <span className="text-red-500">*</span>
+              Objet 
             </label>
             <input
               type="text"
@@ -3426,7 +3419,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              Cas d'usage <span className="text-red-500">*</span>
+              Cas d'usage 
             </label>
             <input
               type="text"
@@ -3469,7 +3462,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              Pilote <span className="text-red-500">*</span>
+              Pilote 
             </label>
             <input
               type="text"
