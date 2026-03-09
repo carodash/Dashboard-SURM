@@ -3163,127 +3163,149 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                 className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Nom de l'entreprise"
               />
-              <button
+                <button
                 type="button"
                 onClick={async () => {
                   if (!formData.nom_entreprise || formData.nom_entreprise.length < 3) {
-                    alert('Veuillez saisir au moins 3 caractères pour enrichir les données');
+                    alert("Veuillez saisir au moins 3 caractères pour enrichir les données");
                     return;
                   }
+
                   clearError();
+
                   const enrichedData = await enrichCompany(formData.nom_entreprise);
                   const descriptionFR = enrichedData?.description
                     ? await translateToFrench(enrichedData.description)
                     : "";
 
-                  console.log('🔍 ENRICHISSEMENT - Données reçues:', enrichedData);
-                  console.log('🇫🇷 DESCRIPTION TRADUITE :', descriptionFR);
-                    
-                    // Smart mapping function for enriched data to dropdown values
+                  console.log("🔍 ENRICHISSEMENT - Données reçues:", enrichedData);
+                  console.log("🇫🇷 DESCRIPTION TRADUITE :", descriptionFR);
+
+                  if (enrichedData) {
+                    console.log("📋 AVANT ENRICHISSEMENT:", formData);
+
                     const mapIndustryToDomain = (industry) => {
                       if (!industry) return null;
                       const industryLower = industry.toLowerCase();
-                      
-                      // Smart mapping to DOMAINES_ACTIVITE
-                      if (industryLower.includes('fintech') || industryLower.includes('financial technology')) return 'FinTech';
-                      if (industryLower.includes('insurtech') || industryLower.includes('insurance')) return 'InsurTech';
-                      if (industryLower.includes('legaltech') || industryLower.includes('legal')) return 'LegalTech';
-                      if (industryLower.includes('edtech') || industryLower.includes('education')) return 'EdTech';
-                      if (industryLower.includes('healthtech') || industryLower.includes('health') || industryLower.includes('medical')) return 'DigitalHealth';
-                      if (industryLower.includes('proptech') || industryLower.includes('real estate')) return 'PropTech';
-                      if (industryLower.includes('martech') || industryLower.includes('marketing')) return 'MarTech';
-                      if (industryLower.includes('retailtech') || industryLower.includes('retail')) return 'RetailTech';
-                      if (industryLower.includes('mobility') || industryLower.includes('transport')) return 'Mobility';
-                      if (industryLower.includes('cyber') || industryLower.includes('security')) return 'CyberSecurity';
-                      if (industryLower.includes('data') || industryLower.includes('analytics')) return 'Data';
-                      if (industryLower.includes('clean') || industryLower.includes('green') || industryLower.includes('environment')) return 'CleanTech';
-                      if (industryLower.includes('climate')) return 'ClimateTech';
-                      if (industryLower.includes('tech') || industryLower.includes('technology') || industryLower.includes('software')) return 'Tech';
-                      if (industryLower.includes('consult')) return 'Conseil';
-                      
-                      return 'Autre'; // Default fallback
+
+                      if (industryLower.includes("fintech") || industryLower.includes("financial technology")) return "FinTech";
+                      if (industryLower.includes("insurtech") || industryLower.includes("insurance")) return "InsurTech";
+                      if (industryLower.includes("legaltech") || industryLower.includes("legal")) return "LegalTech";
+                      if (industryLower.includes("edtech") || industryLower.includes("education")) return "EdTech";
+                      if (industryLower.includes("healthtech") || industryLower.includes("health") || industryLower.includes("medical")) return "DigitalHealth";
+                      if (industryLower.includes("proptech") || industryLower.includes("real estate")) return "PropTech";
+                      if (industryLower.includes("martech") || industryLower.includes("marketing")) return "MarTech";
+                      if (industryLower.includes("retailtech") || industryLower.includes("retail")) return "RetailTech";
+                      if (industryLower.includes("mobility") || industryLower.includes("transport")) return "Mobility";
+                      if (industryLower.includes("cyber") || industryLower.includes("security")) return "CyberSecurity";
+                      if (industryLower.includes("data") || industryLower.includes("analytics")) return "Data";
+                      if (industryLower.includes("clean") || industryLower.includes("green") || industryLower.includes("environment")) return "CleanTech";
+                      if (industryLower.includes("climate")) return "ClimateTech";
+                      if (industryLower.includes("tech") || industryLower.includes("technology") || industryLower.includes("software")) return "Tech";
+                      if (industryLower.includes("consult")) return "Conseil";
+
+                      return "Autre";
                     };
 
                     const mapCountryToPays = (country) => {
                       if (!country) return null;
                       const countryLower = country.toLowerCase();
-                      
-                      if (countryLower.includes('france') || countryLower.includes('french')) return 'France';
-                      if (countryLower.includes('germany') || countryLower.includes('allemagne')) return 'Allemagne';
-                      if (countryLower.includes('united states') || countryLower.includes('usa') || countryLower.includes('america')) return 'États-Unis';
-                      if (countryLower.includes('united kingdom') || countryLower.includes('uk') || countryLower.includes('britain')) return 'Royaume-Uni';
-                      if (countryLower.includes('spain') || countryLower.includes('espagne')) return 'Espagne';
-                      if (countryLower.includes('italy') || countryLower.includes('italie')) return 'Italie';
-                      if (countryLower.includes('switzerland') || countryLower.includes('suisse')) return 'Suisse';
-                      if (countryLower.includes('belgium') || countryLower.includes('belgique')) return 'Belgique';
-                      
-                      return 'Autre'; // Default fallback
+
+                      if (countryLower.includes("france") || countryLower.includes("french")) return "France";
+                      if (countryLower.includes("germany") || countryLower.includes("allemagne")) return "Allemagne";
+                      if (countryLower.includes("united states") || countryLower.includes("usa") || countryLower.includes("america")) return "États-Unis";
+                      if (countryLower.includes("united kingdom") || countryLower.includes("uk") || countryLower.includes("britain")) return "Royaume-Uni";
+                      if (countryLower.includes("spain") || countryLower.includes("espagne")) return "Espagne";
+                      if (countryLower.includes("italy") || countryLower.includes("italie")) return "Italie";
+                      if (countryLower.includes("switzerland") || countryLower.includes("suisse")) return "Suisse";
+                      if (countryLower.includes("belgium") || countryLower.includes("belgique")) return "Belgique";
+
+                      return "Autre";
                     };
 
-                    // Auto-fill form fields with enriched data using smart mapping
                     const updatedData = {
                       ...formData,
-                      // Smart domain mapping
-                      domaine_activite: (!formData.domaine_activite || formData.domaine_activite === '') && enrichedData.industry
-                        ? mapIndustryToDomain(enrichedData.industry) : formData.domaine_activite,
-                      // Smart country mapping
-                      pays_origine: (!formData.pays_origine || formData.pays_origine === '') && enrichedData.country
-                        ? mapCountryToPays(enrichedData.country) : formData.pays_origine,
-                      // Typologie mapping
-                      typologie: (!formData.typologie || formData.typologie === '') && enrichedData.company_type ? 
-                        (enrichedData.company_type === 'startup' || enrichedData.company_type.toLowerCase().includes('startup') ? 'Startup' : 
-                         enrichedData.company_type === 'private' || enrichedData.company_type.toLowerCase().includes('private') ? 'PME' : 
-                         enrichedData.employees_count && enrichedData.employees_count > 250 ? 'Scale-up' : 
-                         'Startup') : formData.typologie, // Default to Startup if uncertain
-                      // Description traduite en français
-                      objet: (!formData.objet || formData.objet === '') && descriptionFR
-                        ? descriptionFR.substring(0, 200) + (descriptionFR.length > 200 ? '...' : '')
-                        : formData.objet,
-                      // Technology - only fill if it's tech-related
-                      technologie: (!formData.technologie || formData.technologie === '') && enrichedData.industry && 
-                        enrichedData.industry.toLowerCase().includes('tech') 
-                        ? enrichedData.industry : formData.technologie
+                      domaine_activite:
+                        (!formData.domaine_activite || formData.domaine_activite === "") && enrichedData.industry
+                          ? mapIndustryToDomain(enrichedData.industry)
+                          : formData.domaine_activite,
+                      pays_origine:
+                        (!formData.pays_origine || formData.pays_origine === "") && enrichedData.country
+                          ? mapCountryToPays(enrichedData.country)
+                          : formData.pays_origine,
+                      typologie:
+                        (!formData.typologie || formData.typologie === "") && enrichedData.company_type
+                          ? (
+                              enrichedData.company_type === "startup" ||
+                              enrichedData.company_type.toLowerCase().includes("startup")
+                            )
+                            ? "Startup"
+                            : (
+                                enrichedData.company_type === "private" ||
+                                enrichedData.company_type.toLowerCase().includes("private")
+                              )
+                              ? "PME"
+                              : enrichedData.employees_count && enrichedData.employees_count > 250
+                                ? "Scale-up"
+                                : "Startup"
+                          : formData.typologie,
+                      objet:
+                        (!formData.objet || formData.objet === "") && descriptionFR
+                          ? descriptionFR.substring(0, 200) + (descriptionFR.length > 200 ? "..." : "")
+                          : formData.objet,
+                      technologie:
+                        (!formData.technologie || formData.technologie === "") &&
+                        enrichedData.industry &&
+                        enrichedData.industry.toLowerCase().includes("tech")
+                          ? enrichedData.industry
+                          : formData.technologie
                     };
-                    
-                    console.log('📋 APRÈS ENRICHISSEMENT:', updatedData);
-                    
+
+                    console.log("📋 APRÈS ENRICHISSEMENT:", updatedData);
+
                     setFormData(updatedData);
-                    
-                    // Count how many fields were actually filled and show mapping details
+
                     const filledFields = [];
                     const mappingDetails = [];
-                    
-                    if (enrichedData.industry && (!formData.domaine_activite || formData.domaine_activite === '')) {
-                      filledFields.push('Domaine d\'activité');
+
+                    if (enrichedData.industry && (!formData.domaine_activite || formData.domaine_activite === "")) {
+                      filledFields.push("Domaine d'activité");
                       mappingDetails.push(`🎯 ${enrichedData.industry} → ${updatedData.domaine_activite}`);
                     }
-                    if (enrichedData.country && (!formData.pays_origine || formData.pays_origine === '')) {
-                      filledFields.push('Pays d\'origine');
+
+                    if (enrichedData.country && (!formData.pays_origine || formData.pays_origine === "")) {
+                      filledFields.push("Pays d'origine");
                       mappingDetails.push(`🌍 ${enrichedData.country} → ${updatedData.pays_origine}`);
                     }
-                    if (enrichedData.description && (!formData.objet || formData.objet === '')) {
-                      filledFields.push('Description');
+
+                    if (enrichedData.description && (!formData.objet || formData.objet === "")) {
+                      filledFields.push("Description");
                       mappingDetails.push(`📝 Description ajoutée (${enrichedData.description.length} caractères)`);
                     }
-                    if (enrichedData.company_type && (!formData.typologie || formData.typologie === '')) {
-                      filledFields.push('Typologie');
+
+                    if (enrichedData.company_type && (!formData.typologie || formData.typologie === "")) {
+                      filledFields.push("Typologie");
                       mappingDetails.push(`🏢 ${enrichedData.company_type} → ${updatedData.typologie}`);
                     }
-                    
+
                     if (filledFields.length > 0) {
-                      alert(`✅ Données enrichies avec succès !\n\n🏢 Champs remplis: ${filledFields.join(', ')}\n\n🔄 Mappings effectués:\n${mappingDetails.join('\n')}\n\n📊 Données source:\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}`);
+                      alert(
+                        `✅ Données enrichies avec succès !\n\n🏢 Champs remplis: ${filledFields.join(", ")}\n\n🔄 Mappings effectués:\n${mappingDetails.join("\n")}\n\n📊 Données source:\n🏢 Secteur: ${enrichedData.industry || "N/A"}\n🌍 Pays: ${enrichedData.country || "N/A"}\n👥 Employés: ${enrichedData.employees_count || "N/A"}`
+                      );
                     } else {
-                      alert(`ℹ️ Enrichissement réussi mais aucun nouveau champ à remplir.\n\n📊 Données trouvées:\n🏢 Secteur: ${enrichedData.industry || 'N/A'}\n🌍 Pays: ${enrichedData.country || 'N/A'}\n👥 Employés: ${enrichedData.employees_count || 'N/A'}\n\n💡 Conseil: Videz les champs que vous souhaitez enrichir automatiquement.`);
+                      alert(
+                        `ℹ️ Enrichissement réussi mais aucun nouveau champ à remplir.\n\n📊 Données trouvées:\n🏢 Secteur: ${enrichedData.industry || "N/A"}\n🌍 Pays: ${enrichedData.country || "N/A"}\n👥 Employés: ${enrichedData.employees_count || "N/A"}\n\n💡 Conseil: Videz les champs que vous souhaitez enrichir automatiquement.`
+                      );
                     }
                   } else {
-                    alert('❌ Aucune donnée trouvée pour enrichir cette entreprise. Essayez avec le nom de domaine (ex: google.com) ou vérifiez l\'orthographe.');
+                    alert("❌ Aucune donnée trouvée pour enrichir cette entreprise. Essayez avec le nom de domaine (ex: google.com) ou vérifiez l'orthographe.");
                   }
                 }}
                 disabled={isEnriching || !formData.nom_entreprise || formData.nom_entreprise.length < 3}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   isEnriching || !formData.nom_entreprise || formData.nom_entreprise.length < 3
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 }`}
                 title="Enrichir automatiquement les données de l'entreprise"
               >
@@ -3296,7 +3318,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                     <span>...</span>
                   </span>
                 ) : (
-                  '🔍 Enrichir'
+                  "🔍 Enrichir"
                 )}
               </button>
             </div>
