@@ -2956,7 +2956,28 @@ const QuickViewResults = ({ isVisible, viewData, onClose }) => {
     </div>
   );
 };
+const translateToFrench = async (text) => {
+  if (!text || typeof text !== "string") return "";
 
+  try {
+    const response = await fetch(
+      "https://api.mymemory.translated.net/get?q=" +
+        encodeURIComponent(text) +
+        "&langpair=en|fr"
+    );
+
+    const data = await response.json();
+
+    if (data?.responseData?.translatedText) {
+      return data.responseData.translatedText;
+    }
+
+    return text;
+  } catch (error) {
+    console.error("❌ Erreur traduction :", error);
+    return text;
+  }
+};
 const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [], onChangeTab }) => {
   // État simple avec tous les champs requis + évaluation stratégique complète
   const [formData, setFormData] = useState({
@@ -3149,15 +3170,14 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                     alert('Veuillez saisir au moins 3 caractères pour enrichir les données');
                     return;
                   }
-                  
                   clearError();
                   const enrichedData = await enrichCompany(formData.nom_entreprise);
-                  
+                  const descriptionFR = enrichedData?.description
+                    ? await translateToFrench(enrichedData.description)
+                    : "";
+
                   console.log('🔍 ENRICHISSEMENT - Données reçues:', enrichedData);
-                  
-                  if (enrichedData) {
-                    // Debug: Log current form data before update
-                    console.log('📋 AVANT ENRICHISSEMENT:', formData);
+                  console.log('🇫🇷 DESCRIPTION TRADUITE :', descriptionFR);
                     
                     // Smart mapping function for enriched data to dropdown values
                     const mapIndustryToDomain = (industry) => {
@@ -3215,9 +3235,10 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                          enrichedData.company_type === 'private' || enrichedData.company_type.toLowerCase().includes('private') ? 'PME' : 
                          enrichedData.employees_count && enrichedData.employees_count > 250 ? 'Scale-up' : 
                          'Startup') : formData.typologie, // Default to Startup if uncertain
-                      // Description
-                      objet: (!formData.objet || formData.objet === '') && enrichedData.description
-                        ? enrichedData.description.substring(0, 200) + (enrichedData.description.length > 200 ? '...' : '') : formData.objet,
+                      // Description traduite en français
+                      objet: (!formData.objet || formData.objet === '') && descriptionFR
+                        ? descriptionFR.substring(0, 200) + (descriptionFR.length > 200 ? '...' : '')
+                        : formData.objet,
                       // Technology - only fill if it's tech-related
                       technologie: (!formData.technologie || formData.technologie === '') && enrichedData.industry && 
                         enrichedData.industry.toLowerCase().includes('tech') 
