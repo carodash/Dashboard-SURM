@@ -12,24 +12,26 @@ cardStyles.innerHTML = `
     gap: 20px;
     padding: 20px 0;
   }
-  .startup-card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    position: relative;
-    height: 100%;
-    min-height: 250px;
-  }
-  .startup-card:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    transform: translateY(-4px);
-    border-color: #3b82f6;
-  }
+.startup-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  height: 100%;
+  min-height: 250px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.startup-card:hover {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  transform: translateY(-4px);
+  border-color: #F42B5F;
+}
   .card-badge {
     align-self: flex-start;
     font-size: 10px;
