@@ -3170,20 +3170,17 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                     alert("Veuillez saisir au moins 3 caractères pour enrichir les données");
                     return;
                   }
-
                   clearError();
-
                   const enrichedData = await enrichCompany(formData.nom_entreprise);
                   const descriptionFR = enrichedData?.description
                     ? await translateToFrench(enrichedData.description)
                     : "";
 
-                  console.log("🔍 ENRICHISSEMENT - Données reçues:", enrichedData);
-                  console.log("🇫🇷 DESCRIPTION TRADUITE :", descriptionFR);
+                  console.log('🔍 ENRICHISSEMENT - Données reçues:', enrichedData);
+                  console.log('🇫🇷 DESCRIPTION TRADUITE :', descriptionFR);
 
                   if (enrichedData) {
-                    console.log("📋 AVANT ENRICHISSEMENT:", formData);
-
+                    // Smart mapping function for enriched data to dropdown values
                     const mapIndustryToDomain = (industry) => {
                       if (!industry) return null;
                       const industryLower = industry.toLowerCase();
