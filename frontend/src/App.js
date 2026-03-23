@@ -1879,7 +1879,10 @@ const KanbanBoard = ({ isVisible }) => {
     }
 
     // Extract partner info from draggableId
-    const [partnerType, partnerId] = draggableId.split('_');
+    // BUG CORRIGÉ : séparateur | au lieu de _ pour éviter le conflit avec les UUIDs
+    const separatorIndex = draggableId.indexOf('|');
+    const partnerType = draggableId.substring(0, separatorIndex);
+    const partnerId = draggableId.substring(separatorIndex + 1);
 
     try {
       console.log(`🔄 Moving ${partnerType}_${partnerId} from ${source.droppableId} to ${destination.droppableId}`);
@@ -5349,11 +5352,13 @@ const Dashboard = () => {
     setColumnSortConfig({ column: columnKey, direction });
   };
 
-  const applyAdvancedFilters = (data, filters = {}, sort = null) => {
+// BUG CORRIGÉ : on passe activeFilters explicitement en paramètre
+  // pour éviter le problème de stale closure
+  const applyAdvancedFilters = (data, currentActiveFilters = activeFilters, sort = null) => {
     let filtered = [...data];
 
     // Apply existing basic filters first
-    filtered = applyFilters(filtered, activeFilters);
+    filtered = applyFilters(filtered, currentActiveFilters);
 
     // Apply column filters
     Object.entries(columnFilters).forEach(([columnKey, filterValues]) => {
@@ -5722,7 +5727,8 @@ const Dashboard = () => {
     }
 
     const baseUrl = API_URL.replace(/\/$/, "");
-    const userId = encodeURIComponent(currentUser?.name || currentUser?.email || "default_user");
+    // BUG CORRIGÉ : utiliser full_name qui est le bon champ du state currentUser
+    const userId = encodeURIComponent(currentUser?.full_name || currentUser?.id || "default_user");
     const cleanUrl = `${baseUrl}/sourcing/${partnerId}?user_id=${userId}`;
 
     console.log("✅ URL finale PUT :", cleanUrl);
