@@ -6020,29 +6020,30 @@ const Dashboard = () => {
   };
 
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedItems.length} éléments ?`)) {
-      return;
+  if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedItems.length} éléments ?`)) {
+    return;
+  }
+
+  try {
+    const endpoint = activeTab === 'sourcing' ? '/sourcing' : '/dealflow';
+
+    await Promise.all(
+      selectedItems.map((id) => axios.delete(`${API_URL}${endpoint}/${id}`))
+    );
+
+    if (activeTab === 'sourcing') {
+      await fetchSourcingPartners();
+    } else {
+      await fetchDealflowPartners();
     }
-    
-    try {
-      const endpoint = activeTab === 'sourcing' ? '/api/sourcing' : '/api/dealflow';
-      await Promise.all(
-        selectedItems.map(id => axios.delete(`${API_URL}${endpoint}/${id}`))
-      );
-      
-      // Refresh data
-      if (activeTab === 'sourcing') {
-        await fetchSourcingPartners();
-      } else {
-        await fetchDealflowPartners();
-      }
-      
-      setSelectedItems([]);
-      alert('Éléments supprimés avec succès');
-    } catch (error) {
-      alert('Erreur lors de la suppression');
-    }
-  };
+
+    setSelectedItems([]);
+    alert('Éléments supprimés avec succès');
+  } catch (error) {
+    console.error('Erreur suppression :', error);
+    alert('Erreur lors de la suppression');
+  }
+};
 
   const handleBulkTransition = async () => {
     if (!window.confirm(`Transférer ${selectedItems.length} partenaires vers le dealflow ?`)) {
