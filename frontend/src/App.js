@@ -5529,8 +5529,14 @@ const Dashboard = () => {
   const fetchSourcingPartners = async () => {
     try {
       const response = await axios.get(`${API_URL}/sourcing`);
-      setSourcingPartners(response.data);
-      setFilteredSourcingPartners(response.data);
+      // Tri par défaut : ordre chronologique d'entrée (plus récent en premier)
+      const sorted = [...response.data].sort((a, b) => {
+        const dateA = new Date(a.date_entree_sourcing || 0);
+        const dateB = new Date(b.date_entree_sourcing || 0);
+        return dateB - dateA;
+      });
+      setSourcingPartners(sorted);
+      setFilteredSourcingPartners(sorted);
     } catch (error) {
       console.error("Error fetching sourcing partners:", error);
     }
