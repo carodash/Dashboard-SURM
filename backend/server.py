@@ -2492,7 +2492,151 @@ async def global_search(query: str, user_id: str = "default_user"):
         },
     })
 
-
+@api_router.get("/migrate-domains")
+async def migrate_domains():
+    """
+    Migration unique : normalise les doublons de domaines et typologies
+    dans les collections sourcing_partners et dealflow_partners.
+    Peut être appelé plusieurs fois sans risque (idempotent).
+    """
+ 
+    results = {
+        "sourcing_domaine": {},
+        "dealflow_domaine": {},
+        "sourcing_typologie": {},
+        "dealflow_typologie": {},
+        "total_corrections": 0
+    }
+ 
+    # ============================================================
+    # 1. NORMALISATION DES DOMAINES
+    # ============================================================
+    domaine_corrections = {
+        # Valeur incorrecte → Valeur correcte
+        "Insurtech":    "InsurTech",
+        "Fintech":      "FinTech",
+        "Smarthome":    "SmartHome",
+        "Cybersecurity":"CyberSecurity",
+        "Martech":      "MarTech",
+        "Regtech":      "RegTech",
+    }
+ 
+    # Sourcing — champ domaine_activite
+    for incorrect, correct in domaine_corrections.items():
+        result = await db.sourcing_partners.update_many(
+            {"domaine_activite": incorrect},
+            {"$set": {"domaine_activite": correct}}
+        )
+        if result.modified_count > 0:
+            results["sourcing_domaine"][incorrect] = {
+                "corrigé_en": correct,
+                "nb_corrections": result.modified_count
+            }
+            results["total_corrections"] += result.modified_count
+ 
+    # Dealflow — champ domaine
+    for incorrect, correct in domaine_corrections.items():
+        result = await db.dealflow_partners.update_many(
+            {"domaine": incorrect},
+            {"$set": {"domaine": correct}}
+        )
+        if result.modified_count > 0:
+            results["dealflow_domaine"][incorrect] = {
+                "corrigé_en": correct,
+                "nb_corrections": result.modified_count
+            }
+            results["total_corrections"] += result.modified_count
+ 
+    # ============================================================
+    # 2. NORMALISATION DES TYPOLOGIES
+    # ============================================================
+    # Format : "valeur_incorrecte_en_base" → "valeur_correcte"
+    # Les caractères mal encodés viennent d'un import CSV
+    # où les accents n'étaient pas en UTF-8
+    typologie_corrections = {
+        # Casse / espaces
+        "assurance":                "Assurance",
+        "Assurance ":               "Assurance",
+        "solution assurance":       "Solution Assurance",
+        "Gestion sinistres":        "Gestion Sinistres",
+        "Solution innovante":       "Solution Innovante",
+        "Mutuelle ":                "Mutuelle",
+        "Gestion innovation":       "Gestion Innovation",
+        "Gestion des risques":      "Gestion des Risques",
+        "Gestion risques":          "Gestion des Risques",
+        "Solution RH ":             "Solution RH",
+        "solution juridique":       "Solution Juridique",
+        "Solution financire":       "Solution Financière",
+        "Solution marketing":       "Solution Marketing",
+        "Solution auto ":           "Solution Auto",
+        "Communication mdicale":    "Communication Médicale",
+        "Protection donnes":        "Protection Données",
+        "Gestion immoblire":        "Gestion Immobilière",
+ 
+        # Accents manquants (encodage cassé lors d'import CSV)
+        "Prvention Climatique":     "Prévention Climatique",
+        "Preuves Numriques":        "Preuves Numériques",
+        "Preuves numriques":        "Preuves Numériques",
+        "Avantages Employs ":       "Avantages Employés",
+        "Prvention Sinistre":       "Prévention Sinistre",
+        "Gestion Donnes":           "Gestion Données",
+        "Sant Prventive":           "Santé Préventive",
+        "Sant":                     "Santé",
+        "Solution ducative":        "Solution Éducative",
+        "Solution ducation":        "Solution Éducative",
+        "Solution Financire":       "Solution Financière",
+        "Exprience Client ":        "Expérience Client",
+        "Transition cologique":     "Transition Écologique",
+        "Gestion Rclamations":      "Gestion Réclamations",
+        "Solution Mobilit":         "Solution Mobilité",
+        "Communication Mdicale":    "Communication Médicale",
+        "Protection Donnes":        "Protection Données",
+        "Gestion Immobilire":       "Gestion Immobilière",
+        "Assurance Numrique":       "Assurance Numérique",
+        "Finance sant":             "Finance Santé",
+        "Prise de note ":           "Prise de Note",
+    }
+ 
+    # Sourcing — champ typologie
+    for incorrect, correct in typologie_corrections.items():
+        result = await db.sourcing_partners.update_many(
+            {"typologie": incorrect},
+            {"$set": {"typologie": correct}}
+        )
+        if result.modified_count > 0:
+            results["sourcing_typologie"][incorrect] = {
+                "corrigé_en": correct,
+                "nb_corrections": result.modified_count
+            }
+            results["total_corrections"] += result.modified_count
+ 
+    # Dealflow — champ typologie
+    for incorrect, correct in typologie_corrections.items():
+        result = await db.dealflow_partners.update_many(
+            {"typologie": incorrect},
+            {"$set": {"typologie": correct}}
+        )
+        if result.modified_count > 0:
+            results["dealflow_typologie"][incorrect] = {
+                "corrigé_en": correct,
+                "nb_corrections": result.modified_count
+            }
+            results["total_corrections"] += result.modified_count
+ 
+    # ============================================================
+    # 3. RÉSUMÉ
+    # ============================================================
+    results["message"] = (
+        f"✅ Migration terminée : {results['total_corrections']} "
+        f"corrections appliquées en base de données."
+    )
+    if results["total_corrections"] == 0:
+        results["message"] = (
+            "✅ Aucune correction nécessaire : "
+            "les données sont déjà propres (migration déjà effectuée)."
+        )
+ 
+    return results
 app.include_router(api_router)
 
 logging.basicConfig(
