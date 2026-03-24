@@ -258,6 +258,7 @@ class SourcingPartner(BaseModel):
     priorite_strategique: Optional[str] = None
     score_potentiel: Optional[int] = None
     tags_strategiques: Optional[List[str]] = []
+    logo_url: Optional[str] = None
     enriched_data: Optional[Dict[str, Any]] = {}
     custom_fields: Optional[Dict[str, Any]] = {}
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -283,6 +284,7 @@ class SourcingPartnerCreate(BaseModel):
     priorite_strategique: Optional[str] = None
     score_potentiel: Optional[int] = None
     tags_strategiques: Optional[List[str]] = []
+    logo_url: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = {}
 
 class SourcingPartnerUpdate(BaseModel):
@@ -305,6 +307,7 @@ class SourcingPartnerUpdate(BaseModel):
     priorite_strategique: Optional[str] = None
     score_potentiel: Optional[int] = None
     tags_strategiques: Optional[List[str]] = None
+    logo_url: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = None
 
 class DealflowPartner(BaseModel):
@@ -339,6 +342,7 @@ class DealflowPartner(BaseModel):
     priorite_strategique: Optional[str] = None
     score_potentiel: Optional[int] = None
     tags_strategiques: Optional[List[str]] = []
+    logo_url: Optional[str] = None
     enriched_data: Optional[Dict[str, Any]] = {}
     custom_fields: Optional[Dict[str, Any]] = {}
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -369,6 +373,7 @@ class DealflowPartnerCreate(BaseModel):
     cas_usage: Optional[str] = None
     technologie: Optional[str] = None
     interet: Optional[bool] = None
+    logo_url: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = {}
 
 class DealflowPartnerUpdate(BaseModel):
@@ -391,6 +396,7 @@ class DealflowPartnerUpdate(BaseModel):
     actions_commentaires: Optional[str] = None
     points_etapes_intermediaires: Optional[str] = None
     date_prochaine_action: Optional[date] = None
+    logo_url: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = None
 
 class QuarterlyStats(BaseModel):
