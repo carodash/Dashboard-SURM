@@ -5459,6 +5459,315 @@ const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, 
   );
 };
 
+const HomePage = ({ statistics, onNavigate }) => {
+  const kpis = [
+    {
+      label: "Startups sourcées",
+      value: statistics?.total_sourcing || 0,
+      color: "#000069",
+      accent: "#F42B5F",
+      icon: "🔍",
+      sub: "dans le portefeuille"
+    },
+    {
+      label: "En Dealflow",
+      value: statistics?.total_dealflow || 0,
+      color: "#0391DF",
+      accent: "#0FD2B6",
+      icon: "🚀",
+      sub: "projets actifs"
+    },
+    {
+      label: "Clôturées",
+      value: statistics?.sourcing_status_distribution?.["Clos"] || 0,
+      color: "#6B7280",
+      accent: "#9CA3AF",
+      icon: "✅",
+      sub: "dossiers fermés"
+    },
+    {
+      label: "À relancer",
+      value: statistics?.sourcing_status_distribution?.["A traiter"] || 0,
+      color: "#F42B5F",
+      accent: "#FBB902",
+      icon: "⏰",
+      sub: "en attente de traitement"
+    },
+  ];
+ 
+  const topDomaines = Object.entries(statistics?.domain_distribution || {})
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+ 
+  const domainColors = ["#000069", "#F42B5F", "#0391DF", "#0FD2B6", "#FBB902"];
+ 
+  const quickActions = [
+    { label: "Voir le Sourcing", icon: "🔎", tab: "sourcing", color: "#000069" },
+    { label: "Pipeline Kanban", icon: "📋", tab: "kanban", color: "#0391DF" },
+    { label: "Rapport synthétique", icon: "📊", tab: "reports", color: "#F42B5F" },
+    { label: "Dealflow", icon: "🚀", tab: "dealflow", color: "#0FD2B6" },
+  ];
+ 
+  return (
+    <div className="space-y-8 fade-in-up">
+ 
+      {/* ── HERO ── */}
+      <div
+        className="rounded-2xl p-8 relative overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #000069 0%, #0a0a8a 60%, #001a99 100%)",
+          minHeight: "200px"
+        }}
+      >
+        {/* Cercles décoratifs */}
+        <div style={{
+          position: "absolute", right: "-40px", top: "-40px",
+          width: "200px", height: "200px", borderRadius: "50%",
+          background: "rgba(244,43,95,0.15)"
+        }} />
+        <div style={{
+          position: "absolute", right: "80px", bottom: "-30px",
+          width: "120px", height: "120px", borderRadius: "50%",
+          background: "rgba(15,210,182,0.12)"
+        }} />
+        <div style={{
+          position: "absolute", left: "40%", top: "-20px",
+          width: "80px", height: "80px", borderRadius: "50%",
+          background: "rgba(3,145,223,0.15)"
+        }} />
+ 
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-3">
+            <div style={{
+              background: "#F42B5F", borderRadius: "10px",
+              padding: "8px 14px", display: "inline-block"
+            }}>
+              <span style={{ color: "white", fontWeight: 700, fontSize: "13px", letterSpacing: "1px" }}>
+                SURM
+              </span>
+            </div>
+            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>
+              Startup Universe Relationship Management
+            </span>
+          </div>
+ 
+          <h1 style={{
+            color: "white", fontSize: "32px", fontWeight: 700,
+            marginBottom: "8px", lineHeight: 1.2
+          }}>
+            Bonjour 👋
+          </h1>
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "16px", marginBottom: "28px" }}>
+            Pôle Innovation & Prospective — Tableau de bord Open Innovation
+          </p>
+ 
+          {/* Actions rapides */}
+          <div className="flex flex-wrap gap-3">
+            {quickActions.map((action) => (
+              <button
+                key={action.tab}
+                onClick={() => onNavigate(action.tab)}
+                style={{
+                  background: "rgba(255,255,255,0.1)",
+                  border: "1.5px solid rgba(255,255,255,0.2)",
+                  borderRadius: "10px",
+                  padding: "10px 18px",
+                  color: "white",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  backdropFilter: "blur(4px)",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = action.color;
+                  e.currentTarget.style.border = `1.5px solid ${action.color}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+                  e.currentTarget.style.border = "1.5px solid rgba(255,255,255,0.2)";
+                }}
+              >
+                <span>{action.icon}</span>
+                <span>{action.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+ 
+      {/* ── KPI CARDS ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        {kpis.map((kpi, i) => (
+          <div
+            key={i}
+            className="kpi-card"
+            style={{ paddingLeft: "24px" }}
+          >
+            <div className="kpi-card-accent" style={{ background: kpi.accent }} />
+            <div style={{ fontSize: "24px", marginBottom: "8px" }}>{kpi.icon}</div>
+            <div className="kpi-label">{kpi.label}</div>
+            <div className="kpi-value" style={{ color: kpi.color }}>{kpi.value.toLocaleString('fr-FR')}</div>
+            <div className="kpi-sub" style={{ color: kpi.accent }}>{kpi.sub}</div>
+          </div>
+        ))}
+      </div>
+ 
+      {/* ── LIGNE DU BAS : Top domaines + Funnel ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+ 
+        {/* Top 5 domaines */}
+        <div style={{
+          background: "white", borderRadius: "16px",
+          padding: "24px", border: "1px solid var(--surm-border)",
+          boxShadow: "0 2px 8px rgba(0,0,105,0.06)"
+        }}>
+          <h3 style={{
+            color: "var(--surm-navy)", fontSize: "16px",
+            fontWeight: 700, marginBottom: "6px",
+            borderLeft: "4px solid var(--surm-pink)",
+            paddingLeft: "10px"
+          }}>
+            Top 5 domaines
+          </h3>
+          <p style={{ color: "var(--surm-muted)", fontSize: "12px", marginBottom: "20px", paddingLeft: "14px" }}>
+            Répartition du portefeuille sourcing
+          </p>
+ 
+          <div className="space-y-4">
+            {topDomaines.map(([domaine, count], i) => {
+              const total = statistics?.total_sourcing || 1;
+              const pct = Math.round((count / total) * 100);
+              return (
+                <div key={domaine}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--surm-navy)" }}>
+                      {domaine}
+                    </span>
+                    <span style={{ fontSize: "12px", color: "var(--surm-muted)", fontWeight: 500 }}>
+                      {count} · {pct}%
+                    </span>
+                  </div>
+                  <div style={{
+                    height: "8px", background: "#F0F2F8",
+                    borderRadius: "4px", overflow: "hidden"
+                  }}>
+                    <div style={{
+                      height: "100%", width: `${pct}%`,
+                      background: domainColors[i],
+                      borderRadius: "4px",
+                      transition: "width 0.8s ease"
+                    }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+ 
+        {/* Funnel Open Innovation */}
+        <div style={{
+          background: "white", borderRadius: "16px",
+          padding: "24px", border: "1px solid var(--surm-border)",
+          boxShadow: "0 2px 8px rgba(0,0,105,0.06)"
+        }}>
+          <h3 style={{
+            color: "var(--surm-navy)", fontSize: "16px",
+            fontWeight: 700, marginBottom: "6px",
+            borderLeft: "4px solid var(--surm-turquoise)",
+            paddingLeft: "10px"
+          }}>
+            Funnel Open Innovation
+          </h3>
+          <p style={{ color: "var(--surm-muted)", fontSize: "12px", marginBottom: "20px", paddingLeft: "14px" }}>
+            Cycle de vie des startups
+          </p>
+ 
+          {[
+            {
+              label: "Sourcées",
+              value: statistics?.total_sourcing || 0,
+              color: "#000069",
+              bg: "rgba(0,0,105,0.08)",
+              icon: "🔍"
+            },
+            {
+              label: "Dealflow",
+              value: statistics?.sourcing_status_distribution?.["Dealflow"] || 0,
+              color: "#0391DF",
+              bg: "rgba(3,145,223,0.08)",
+              icon: "🔄"
+            },
+            {
+              label: "En cours",
+              value: statistics?.total_dealflow || 0,
+              color: "#0FD2B6",
+              bg: "rgba(15,210,182,0.1)",
+              icon: "🚀"
+            },
+            {
+              label: "Clôturées",
+              value: statistics?.sourcing_status_distribution?.["Clos"] || 0,
+              color: "#6B7280",
+              bg: "rgba(107,114,128,0.08)",
+              icon: "✅"
+            },
+          ].map((step, i, arr) => {
+            const maxVal = arr[0].value || 1;
+            const width = Math.max(20, Math.round((step.value / maxVal) * 100));
+            return (
+              <div key={step.label} className="flex items-center gap-4 mb-4">
+                <span style={{ fontSize: "16px", width: "24px" }}>{step.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <div className="flex justify-between mb-1">
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: step.color }}>
+                      {step.label}
+                    </span>
+                    <span style={{ fontSize: "13px", fontWeight: 700, color: step.color }}>
+                      {step.value.toLocaleString('fr-FR')}
+                    </span>
+                  </div>
+                  <div style={{
+                    height: "28px", background: "#F0F2F8",
+                    borderRadius: "6px", overflow: "hidden"
+                  }}>
+                    <div style={{
+                      height: "100%",
+                      width: `${width}%`,
+                      background: step.bg,
+                      borderRadius: "6px",
+                      borderLeft: `3px solid ${step.color}`,
+                      transition: "width 0.8s ease"
+                    }} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+ 
+          {/* Taux de conversion */}
+          <div style={{
+            marginTop: "16px", padding: "12px",
+            background: "rgba(0,0,105,0.04)",
+            borderRadius: "10px", textAlign: "center"
+          }}>
+            <span style={{ fontSize: "12px", color: "var(--surm-muted)" }}>
+              Taux sourcing → dealflow actif :&nbsp;
+            </span>
+            <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--surm-navy)" }}>
+              {statistics?.total_sourcing
+                ? ((statistics.total_dealflow / statistics.total_sourcing) * 100).toFixed(1)
+                : 0}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 const Dashboard = () => {
   // Phase 6 - Advanced Column Filtering & Sorting State
   const [columnFilters, setColumnFilters] = useState({});
