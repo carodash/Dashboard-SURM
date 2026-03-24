@@ -1,303 +1,534 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap');
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+/* ============================================================
+   SURM DASHBOARD — Charte graphique Pôle Innovation & Prospective
+   Palette : #000069 (marine) · #F42B5F (rose) · #0391DF (bleu)
+             #0FD2B6 (turquoise) · #FBB902 (jaune)
+   Police  : Roboto Condensed
+   ============================================================ */
+
+:root {
+  --surm-navy:      #000069;
+  --surm-pink:      #F42B5F;
+  --surm-blue:      #0391DF;
+  --surm-turquoise: #0FD2B6;
+  --surm-yellow:    #FBB902;
+  --surm-bg:        #F0F2F8;
+  --surm-card:      #FFFFFF;
+  --surm-border:    #E2E6F0;
+  --surm-text:      #1A1A4E;
+  --surm-muted:     #6B7280;
+}
+
+* {
+  font-family: 'Roboto Condensed', 'Arial Narrow', Arial, sans-serif;
+}
+
+body {
+  background-color: var(--surm-bg);
+  color: var(--surm-text);
+}
+
 .App {
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--surm-bg);
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+.surm-navbar {
+  background: var(--surm-navy);
+  box-shadow: 0 2px 12px rgba(0, 0, 105, 0.25);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* Form animations */
-.form-slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Button hover effects */
-.btn-hover:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-}
-
-/* Card hover effects */
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-/* Status badges */
-.status-badge {
-  transition: all 0.2s ease;
-}
-
-.status-badge:hover {
-  transform: scale(1.05);
-}
-
-/* Table row hover */
-.table-row-hover:hover {
-  background-color: #f8fafc;
-  transition: background-color 0.2s ease;
-}
-
-/* Loading spinner */
-.loading-spinner {
+.surm-logo-bar {
+  width: 4px;
+  height: 36px;
+  background: var(--surm-pink);
+  border-radius: 2px;
   display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  margin-right: 10px;
+  vertical-align: middle;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.surm-badge {
+  background: var(--surm-pink);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 6px;
 }
 
-/* Custom form styling */
-.form-input {
+/* ============================================================
+   CARTES STARTUP
+   ============================================================ */
+.startup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.startup-card {
+  background: var(--surm-card);
+  border: 1px solid var(--surm-border);
+  border-radius: 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
   transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 105, 0.06);
+  min-height: 240px;
+}
+
+.startup-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 105, 0.14);
+  transform: translateY(-3px);
+  border-color: var(--surm-navy);
+}
+
+/* Barre colorée en haut de chaque carte selon le domaine */
+.startup-card-inner {
+  padding: 16px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.card-domain-bar {
+  height: 5px;
+  width: 100%;
+  border-radius: 14px 14px 0 0;
+}
+
+/* Couleurs par domaine */
+.domain-bar-InsurTech    { background: var(--surm-navy); }
+.domain-bar-FinTech      { background: var(--surm-pink); }
+.domain-bar-DigitalHealth{ background: var(--surm-turquoise); }
+.domain-bar-RhTech       { background: var(--surm-blue); }
+.domain-bar-Data         { background: #8B5CF6; }
+.domain-bar-Mobility     { background: #F97316; }
+.domain-bar-CyberSecurity{ background: #EF4444; }
+.domain-bar-CleanTech    { background: #22C55E; }
+.domain-bar-ClimateTech  { background: #16A34A; }
+.domain-bar-LegalTech    { background: #0369A1; }
+.domain-bar-MarTech      { background: #DB2777; }
+.domain-bar-RegTech      { background: #7C3AED; }
+.domain-bar-PropTech     { background: #D97706; }
+.domain-bar-EdTech       { background: #059669; }
+.domain-bar-Tech         { background: var(--surm-blue); }
+.domain-bar-default      { background: var(--surm-muted); }
+
+/* ============================================================
+   BADGES STATUT
+   ============================================================ */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.status-a-traiter  { background: #FEF3C7; color: #92400E; }
+.status-klaxoon    { background: #CCFBF1; color: #0F766E; }
+.status-dealflow   { background: #DBEAFE; color: #1E40AF; }
+.status-clos       { background: #FEE2E2; color: #991B1B; }
+.status-en-cours   { background: #EDE9FE; color: #5B21B6; }
+
+/* ============================================================
+   KPI CARDS
+   ============================================================ */
+.kpi-card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px 22px;
+  border: 1px solid var(--surm-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 105, 0.06);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.kpi-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 105, 0.12);
+}
+
+.kpi-card-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  border-radius: 14px 0 0 14px;
+}
+
+.kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--surm-muted);
+  margin-bottom: 8px;
+}
+
+.kpi-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--surm-navy);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.kpi-sub {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* ============================================================
+   TAGS DOMAINE & TYPOLOGIE
+   ============================================================ */
+.tag-domaine {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(0, 0, 105, 0.08);
+  color: var(--surm-navy);
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.tag-typologie {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(243, 43, 95, 0.08);
+  color: var(--surm-pink);
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.tag-strategique {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(3, 145, 223, 0.1);
+  color: var(--surm-blue);
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+/* ============================================================
+   INACTIVITÉ INDICATOR
+   ============================================================ */
+.inactivity-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 2s infinite;
+}
+.inactivity-high   { background: #EF4444; }
+.inactivity-medium { background: #F97316; }
+.inactivity-low    { background: var(--surm-yellow); }
+
+/* ============================================================
+   KANBAN
+   ============================================================ */
+.kanban-column {
+  background: #F4F6FB;
+  border-radius: 12px;
+  padding: 12px;
+  min-height: 600px;
+  width: 280px;
+  flex-shrink: 0;
+  border: 1px solid var(--surm-border);
+}
+
+.kanban-column-header {
+  margin-bottom: 12px;
+}
+
+.kanban-column-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--surm-navy);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kanban-column-subtitle {
+  font-size: 10px;
+  color: var(--surm-muted);
+  margin-top: 2px;
+}
+
+.kanban-count-badge {
+  display: inline-block;
+  background: white;
+  border: 1px solid var(--surm-border);
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--surm-navy);
+  margin-top: 6px;
+}
+
+.kanban-column-accent {
+  height: 4px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.kanban-card {
+  background: white;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--surm-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 105, 0.05);
+  cursor: grab;
+  transition: all 0.15s ease;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 105, 0.12);
+  transform: translateY(-2px);
+}
+
+.kanban-card-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--surm-navy);
+  margin-bottom: 6px;
+}
+
+.kanban-card-meta {
+  font-size: 10px;
+  color: var(--surm-muted);
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ============================================================
+   BOUTONS
+   ============================================================ */
+.btn-primary {
+  background: var(--surm-pink);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.3px;
+}
+
+.btn-primary:hover {
+  background: #D91F4F;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 43, 95, 0.35);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--surm-navy);
+  border: 1.5px solid var(--surm-border);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--surm-navy);
+  background: rgba(0, 0, 105, 0.04);
+}
+
+.btn-navy {
+  background: var(--surm-navy);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-navy:hover {
+  background: #000050;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 105, 0.3);
+}
+
+/* ============================================================
+   FORMULAIRES
+   ============================================================ */
+.form-input {
+  border: 1.5px solid var(--surm-border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  width: 100%;
+  transition: border-color 0.15s;
+  background: white;
+  color: var(--surm-text);
 }
 
 .form-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+  border-color: var(--surm-navy);
+  box-shadow: 0 0 0 3px rgba(0, 0, 105, 0.08);
 }
 
-/* Dashboard grid animations */
-.dashboard-grid {
-  animation: fadeInUp 0.6s ease-out;
+.form-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--surm-navy);
+  letter-spacing: 0.3px;
+  margin-bottom: 5px;
+  display: block;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Statistics card styling */
-.stats-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.stats-card h3 {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.stats-card p {
-  color: white;
-}
-
-/* Navigation active state */
-.nav-active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-/* Success message */
-.success-message {
-  background-color: #d4edda;
-  color: #155724;
-  padding: 12px;
-  border-radius: 4px;
-  border: 1px solid #c3e6cb;
+.form-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--surm-navy);
+  border-left: 4px solid var(--surm-pink);
+  padding-left: 10px;
   margin-bottom: 16px;
 }
 
-/* Error message */
-.error-message {
-  background-color: #f8d7da;
-  color: #721c24;
-  padding: 12px;
-  border-radius: 4px;
-  border: 1px solid #f5c6cb;
-  margin-bottom: 16px;
+/* ============================================================
+   SECTION ÉVALUATION STRATÉGIQUE
+   ============================================================ */
+.evaluation-section {
+  background: linear-gradient(135deg, rgba(0,0,105,0.04) 0%, rgba(3,145,223,0.04) 100%);
+  border: 1.5px solid rgba(0,0,105,0.12);
+  border-radius: 12px;
+  padding: 18px;
 }
 
-/* Responsive design improvements */
-@media (max-width: 768px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .nav-mobile {
-    flex-direction: column;
-    space-y: 2;
-  }
+.evaluation-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--surm-navy);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* Enhanced horizontal scrollbar for better UX */
+/* ============================================================
+   SCROLLBARS
+   ============================================================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #F0F2F8; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #C5CAE0; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--surm-navy); }
+
 .enhanced-horizontal-scroll {
   overflow-x: auto;
   overflow-y: hidden;
-  /* Custom scrollbar styling */
-  scrollbar-width: auto; /* Firefox */
-  scrollbar-color: #CBD5E0 #F7FAFC; /* Firefox: thumb track */
-  /* Performance optimizations */
-  -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
-  scroll-behavior: auto; /* Disable smooth scrolling for performance */
+  scrollbar-width: thin;
+  scrollbar-color: #C5CAE0 #F0F2F8;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Webkit browsers (Chrome, Safari, Edge) */
-.enhanced-horizontal-scroll::-webkit-scrollbar {
-  height: 12px; /* Make horizontal scrollbar thicker/more visible */
-}
-
-.enhanced-horizontal-scroll::-webkit-scrollbar-track {
-  background: #F7FAFC; /* Light gray track */
-  border-radius: 6px;
-  border: 1px solid #E2E8F0;
-}
-
-.enhanced-horizontal-scroll::-webkit-scrollbar-thumb {
-  background: #CBD5E0; /* Gray thumb */
-  border-radius: 6px;
-  border: 1px solid #A0AEC0;
-  min-width: 50px; /* Minimum thumb size for better visibility */
-}
-
-.enhanced-horizontal-scroll::-webkit-scrollbar-thumb:hover {
-  background: #A0AEC0; /* Darker on hover */
-}
-
-.enhanced-horizontal-scroll::-webkit-scrollbar-thumb:active {
-  background: #718096; /* Even darker when dragging */
-}
-
-/* Mouse wheel horizontal scroll capability - optimized */
-.wheel-horizontal-scroll {
-  /* Performance optimizations for wheel scrolling */
-  will-change: scroll-position;
-  transform: translateZ(0); /* Force hardware acceleration */
-}
-
-/* Enhanced table scroll */
+.enhanced-horizontal-scroll::-webkit-scrollbar { height: 6px; }
 .enhanced-table-scroll {
   overflow-x: auto;
   overflow-y: visible;
-  border-radius: 8px;
-  border: 1px solid #E2E8F0;
-  scroll-behavior: auto; /* Performance: disable smooth scrolling */
-  -webkit-overflow-scrolling: touch; /* iOS optimization */
+  border-radius: 10px;
+  border: 1px solid var(--surm-border);
 }
 
-.enhanced-table-scroll::-webkit-scrollbar {
-  height: 10px;
-}
-
-.enhanced-table-scroll::-webkit-scrollbar-track {
-  background: #F8FAFC;
-  border-radius: 5px;
-}
-
-.enhanced-table-scroll::-webkit-scrollbar-thumb {
-  background: #94A3B8;
-  border-radius: 5px;
-  min-width: 40px;
-}
-
-.enhanced-table-scroll::-webkit-scrollbar-thumb:hover {
-  background: #64748B;
-}
-
-/* Top scrollbar container */
 .top-scrollbar-container {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(249, 250, 251, 0.95);
+  background: rgba(240, 242, 248, 0.95);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid #E5E7EB;
-  padding: 8px 0;
+  border-bottom: 1px solid var(--surm-border);
+  padding: 6px 0;
 }
 
 .top-scrollbar {
-  height: 12px;
+  height: 10px;
   overflow-x: auto;
   overflow-y: hidden;
-  border-radius: 6px;
-  border: 1px solid #D1D5DB;
-  scroll-behavior: auto; /* Performance: disable smooth scrolling */
-  -webkit-overflow-scrolling: touch; /* iOS optimization */
-}
-
-.top-scrollbar::-webkit-scrollbar {
-  height: 10px;
-}
-
-.top-scrollbar::-webkit-scrollbar-track {
-  background: #F3F4F6;
   border-radius: 5px;
+  border: 1px solid var(--surm-border);
 }
 
-.top-scrollbar::-webkit-scrollbar-thumb {
-  background: #9CA3AF;
-  border-radius: 5px;
-  min-width: 40px;
+.wheel-horizontal-scroll {
+  will-change: scroll-position;
+  transform: translateZ(0);
 }
 
-.top-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #6B7280;
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
-/* Print styles */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up { animation: fadeInUp 0.4s ease-out; }
+.slide-in   { animation: slideIn 0.3s ease-out; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .startup-grid { grid-template-columns: 1fr; }
+  .kpi-value { font-size: 28px; }
+}
+
 @media print {
-  .no-print {
-    display: none !important;
-  }
-  
-  body {
-    background: white !important;
-  }
-  
-  .print-friendly {
-    color: black !important;
-    background: white !important;
-  }
+  .no-print { display: none !important; }
+  body { background: white !important; }
 }
