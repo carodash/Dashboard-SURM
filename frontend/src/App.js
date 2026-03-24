@@ -7049,7 +7049,7 @@ const Dashboard = () => {
         {activeTab === "dashboard" && (
           <div className="space-y-6">
             {/* Phase 2 - Enhanced Analytics Dashboard */}
-            <AnalyticsDashboard isVisible={true} />
+            <SURMAnalyticsDashboard isVisible={true} />
             
             {/* Original Statistics (kept for reference) */}
             {statistics && (
