@@ -3247,6 +3247,10 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                       mappingDetails.push(`🏢 ${enrichedData.company_type} → ${updatedData.typologie}`);
                     }
 
+                    // Mise à jour du logo si trouvé
+                    if (enrichedData.logo_url && !formData.logo_url) {
+                      filledFields.push("Logo");
+                    }
                     if (filledFields.length > 0) {
                       alert(
                         `✅ Données enrichies avec succès !\n\n🏢 Champs remplis: ${filledFields.join(", ")}\n\n🔄 Mappings effectués:\n${mappingDetails.join("\n")}\n\n📊 Données source:\n🏢 Secteur: ${enrichedData.industry || "N/A"}\n🌍 Pays: ${enrichedData.country || "N/A"}\n👥 Employés: ${enrichedData.employees_count || "N/A"}`
