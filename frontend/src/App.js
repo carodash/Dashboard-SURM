@@ -3183,6 +3183,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
 
                     const updatedData = {
                       ...formData,
+                      logo_url: enrichedData.logo_url || formData.logo_url,
                       domaine_activite:
                         (!formData.domaine_activite || formData.domaine_activite === "") && enrichedData.industry
                           ? mapIndustryToDomain(enrichedData.industry)
