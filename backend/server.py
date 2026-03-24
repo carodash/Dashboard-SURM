@@ -1033,6 +1033,7 @@ class EnrichedCompanyData(BaseModel):
     company_type: Optional[str] = None
     description: Optional[str] = None
     website: Optional[str] = None
+    logo_url: Optional[str] = None
 
 class CompanyEnrichmentResponse(BaseModel):
     success: bool
@@ -1089,12 +1090,25 @@ async def enrich_company_endpoint(request: CompanyEnrichmentRequest):
 
                 description_fr = (ai.get("description_fr") or "").strip()
 
+                # Récupération automatique du logo via Clearbit
+                logo_url = None
+                if website_url:
+                    try:
+                        from urllib.parse import urlparse
+                        domain_parsed = urlparse(website_url).netloc or urlparse(website_url).path
+                        domain_parsed = domain_parsed.replace("www.", "")
+                        if domain_parsed:
+                            logo_url = f"https://logo.clearbit.com/{domain_parsed}"
+                    except Exception:
+                        pass
+
                 enriched_data = EnrichedCompanyData(
                     name=request.query.title(),
                     domain=request.domain,
                     website=website_url,
                     description=description_fr or (tavily_answer or "Résumé indisponible."),
-                    country="France"
+                    country="France",
+                    logo_url=logo_url
                 )
 
                 return CompanyEnrichmentResponse(
