@@ -991,180 +991,224 @@ const DistributionPieChart = ({ data, title, dataKey }) => {
 };
 
 // Phase 2 - Analytics Dashboard Component  
-const AnalyticsDashboard = ({ isVisible }) => {
-  const [monthlyData, setMonthlyData] = useState(null);
-  const [distributionData, setDistributionData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [dateFilter, setDateFilter] = useState({
-    start_date: new Date(new Date().getFullYear() - 1, 0, 1).toISOString().split('T')[0],
-    end_date: new Date().toISOString().split('T')[0]
-  });
-  const [filters, setFilters] = useState({
-    filter_by: '',
-    filter_value: ''
-  });
-
-  useEffect(() => {
-    if (isVisible) {
-      loadAnalyticsData();
-    }
-  }, [isVisible, dateFilter, filters]);
-
-  const loadAnalyticsData = async () => {
-    setLoading(true);
-    try {
-      // Load monthly evolution
-      const monthlyParams = new URLSearchParams(dateFilter);
-      const monthlyResponse = await axios.get(`${API_URL}/analytics/monthly-evolution?${monthlyParams}`);
-      setMonthlyData(monthlyResponse.data);
-
-      // Load distribution data
-      const distributionParams = new URLSearchParams({
-        ...dateFilter,
-        ...filters
-      });
-      const distributionResponse = await axios.get(`${API_URL}/analytics/distribution?${distributionParams}`);
-      setDistributionData(distributionResponse.data);
-    } catch (error) {
-      console.error("Error loading analytics:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDateFilterChange = (field, value) => {
-    setDateFilter(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleFilterChange = (field, value) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
-  };
-
+const SURMAnalyticsDashboard = ({ isVisible, statistics, monthlyData, distributionData }) => {
   if (!isVisible) return null;
-
+ 
+  const statusColors = {
+    "Sourcing - A traiter": "#FBB902",
+    "Sourcing - Klaxoon":   "#0FD2B6",
+    "Sourcing - Dealflow":  "#0391DF",
+    "Sourcing - Clos":      "#EF4444",
+    "Sourcing - EN COURS":  "#8B5CF6",
+    "Dealflow - Go experimentation":          "#0FD2B6",
+    "Dealflow - En cours avec l'équipe inno": "#0391DF",
+    "Dealflow - Go métier étude":             "#000069",
+    "Dealflow - En cours avec les métiers":   "#F42B5F",
+    "Dealflow - Clos":                        "#6B7280",
+  };
+ 
+  // Graphique barres mensuel — données
+  const monthlyChartData = monthlyData?.monthly_evolution
+    ? {
+        labels: monthlyData.monthly_evolution.map(([month]) => {
+          const [year, m] = month.split('-');
+          return new Date(year, m - 1).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+        }),
+        datasets: [
+          {
+            label: 'Sourcing créés',
+            data: monthlyData.monthly_evolution.map(([, s]) => s.sourcing_created),
+            backgroundColor: '#000069',
+            borderRadius: 4,
+          },
+          {
+            label: 'Clôtures',
+            data: monthlyData.monthly_evolution.map(([, s]) => s.sourcing_closed),
+            backgroundColor: '#F42B5F',
+            borderRadius: 4,
+          },
+          {
+            label: 'Transitions',
+            data: monthlyData.monthly_evolution.map(([, s]) => s.transitions),
+            backgroundColor: '#0FD2B6',
+            borderRadius: 4,
+          },
+        ]
+      }
+    : null;
+ 
+  const monthlyOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top', labels: { font: { size: 12 }, color: '#000069' } },
+      title: { display: false }
+    },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { color: '#6B7280' } },
+      y: { stacked: true, grid: { color: '#F0F2F8' }, ticks: { color: '#6B7280' } }
+    }
+  };
+ 
+  // Donut statuts
+  const statusEntries = Object.entries(distributionData?.by_status || {});
+  const donutData = {
+    labels: statusEntries.map(([k]) => k),
+    datasets: [{
+      data: statusEntries.map(([, v]) => v),
+      backgroundColor: statusEntries.map(([k]) => statusColors[k] || '#CBD5E1'),
+      borderWidth: 2,
+      borderColor: '#fff',
+    }]
+  };
+ 
+  const donutOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'right', labels: { font: { size: 11 }, color: '#374151', boxWidth: 12 } }
+    }
+  };
+ 
+  // Top domaines — donut
+  const domainEntries = Object.entries(distributionData?.by_domain || {})
+    .sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const domainDonutData = {
+    labels: domainEntries.map(([k]) => k),
+    datasets: [{
+      data: domainEntries.map(([, v]) => v),
+      backgroundColor: ['#000069','#F42B5F','#0391DF','#0FD2B6','#FBB902','#8B5CF6','#EF4444','#F97316'],
+      borderWidth: 2,
+      borderColor: '#fff',
+    }]
+  };
+ 
   return (
-    <div className="space-y-6">
-      {/* Filter Controls */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4">📊 Filtres d'analyse</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Date début</label>
-            <input
-              type="date"
-              value={dateFilter.start_date}
-              onChange={(e) => handleDateFilterChange('start_date', e.target.value)}
-              className="w-full border rounded-md px-3 py-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Date fin</label>
-            <input
-              type="date"
-              value={dateFilter.end_date}
-              onChange={(e) => handleDateFilterChange('end_date', e.target.value)}
-              className="w-full border rounded-md px-3 py-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Filtrer par</label>
-            <select
-              value={filters.filter_by}
-              onChange={(e) => handleFilterChange('filter_by', e.target.value)}
-              className="w-full border rounded-md px-3 py-2"
-            >
-              <option value="">Aucun filtre</option>
-              <option value="domaine">Domaine</option>
-              <option value="pilote">Pilote</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Valeur</label>
-            <input
-              type="text"
-              value={filters.filter_value}
-              onChange={(e) => handleFilterChange('filter_value', e.target.value)}
-              placeholder="Valeur du filtre..."
-              className="w-full border rounded-md px-3 py-2"
-              disabled={!filters.filter_by}
-            />
+    <div className="space-y-6 fade-in-up">
+      {/* Titre section */}
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <div>
+          <h2 style={{ color: 'var(--surm-navy)', fontSize: '22px', fontWeight: 700 }}>
+            📊 Analyses & Statistiques
+          </h2>
+          <p style={{ color: 'var(--surm-muted)', fontSize: '13px' }}>
+            Vue d'ensemble de l'activité Open Innovation
+          </p>
+        </div>
+      </div>
+ 
+      {/* Graphiques */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+ 
+        {/* Évolution mensuelle */}
+        <div style={{
+          background: 'white', borderRadius: '16px',
+          padding: '24px', border: '1px solid var(--surm-border)',
+          boxShadow: '0 2px 8px rgba(0,0,105,0.06)'
+        }}>
+          <h3 style={{
+            color: 'var(--surm-navy)', fontSize: '15px', fontWeight: 700,
+            marginBottom: '4px', borderLeft: '4px solid #000069', paddingLeft: '10px'
+          }}>
+            Évolution mensuelle
+          </h3>
+          <p style={{ color: 'var(--surm-muted)', fontSize: '12px', marginBottom: '20px', paddingLeft: '14px' }}>
+            Sourcing créés · Clôtures · Transitions dealflow
+          </p>
+          {monthlyChartData
+            ? <Bar data={monthlyChartData} options={monthlyOptions} />
+            : <div style={{ textAlign: 'center', padding: '40px', color: 'var(--surm-muted)' }}>Chargement...</div>
+          }
+        </div>
+ 
+        {/* Répartition par statut */}
+        <div style={{
+          background: 'white', borderRadius: '16px',
+          padding: '24px', border: '1px solid var(--surm-border)',
+          boxShadow: '0 2px 8px rgba(0,0,105,0.06)'
+        }}>
+          <h3 style={{
+            color: 'var(--surm-navy)', fontSize: '15px', fontWeight: 700,
+            marginBottom: '4px', borderLeft: '4px solid #F42B5F', paddingLeft: '10px'
+          }}>
+            Répartition par statut
+          </h3>
+          <p style={{ color: 'var(--surm-muted)', fontSize: '12px', marginBottom: '20px', paddingLeft: '14px' }}>
+            Sourcing + Dealflow combinés
+          </p>
+          <Doughnut data={donutData} options={donutOptions} />
+        </div>
+ 
+        {/* Top domaines */}
+        <div style={{
+          background: 'white', borderRadius: '16px',
+          padding: '24px', border: '1px solid var(--surm-border)',
+          boxShadow: '0 2px 8px rgba(0,0,105,0.06)'
+        }}>
+          <h3 style={{
+            color: 'var(--surm-navy)', fontSize: '15px', fontWeight: 700,
+            marginBottom: '4px', borderLeft: '4px solid #0391DF', paddingLeft: '10px'
+          }}>
+            Top domaines
+          </h3>
+          <p style={{ color: 'var(--surm-muted)', fontSize: '12px', marginBottom: '20px', paddingLeft: '14px' }}>
+            8 domaines les plus représentés
+          </p>
+          <Doughnut data={domainDonutData} options={{
+            ...donutOptions,
+            plugins: { ...donutOptions.plugins, legend: { ...donutOptions.plugins.legend, position: 'right' } }
+          }} />
+        </div>
+ 
+        {/* Répartition par pilote */}
+        <div style={{
+          background: 'white', borderRadius: '16px',
+          padding: '24px', border: '1px solid var(--surm-border)',
+          boxShadow: '0 2px 8px rgba(0,0,105,0.06)'
+        }}>
+          <h3 style={{
+            color: 'var(--surm-navy)', fontSize: '15px', fontWeight: 700,
+            marginBottom: '4px', borderLeft: '4px solid #0FD2B6', paddingLeft: '10px'
+          }}>
+            Charge par pilote
+          </h3>
+          <p style={{ color: 'var(--surm-muted)', fontSize: '12px', marginBottom: '20px', paddingLeft: '14px' }}>
+            Nombre de startups par responsable
+          </p>
+          <div className="space-y-3">
+            {Object.entries(distributionData?.by_pilote || {})
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 6)
+              .map(([pilote, count], i) => {
+                const colors = ['#000069','#F42B5F','#0391DF','#0FD2B6','#FBB902','#8B5CF6'];
+                const maxVal = Math.max(...Object.values(distributionData?.by_pilote || { x: 1 }));
+                const pct = Math.round((count / maxVal) * 100);
+                return (
+                  <div key={pilote}>
+                    <div className="flex justify-between mb-1">
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--surm-navy)' }}>
+                        {pilote}
+                      </span>
+                      <span style={{ fontSize: '12px', color: colors[i], fontWeight: 700 }}>
+                        {count}
+                      </span>
+                    </div>
+                    <div style={{ height: '6px', background: '#F0F2F8', borderRadius: '3px' }}>
+                      <div style={{
+                        height: '100%', width: `${pct}%`,
+                        background: colors[i], borderRadius: '3px'
+                      }} />
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </div>
       </div>
-
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-gray-600">Chargement des analyses...</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Monthly Evolution Chart */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <MonthlyEvolutionChart data={monthlyData} />
-          </div>
-
-          {/* Distribution Charts */}
-          {distributionData && (
-            <>
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <DistributionPieChart 
-                  data={distributionData} 
-                  title="Répartition par statut" 
-                  dataKey="by_status" 
-                />
-              </div>
-              
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <DistributionPieChart 
-                  data={distributionData} 
-                  title="Répartition par domaine" 
-                  dataKey="by_domain" 
-                />
-              </div>
-              
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <DistributionPieChart 
-                  data={distributionData} 
-                  title="Répartition par typologie" 
-                  dataKey="by_typologie" 
-                />
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Summary Stats */}
-      {distributionData && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4">📈 Résumé</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
-                {distributionData.summary.total_sourcing}
-              </div>
-              <div className="text-sm text-gray-600">Sourcing</div>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
-                {distributionData.summary.total_dealflow}
-              </div>
-              <div className="text-sm text-gray-600">Dealflow</div>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
-                {distributionData.summary.total_partners}
-              </div>
-              <div className="text-sm text-gray-600">Total</div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
-
 // Phase 3 - Private Comments Component
 const PrivateCommentsModal = ({ isOpen, onClose, partnerId, partnerType, partnerName }) => {
   const [comments, setComments] = useState([]);
