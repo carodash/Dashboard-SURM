@@ -5363,7 +5363,16 @@ const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, 
                 alt={name}
                 className="w-full h-full object-contain p-1"
                 onError={(e) => {
-                  // Si le logo ne charge pas → affiche la lettre initiale
+                  // Google Favicons comme fallback final
+                  if (partner.logo_url && !e.target.src.includes('google.com')) {
+                    const domain = partner.logo_url
+                      .replace('https://logo.clearbit.com/', '')
+                      .replace('https://www.google.com/s2/favicons?domain=', '')
+                      .split('&')[0];
+                    e.target.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+                    return;
+                  }
+                  // Si tout échoue → lettre initiale
                   e.target.style.display = 'none';
                   e.target.parentNode.innerHTML = `<span style="
                     display:flex;align-items:center;justify-content:center;
