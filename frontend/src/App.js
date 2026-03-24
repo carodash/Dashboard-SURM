@@ -5316,13 +5316,30 @@ const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, 
           </div>
         </div>
 
-        {/* Nom + initiale */}
+        {/* Logo ou initiale */}
         <div className="flex items-center gap-3 mb-2">
-          <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
-            style={{ background: 'var(--surm-navy)' }}
-          >
-            {name ? name[0].toUpperCase() : "?"}
+          <div className="w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden"
+            style={{ border: '1.5px solid var(--surm-border)', background: 'var(--surm-navy)' }}>
+            {partner.logo_url ? (
+              <img
+                src={partner.logo_url}
+                alt={name}
+                className="w-full h-full object-contain p-1"
+                onError={(e) => {
+                  // Si le logo ne charge pas → affiche la lettre initiale
+                  e.target.style.display = 'none';
+                  e.target.parentNode.innerHTML = `<span style="
+                    display:flex;align-items:center;justify-content:center;
+                    width:100%;height:100%;font-weight:700;
+                    color:white;font-size:15px
+                  ">${name ? name[0].toUpperCase() : '?'}</span>`;
+                }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center font-bold text-white text-sm">
+                {name ? name[0].toUpperCase() : "?"}
+              </div>
+            )}
           </div>
           <h3 className="font-bold text-base truncate" style={{ color: 'var(--surm-navy)' }}>
             {name}
