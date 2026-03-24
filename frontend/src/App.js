@@ -6402,7 +6402,7 @@ const Dashboard = () => {
                 }`}
               style={activeTab === "kanban"
                 ? { background: 'var(--surm-turquoise)', borderRadius: '10px' }
-                : { color: 'color: var(--surm-navy)' }}
+                : { color: 'rgba(255,255,255,0.65)' }}
               >
                 <span>📋</span>
                 <span>Kanban</span>
