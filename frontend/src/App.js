@@ -6395,17 +6395,21 @@ const Dashboard = () => {
 
   return (
   <div className="min-h-screen bg-gray-50">
-    <div className="bg-white border-b border-surm-border shadow-sm">
-      <div className="max-w-[1600px] mx-auto px-6 py-4">
+    <div className="surm-navbar">
+      <div className="max-w-[1600px] mx-auto px-6 py-3">
         <div className="flex items-center justify-between gap-6">
-          {/* Bloc gauche : titre */}
-          <div className="min-w-[220px]">
-            <h1 className="text-2xl font-bold text-surm-navy leading-tight">
-              SURM
-            </h1>
-            <p className="text-sm font-semibold text-surm-navy leading-tight">
-              Dashboard
-            </p>
+          {/* Bloc gauche : logo Pôle Innovation */}
+          <div className="flex items-center gap-3 min-w-[260px]">
+            <span className="surm-logo-bar" />
+            <div>
+              <div className="text-white font-bold text-sm leading-tight" style={{ letterSpacing: '0.5px' }}>
+                PÔLE INNOVATION
+              </div>
+              <div className="text-xs leading-tight font-medium" style={{ color: 'var(--surm-turquoise)', letterSpacing: '1px' }}>
+                & PROSPECTIVE
+              </div>
+            </div>
+            <span className="surm-badge ml-2">SURM</span>
           </div>
 
           {/* Bloc centre : recherche + vues */}
