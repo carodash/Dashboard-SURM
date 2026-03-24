@@ -1098,7 +1098,7 @@ async def enrich_company_endpoint(request: CompanyEnrichmentRequest):
                         domain_parsed = urlparse(website_url).netloc or urlparse(website_url).path
                         domain_parsed = domain_parsed.replace("www.", "")
                         if domain_parsed:
-                            logo_url = f"https://logo.clearbit.com/{domain_parsed}"
+                           logo_url = f"https://www.google.com/s2/favicons?domain={domain_parsed}&sz=128"
                     except Exception:
                         pass
 
