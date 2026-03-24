@@ -3556,6 +3556,37 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
           {/* Champs optionnels */}
           <div className="border-t pt-4">
             <h3 className="text-lg font-medium mb-3">Informations complémentaires</h3>
+            {/* Champ logo URL */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                Logo de la startup (URL)
+              </label>
+              <div className="flex gap-3 items-center">
+                <input
+                  type="text"
+                  name="logo_url"
+                  value={formData.logo_url || ''}
+                  onChange={handleChange}
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2"
+                  placeholder="https://logo.clearbit.com/nomdusite.com"
+                />
+                {/* Prévisualisation du logo */}
+                {formData.logo_url && (
+                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
+                    style={{ border: '1.5px solid var(--surm-border)', background: '#f8fafc' }}>
+                    <img
+                      src={formData.logo_url}
+                      alt="Logo"
+                      className="w-full h-full object-contain p-1"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Astuce : essaie https://logo.clearbit.com/nomdusite.com
+              </p>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
