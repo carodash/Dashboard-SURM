@@ -3588,7 +3588,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                💡 Astuce : essaie https://logo.clearbit.com/nomdusite.com
+                💡 Astuce : essaie https://logo.clearbit.com/nomdusite.com ou https://www.google.com/s2/favicons?domain=nomdusite.com&sz=64
               </p>
             </div>
             
