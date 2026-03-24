@@ -1,13 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700&family=Roboto:wght@400;500&display=swap');
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
 /* ============================================================
-   SURM DASHBOARD — Charte graphique Pôle Innovation & Prospective
-   Palette : #000069 (marine) · #F42B5F (rose) · #0391DF (bleu)
-             #0FD2B6 (turquoise) · #FBB902 (jaune)
-   Police  : Roboto Condensed
+   SURM — Charte Pôle Innovation & Prospective
    ============================================================ */
 
 :root {
@@ -23,18 +20,34 @@
   --surm-muted:     #6B7280;
 }
 
+/* ============================================================
+   BASE — police lisible, taille normale
+   ============================================================ */
 * {
-  font-family: 'Roboto Condensed', 'Arial Narrow', Arial, sans-serif;
+  /* On garde la police système par défaut pour la lisibilité,
+     Roboto Condensed uniquement pour les titres et labels */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
 body {
   background-color: var(--surm-bg);
   color: var(--surm-text);
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .App {
   min-height: 100vh;
   background-color: var(--surm-bg);
+}
+
+/* Roboto Condensed uniquement pour les éléments de titre */
+h1, h2, h3, h4,
+.kpi-label, .kpi-value,
+.surm-badge, .status-badge,
+.kanban-column-title,
+.form-section-title {
+  font-family: 'Roboto Condensed', 'Arial Narrow', Arial, sans-serif;
 }
 
 /* ============================================================
@@ -56,20 +69,21 @@ body {
   display: inline-block;
   margin-right: 10px;
   vertical-align: middle;
+  flex-shrink: 0;
 }
 
 .surm-badge {
   background: var(--surm-pink);
   color: white;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 6px;
 }
 
 /* ============================================================
-   CARTES STARTUP
+   CARTES STARTUP — taille de texte lisible
    ============================================================ */
 .startup-grid {
   display: grid;
@@ -90,7 +104,7 @@ body {
   position: relative;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 105, 0.06);
-  min-height: 240px;
+  min-height: 250px;
 }
 
 .startup-card:hover {
@@ -99,7 +113,6 @@ body {
   border-color: var(--surm-navy);
 }
 
-/* Barre colorée en haut de chaque carte selon le domaine */
 .startup-card-inner {
   padding: 16px 18px 14px;
   display: flex;
@@ -107,49 +120,113 @@ body {
   flex: 1;
 }
 
+/* Barre colorée en haut selon le domaine */
 .card-domain-bar {
   height: 5px;
   width: 100%;
   border-radius: 14px 14px 0 0;
+  flex-shrink: 0;
 }
 
-/* Couleurs par domaine */
-.domain-bar-InsurTech    { background: var(--surm-navy); }
-.domain-bar-FinTech      { background: var(--surm-pink); }
-.domain-bar-DigitalHealth{ background: var(--surm-turquoise); }
-.domain-bar-RhTech       { background: var(--surm-blue); }
-.domain-bar-Data         { background: #8B5CF6; }
-.domain-bar-Mobility     { background: #F97316; }
-.domain-bar-CyberSecurity{ background: #EF4444; }
-.domain-bar-CleanTech    { background: #22C55E; }
-.domain-bar-ClimateTech  { background: #16A34A; }
-.domain-bar-LegalTech    { background: #0369A1; }
-.domain-bar-MarTech      { background: #DB2777; }
-.domain-bar-RegTech      { background: #7C3AED; }
-.domain-bar-PropTech     { background: #D97706; }
-.domain-bar-EdTech       { background: #059669; }
-.domain-bar-Tech         { background: var(--surm-blue); }
-.domain-bar-default      { background: var(--surm-muted); }
+/* Couleurs domaines */
+.domain-bar-InsurTech     { background: var(--surm-navy); }
+.domain-bar-FinTech       { background: var(--surm-pink); }
+.domain-bar-DigitalHealth { background: var(--surm-turquoise); }
+.domain-bar-RhTech        { background: var(--surm-blue); }
+.domain-bar-Data          { background: #8B5CF6; }
+.domain-bar-Mobility      { background: #F97316; }
+.domain-bar-CyberSecurity { background: #EF4444; }
+.domain-bar-CleanTech     { background: #22C55E; }
+.domain-bar-ClimateTech   { background: #16A34A; }
+.domain-bar-LegalTech     { background: #0369A1; }
+.domain-bar-MarTech       { background: #DB2777; }
+.domain-bar-RegTech       { background: #7C3AED; }
+.domain-bar-PropTech      { background: #D97706; }
+.domain-bar-EdTech        { background: #059669; }
+.domain-bar-Tech          { background: var(--surm-blue); }
+.domain-bar-default       { background: #CBD5E1; }
+
+/* Nom de startup — bien lisible */
+.startup-card .startup-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--surm-navy);
+  line-height: 1.3;
+}
+
+/* Description — taille normale */
+.startup-card .startup-desc {
+  font-size: 13px;
+  color: var(--surm-muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 /* ============================================================
-   BADGES STATUT
+   BADGES STATUT — plus grands et lisibles
    ============================================================ */
 .status-badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 20px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.status-a-traiter  { background: #FEF3C7; color: #92400E; }
-.status-klaxoon    { background: #CCFBF1; color: #0F766E; }
-.status-dealflow   { background: #DBEAFE; color: #1E40AF; }
-.status-clos       { background: #FEE2E2; color: #991B1B; }
-.status-en-cours   { background: #EDE9FE; color: #5B21B6; }
+.status-a-traiter { background: #FEF3C7; color: #92400E; }
+.status-klaxoon   { background: #CCFBF1; color: #0F766E; }
+.status-dealflow  { background: #DBEAFE; color: #1E40AF; }
+.status-clos      { background: #FEE2E2; color: #991B1B; }
+.status-en-cours  { background: #EDE9FE; color: #5B21B6; }
+
+/* ============================================================
+   TAGS
+   ============================================================ */
+.tag-domaine {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(0, 0, 105, 0.08);
+  color: var(--surm-navy);
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.tag-typologie {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(243, 43, 95, 0.08);
+  color: var(--surm-pink);
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.tag-strategique {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(3, 145, 223, 0.1);
+  color: var(--surm-blue);
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
 
 /* ============================================================
    KPI CARDS
@@ -157,7 +234,7 @@ body {
 .kpi-card {
   background: white;
   border-radius: 14px;
-  padding: 20px 22px;
+  padding: 22px 24px;
   border: 1px solid var(--surm-border);
   box-shadow: 0 2px 8px rgba(0, 0, 105, 0.06);
   position: relative;
@@ -171,79 +248,35 @@ body {
 
 .kpi-card-accent {
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  left: 0; top: 0; bottom: 0;
   width: 5px;
   border-radius: 14px 0 0 14px;
 }
 
 .kpi-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--surm-muted);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .kpi-value {
-  font-size: 36px;
+  font-size: 38px;
   font-weight: 700;
   color: var(--surm-navy);
   line-height: 1;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .kpi-sub {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 /* ============================================================
-   TAGS DOMAINE & TYPOLOGIE
-   ============================================================ */
-.tag-domaine {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 600;
-  background: rgba(0, 0, 105, 0.08);
-  color: var(--surm-navy);
-  margin-right: 4px;
-  margin-bottom: 4px;
-}
-
-.tag-typologie {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 600;
-  background: rgba(243, 43, 95, 0.08);
-  color: var(--surm-pink);
-  margin-right: 4px;
-  margin-bottom: 4px;
-}
-
-.tag-strategique {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 600;
-  background: rgba(3, 145, 223, 0.1);
-  color: var(--surm-blue);
-  margin-right: 4px;
-  margin-bottom: 4px;
-}
-
-/* ============================================================
-   INACTIVITÉ INDICATOR
+   INACTIVITÉ
    ============================================================ */
 .inactivity-dot {
   width: 9px;
@@ -251,6 +284,7 @@ body {
   border-radius: 50%;
   display: inline-block;
   animation: pulse 2s infinite;
+  flex-shrink: 0;
 }
 .inactivity-high   { background: #EF4444; }
 .inactivity-medium { background: #F97316; }
@@ -269,20 +303,16 @@ body {
   border: 1px solid var(--surm-border);
 }
 
-.kanban-column-header {
-  margin-bottom: 12px;
-}
-
 .kanban-column-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--surm-navy);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .kanban-column-subtitle {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--surm-muted);
   margin-top: 2px;
 }
@@ -292,8 +322,8 @@ body {
   background: white;
   border: 1px solid var(--surm-border);
   border-radius: 8px;
-  padding: 2px 8px;
-  font-size: 11px;
+  padding: 2px 10px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--surm-navy);
   margin-top: 6px;
@@ -308,7 +338,7 @@ body {
 .kanban-card {
   background: white;
   border-radius: 10px;
-  padding: 12px;
+  padding: 14px;
   margin-bottom: 8px;
   border: 1px solid var(--surm-border);
   box-shadow: 0 1px 4px rgba(0, 0, 105, 0.05);
@@ -322,14 +352,14 @@ body {
 }
 
 .kanban-card-name {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--surm-navy);
   margin-bottom: 6px;
 }
 
 .kanban-card-meta {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--surm-muted);
   margin-top: 3px;
   display: flex;
@@ -345,12 +375,11 @@ body {
   color: white;
   border: none;
   border-radius: 10px;
-  padding: 9px 18px;
-  font-size: 13px;
+  padding: 10px 20px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
-  letter-spacing: 0.3px;
 }
 
 .btn-primary:hover {
@@ -364,8 +393,8 @@ body {
   color: var(--surm-navy);
   border: 1.5px solid var(--surm-border);
   border-radius: 10px;
-  padding: 8px 16px;
-  font-size: 12px;
+  padding: 9px 18px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -376,32 +405,14 @@ body {
   background: rgba(0, 0, 105, 0.04);
 }
 
-.btn-navy {
-  background: var(--surm-navy);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 9px 18px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-navy:hover {
-  background: #000050;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 105, 0.3);
-}
-
 /* ============================================================
    FORMULAIRES
    ============================================================ */
 .form-input {
   border: 1.5px solid var(--surm-border);
   border-radius: 8px;
-  padding: 9px 12px;
-  font-size: 13px;
+  padding: 10px 14px;
+  font-size: 14px;
   width: 100%;
   transition: border-color 0.15s;
   background: white;
@@ -415,16 +426,15 @@ body {
 }
 
 .form-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--surm-navy);
-  letter-spacing: 0.3px;
   margin-bottom: 5px;
   display: block;
 }
 
 .form-section-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--surm-navy);
   border-left: 4px solid var(--surm-pink);
@@ -432,24 +442,11 @@ body {
   margin-bottom: 16px;
 }
 
-/* ============================================================
-   SECTION ÉVALUATION STRATÉGIQUE
-   ============================================================ */
 .evaluation-section {
   background: linear-gradient(135deg, rgba(0,0,105,0.04) 0%, rgba(3,145,223,0.04) 100%);
   border: 1.5px solid rgba(0,0,105,0.12);
   border-radius: 12px;
   padding: 18px;
-}
-
-.evaluation-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--surm-navy);
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 /* ============================================================
@@ -464,11 +461,11 @@ body {
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
-  scrollbar-color: #C5CAE0 #F0F2F8;
   -webkit-overflow-scrolling: touch;
 }
 
 .enhanced-horizontal-scroll::-webkit-scrollbar { height: 6px; }
+
 .enhanced-table-scroll {
   overflow-x: auto;
   overflow-y: visible;
@@ -504,7 +501,7 @@ body {
    ============================================================ */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50%       { opacity: 0.4; }
 }
 
 @keyframes fadeInUp {
@@ -525,7 +522,7 @@ body {
    ============================================================ */
 @media (max-width: 768px) {
   .startup-grid { grid-template-columns: 1fr; }
-  .kpi-value { font-size: 28px; }
+  .kpi-value { font-size: 30px; }
 }
 
 @media print {
