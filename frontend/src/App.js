@@ -5284,52 +5284,158 @@ const EnrichedDataModal = ({ isOpen, onClose, partner, partnerType }) => {
 
 const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, onComments, onDocs, onTransition }) => {
   const name = partner.nom_entreprise || partner.nom;
-  const description = partner.objet || partner.actions_commentaires || "Aucune description.";
-  
-  // 1. AJOUT : Cette fonction définit quelle couleur utiliser pour chaque statut
-  const getStatusColor = (status) => {
-    const mapping = {
-      "A traiter": "bg-yellow-100 text-yellow-800",
-      "Clos": "bg-red-100 text-red-800",
-      "Dealflow": "bg-green-100 text-green-800",
-      "En cours avec les métiers": "bg-blue-100 text-blue-800",
-      "En cours avec l'équipe inno": "bg-green-100 text-green-800",
-      "Klaxoon": "bg-blue-100 text-blue-800"
+  const domain = partner.domaine_activite || partner.domaine || "";
+  const description = partner.objet || partner.actions_commentaires || "Aucune description disponible.";
+
+  // Barre couleur selon le domaine
+  const getDomainBarClass = (d) => {
+    const map = {
+      "InsurTech": "domain-bar-InsurTech",
+      "FinTech": "domain-bar-FinTech",
+      "DigitalHealth": "domain-bar-DigitalHealth",
+      "RhTech": "domain-bar-RhTech",
+      "Data": "domain-bar-Data",
+      "Mobility": "domain-bar-Mobility",
+      "CyberSecurity": "domain-bar-CyberSecurity",
+      "CleanTech": "domain-bar-CleanTech",
+      "ClimateTech": "domain-bar-ClimateTech",
+      "LegalTech": "domain-bar-LegalTech",
+      "MarTech": "domain-bar-MarTech",
+      "RegTech": "domain-bar-RegTech",
+      "PropTech": "domain-bar-PropTech",
+      "EdTech": "domain-bar-EdTech",
+      "Tech": "domain-bar-Tech",
     };
-    return mapping[status] || "bg-gray-100 text-gray-800"; // Gris par défaut si inconnu
+    return map[d] || "domain-bar-default";
+  };
+
+  // Badge statut
+  const getStatusClass = (status) => {
+    const map = {
+      "A traiter":   "status-a-traiter",
+      "Klaxoon":     "status-klaxoon",
+      "Dealflow":    "status-dealflow",
+      "Clos":        "status-clos",
+      "EN COURS":    "status-en-cours",
+    };
+    return map[status] || "status-a-traiter";
+  };
+
+  // Indicateur inactivité
+  const getInactivityClass = (days) => {
+    if (days >= 180) return "inactivity-dot inactivity-high";
+    if (days >= 120) return "inactivity-dot inactivity-medium";
+    return "inactivity-dot inactivity-low";
   };
 
   return (
-    <div className={`startup-card ${isSelected ? 'ring-2 ring-blue-500' : ''}`} onClick={() => onSelect(partner.id)}>
-      <div className="flex justify-between items-start">
-        {/* 2. MODIFICATION : On utilise getStatusColor(partner.statut) au lieu de bg-blue-100 */}
-        <span className={`card-badge ${getStatusColor(partner.statut)}`}>
-          {partner.statut}
-        </span>
-        <input type="checkbox" checked={isSelected} readOnly className="rounded" />
-      </div>
+    <div
+      className={`startup-card ${isSelected ? 'ring-2' : ''}`}
+      style={isSelected ? { ringColor: 'var(--surm-pink)' } : {}}
+      onClick={() => onSelect(partner.id)}
+    >
+      {/* Barre couleur domaine en haut */}
+      <div className={`card-domain-bar ${getDomainBarClass(domain)}`} />
 
-      <div className="flex items-center space-x-3 mb-3">
-        <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center font-bold text-gray-400 border">
-          {name ? name[0] : "?"}
+      <div className="startup-card-inner">
+        {/* Header : statut + checkbox + inactivité */}
+        <div className="flex justify-between items-center mb-3">
+          <span className={`status-badge ${getStatusClass(partner.statut)}`}>
+            {partner.statut}
+          </span>
+          <div className="flex items-center gap-2">
+            {partner.is_inactive && (
+              <span
+                className={getInactivityClass(partner.days_since_update)}
+                title={`Inactif depuis ${partner.days_since_update} jours`}
+              />
+            )}
+            <input
+              type="checkbox"
+              checked={isSelected}
+              readOnly
+              onClick={(e) => e.stopPropagation()}
+              className="w-4 h-4 rounded"
+              style={{ accentColor: 'var(--surm-navy)' }}
+            />
+          </div>
         </div>
-        <h3 className="font-bold text-gray-900 truncate">{name}</h3>
-      </div>
 
-      <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">{description}</p>
+        {/* Nom + initiale */}
+        <div className="flex items-center gap-3 mb-2">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
+            style={{ background: 'var(--surm-navy)' }}
+          >
+            {name ? name[0].toUpperCase() : "?"}
+          </div>
+          <h3 className="font-bold text-base truncate" style={{ color: 'var(--surm-navy)' }}>
+            {name}
+          </h3>
+        </div>
 
-      <div className="flex flex-wrap gap-1 mb-4">
-        {partner.domaine_activite && <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded">{partner.domaine_activite}</span>}
-        {partner.typologie && <span className="text-[10px] bg-purple-50 text-purple-600 px-2 py-0.5 rounded">{partner.typologie}</span>}
-      </div>
+        {/* Description */}
+        <p className="text-sm mb-3 flex-1 line-clamp-3" style={{ color: 'var(--surm-muted)', lineHeight: '1.4' }}>
+          {description}
+        </p>
 
-      <div className="flex gap-2 pt-3 border-t border-gray-100">
-        <button onClick={(e) => {e.stopPropagation(); onEdit(partner)}} className="text-xs text-blue-600 hover:underline">Modifier</button>
-        <button onClick={(e) => {e.stopPropagation(); onTimeline(partner, type)}} className="text-xs text-orange-600 hover:underline">Timeline</button>
-        <button onClick={(e) => {e.stopPropagation(); onDocs(partner, type)}} className="text-xs text-blue-400 hover:underline">Docs</button>
-        {type === 'sourcing' && (
-          <button onClick={(e) => {e.stopPropagation(); onTransition(partner.id)}} className="text-xs text-green-600 font-bold hover:underline">→ Dealflow</button>
+        {/* Tags domaine + typologie */}
+        <div className="flex flex-wrap gap-1 mb-3">
+          {domain && <span className="tag-domaine">{domain}</span>}
+          {partner.typologie && <span className="tag-typologie">{partner.typologie}</span>}
+          {partner.tags_strategiques?.slice(0, 2).map((tag, i) => (
+            <span key={i} className="tag-strategique">{tag}</span>
+          ))}
+        </div>
+
+        {/* Date prochaine action */}
+        {partner.date_prochaine_action && (
+          <div className="flex items-center gap-1 mb-3 text-xs font-medium"
+            style={{ color: new Date(partner.date_prochaine_action) < new Date() ? '#EF4444' : 'var(--surm-blue)' }}>
+            📅 {new Date(partner.date_prochaine_action).toLocaleDateString('fr-FR')}
+          </div>
         )}
+
+        {/* Pilote */}
+        {partner.pilote && (
+          <div className="text-xs mb-3" style={{ color: 'var(--surm-muted)' }}>
+            👤 {partner.pilote}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-3 pt-3 border-t" style={{ borderColor: 'var(--surm-border)' }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(partner); }}
+            className="text-xs font-semibold hover:underline"
+            style={{ color: 'var(--surm-navy)' }}
+          >
+            ✏️ Modifier
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onTimeline(partner, type); }}
+            className="text-xs font-semibold hover:underline"
+            style={{ color: 'var(--surm-blue)' }}
+          >
+            📋 Timeline
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDocs(partner, type); }}
+            className="text-xs font-semibold hover:underline"
+            style={{ color: 'var(--surm-muted)' }}
+          >
+            📎 Docs
+          </button>
+          {type === 'sourcing' && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onTransition(partner.id); }}
+              className="text-xs font-bold hover:underline ml-auto"
+              style={{ color: 'var(--surm-pink)' }}
+            >
+              → Dealflow
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
