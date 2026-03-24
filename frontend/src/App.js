@@ -3,52 +3,7 @@ import "./App.css";
 import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
-// --- BLOC DE STYLE POUR LES VIGNETTES ---
-const cardStyles = document.createElement('style');
-cardStyles.innerHTML = `
-  .startup-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    padding: 20px 0;
-  }
-.startup-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  position: relative;
-  height: 100%;
-  min-height: 250px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
-}
-
-.startup-card:hover {
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
-  transform: translateY(-4px);
-  border-color: #F42B5F;
-}
-  .card-badge {
-    align-self: flex-start;
-    font-size: 10px;
-    font-weight: bold;
-    text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 99px;
-    margin-bottom: 12px;
-  }
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;  
-    overflow: hidden;
-  }
-`;
-document.head.appendChild(cardStyles);
+// Styles gérés dans App.css — bloc supprimé
 
 // Custom hook for horizontal scrolling with mouse wheel (optimized)
 const useHorizontalScroll = () => {
