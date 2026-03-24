@@ -6382,9 +6382,12 @@ const Dashboard = () => {
                 onClick={() => setActiveTab("dashboard")}
                 className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
                   activeTab === "dashboard"
-                    ? "bg-surm-pink/10 text-surm-navy"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "text-white"
+                    : "hover:bg-white hover:bg-opacity-10"
                 }`}
+              style={activeTab === "dashboard"
+                ? { background: 'var(--surm-pink)', borderRadius: '10px' }
+                : { color: 'rgba(255,255,255,0.65)' }}
               >
                 <span>📊</span>
                 <span>Dashboard</span>
@@ -6394,9 +6397,12 @@ const Dashboard = () => {
                 onClick={() => setActiveTab("kanban")}
                 className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
                   activeTab === "kanban"
-                    ? "bg-orange-100 text-orange-700"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "text-white"
+                    : "hover:bg-white hover:bg-opacity-10"
                 }`}
+              style={activeTab === "kanban"
+                ? { background: 'var(--surm-turquoise)', borderRadius: '10px' }
+                : { color: 'color: var(--surm-navy)' }}
               >
                 <span>📋</span>
                 <span>Kanban</span>
@@ -6406,9 +6412,12 @@ const Dashboard = () => {
                 onClick={() => setActiveTab("sourcing")}
                 className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
                   activeTab === "sourcing"
-                    ? "bg-surm-pink/10 text-surm-navy"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "text-white"
+                    : "hover:bg-white hover:bg-opacity-10"
                 }`}
+              style={activeTab === "sourcing"
+                ? { background: 'var(--surm-blue)', borderRadius: '10px' }
+                : { color: 'rgba(255,255,255,0.65)' }}
               >
                 <span>🔎</span>
                 <span>Sourcing</span>
@@ -6417,10 +6426,13 @@ const Dashboard = () => {
               <button
                 onClick={() => setActiveTab("dealflow")}
                 className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
-                  activeTab === "dealflow"
-                    ? "bg-green-100 text-green-700"
-                    : "text-gray-600 hover:bg-gray-100"
+                  activeTab === "dealflox"
+                    ? "text-white"
+                    : "hover:bg-white hover:bg-opacity-10"
                 }`}
+              style={activeTab === "dealflow"
+                ? { background: '#22C55E (vert)', borderRadius: '10px' }
+                : { color: 'rgba(255,255,255,0.65)' }}
               >
                 <span>🔁</span>
                 <span>Dealflow</span>
