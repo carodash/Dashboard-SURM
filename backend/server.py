@@ -2664,9 +2664,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    @api_router.get("/import-dealflow-history")
+@api_router.get("/import-dealflow-history")
 async def import_dealflow_history():
     import json, pathlib
     json_path = pathlib.Path(__file__).parent / "dealflow_import.json"
@@ -2689,4 +2687,7 @@ async def import_dealflow_history():
         existing.add(nom.lower())
         inserted += 1
     return {"inserted": inserted, "skipped": skipped, "total": await db.dealflow_partners.count_documents({})}
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
     client.close()
