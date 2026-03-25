@@ -5903,8 +5903,10 @@ const Dashboard = () => {
     return filtered;
   };
 
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("home");
   const [sourcingPartners, setSourcingPartners] = useState([]);
+  const [monthlyData, setMonthlyData] = useState(null);
+  const [distributionData, setDistributionData] = useState(null);
   const [dealflowPartners, setDealflowPartners] = useState([]);
   const [filteredSourcingPartners, setFilteredSourcingPartners] = useState([]);
   const [filteredDealflowPartners, setFilteredDealflowPartners] = useState([]);
@@ -6068,6 +6070,23 @@ const Dashboard = () => {
     fetchStatistics();
     fetchCustomFields();
     fetchColumnConfig();
+
+    const loadAnalytics = async () => {
+      try {
+        const start = new Date(new Date().getFullYear() - 1, 0, 1)
+          .toISOString().split('T')[0];
+        const end = new Date().toISOString().split('T')[0];
+        const [monthly, dist] = await Promise.all([
+          axios.get(`${API_URL}/analytics/monthly-evolution?start_date=${start}&end_date=${end}`),
+          axios.get(`${API_URL}/analytics/distribution?start_date=${start}&end_date=${end}`)
+        ]);
+        setMonthlyData(monthly.data);
+        setDistributionData(dist.data);
+      } catch (e) {
+        console.error("Erreur chargement analytics:", e);
+      }
+    };
+    loadAnalytics();
   }, []);
 
   const handleSearch = (searchTerm, type) => {
@@ -6794,20 +6813,16 @@ const Dashboard = () => {
           {/* Bloc droite : navigation + user */}
           <div className="flex items-center gap-3">
             <nav className="hidden xl:flex items-center gap-2">
-              <button
-                onClick={() => setActiveTab("dashboard")}
-                className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
-                  activeTab === "dashboard"
-                    ? "text-white"
-                    : "hover:bg-white hover:bg-opacity-10"
-                }`}
-              style={activeTab === "dashboard"
-                ? { background: 'var(--surm-pink)', borderRadius: '10px' }
-                : { color: 'rgba(255,255,255,0.65)' }}
+             <button
+                onClick={() => setActiveTab("home")}
+                className="px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition"
+                style={activeTab === "home"
+                  ? { background: 'var(--surm-turquoise)', borderRadius: '10px', color: 'var(--surm-navy)' }
+                  : { color: 'rgba(255,255,255,0.65)' }}
               >
-                <span>📊</span>
-                <span>Dashboard</span>
-              </button>
+                <span>🏠</span>
+                <span>Accueil</span>
+              </button> 
 
               <button
                 onClick={() => setActiveTab("kanban")}
@@ -6847,7 +6862,7 @@ const Dashboard = () => {
                     : "hover:bg-white hover:bg-opacity-10"
                 }`}
               style={activeTab === "dealflow"
-                ? { background: '#22C55E (vert)', borderRadius: '10px' }
+                ? { background: '#22C55E', borderRadius: '10px' }
                 : { color: 'rgba(255,255,255,0.65)' }}
               >
                 <span>🔁</span>
@@ -6986,14 +7001,13 @@ const Dashboard = () => {
         <div className="xl:hidden border-t border-surm-border mt-4 pt-3">
           <div className="flex space-x-2 overflow-x-auto pb-1">
             <button
-              onClick={() => setActiveTab("dashboard")}
-              className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${
-                activeTab === "dashboard"
-                  ? "bg-surm-pink/10 text-surm-navy"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              onClick={() => setActiveTab("home")}
+              className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap`}
+              style={activeTab === "home"
+                ? { background: 'var(--surm-turquoise)', color: 'var(--surm-navy)' }
+                : { color: '#6B7280' }}
             >
-              📊 Dashboard
+              🏠 Accueil
             </button>
 
             <button
@@ -7046,10 +7060,21 @@ const Dashboard = () => {
           <PersonalDashboard isVisible={true} currentUser={currentUser} />
         )}
 
+        {activeTab === "home" && (
+          <HomePage
+            statistics={statistics}
+            onNavigate={setActiveTab}
+          />
+        )}
+
         {activeTab === "dashboard" && (
           <div className="space-y-6">
-            {/* Phase 2 - Enhanced Analytics Dashboard */}
-            <SURMAnalyticsDashboard isVisible={true} />
+            <SURMAnalyticsDashboard
+              isVisible={true}
+              statistics={statistics}
+              monthlyData={monthlyData}
+              distributionData={distributionData}
+            />
             
             {/* Original Statistics (kept for reference) */}
             {statistics && (
