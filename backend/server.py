@@ -2666,4 +2666,27 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    @api_router.get("/import-dealflow-history")
+async def import_dealflow_history():
+    import json, pathlib
+    json_path = pathlib.Path(__file__).parent / "dealflow_import.json"
+    if not json_path.exists():
+        raise HTTPException(status_code=404, detail="Fichier dealflow_import.json introuvable")
+    with open(json_path, encoding="utf-8") as f:
+        docs = json.load(f)
+    existing = set(
+        d["nom"].strip().lower()
+        for d in await db.dealflow_partners.find({}, {"nom": 1}).to_list(10000)
+        if d.get("nom")
+    )
+    inserted, skipped = 0, 0
+    for doc in docs:
+        nom = doc.get("nom", "").strip()
+        if not nom or nom.lower() in existing:
+            skipped += 1
+            continue
+        await db.dealflow_partners.insert_one(doc)
+        existing.add(nom.lower())
+        inserted += 1
+    return {"inserted": inserted, "skipped": skipped, "total": await db.dealflow_partners.count_documents({})}
     client.close()
