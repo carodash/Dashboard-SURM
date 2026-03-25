@@ -2680,6 +2680,18 @@ async def import_dealflow_history():
         existing.add(nom.lower())
         inserted += 1
     return {"inserted": inserted, "skipped": skipped, "total": await db.dealflow_partners.count_documents({})}
+@api_router.get("/fix-nat-dates")
+async def fix_nat_dates():
+    result = await db.dealflow_partners.update_many(
+        {"date_reception_fichier": "NaT"},
+        {"$set": {"date_reception_fichier": "2020-01-01"}}
+    )
+    return {"fixed": result.modified_count}
+```
+
+Commite, attends le redéploiement Render, puis appelle cette URL :
+```
+https://dashboard-surm.onrender.com/api/fix-nat-dates
 
 app.include_router(api_router)
 
