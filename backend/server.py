@@ -2688,6 +2688,7 @@ async def import_dealflow_history():
         inserted += 1
     return {"inserted": inserted, "skipped": skipped, "total": await db.dealflow_partners.count_documents({})}
 
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
