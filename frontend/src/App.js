@@ -5591,7 +5591,7 @@ const HomePage = ({ statistics, onNavigate }) => {
               </span>
             </div>
             <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>
-              Startup Universe Relationship Management
+              Start Up Relationship Management
             </span>
           </div>
  
