@@ -826,8 +826,7 @@ async def get_sourcing_partners(user_id: str = "default_user"):
     if current_user.role == UserRole.CONTRIBUTEUR:
         query["pilote"] = current_user.full_name
 
-    query["statut"] = {"$ne": SourcingStatus.DEALFLOW}
-
+   
     partners = await db.sourcing_partners.find(query).to_list(2000)
 
     partners_with_status = []
