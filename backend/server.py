@@ -2656,13 +2656,6 @@ async def migrate_domains():
         )
  
     return results
-app.include_router(api_router)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 @api_router.get("/import-dealflow-history")
 async def import_dealflow_history():
@@ -2688,6 +2681,13 @@ async def import_dealflow_history():
         inserted += 1
     return {"inserted": inserted, "skipped": skipped, "total": await db.dealflow_partners.count_documents({})}
 
+app.include_router(api_router)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
