@@ -5836,6 +5836,53 @@ const HomePage = ({ statistics, onNavigate }) => {
     </div>
   );
 };
+const StatusKPIBar = ({ partners, type }) => {
+  const isSourceing = type === 'sourcing';
+  
+  const statusConfig = isSourceing ? [
+    { key: 'A traiter',   label: 'À traiter',   color: '#FBB902', bg: 'rgba(251,185,2,0.1)' },
+    { key: 'Klaxoon',     label: 'Klaxoon',     color: '#0FD2B6', bg: 'rgba(15,210,182,0.1)' },
+    { key: 'Dealflow',    label: 'Dealflow',    color: '#0391DF', bg: 'rgba(3,145,223,0.1)' },
+    { key: 'Clos',        label: 'Clos',        color: '#9CA3AF', bg: 'rgba(156,163,175,0.1)' },
+  ] : [
+    { key: "En cours avec l'équipe inno", label: 'Équipe inno', color: '#0391DF', bg: 'rgba(3,145,223,0.1)' },
+    { key: 'En cours avec les métiers',   label: 'Métiers',     color: '#F42B5F', bg: 'rgba(244,43,95,0.1)' },
+    { key: 'Go métier étude',             label: 'Go étude',    color: '#000069', bg: 'rgba(0,0,105,0.08)' },
+    { key: 'Go experimentation',          label: 'Go expé',     color: '#0FD2B6', bg: 'rgba(15,210,182,0.1)' },
+    { key: 'Go généralisation',           label: 'Généralisation', color: '#22C55E', bg: 'rgba(34,197,94,0.1)' },
+    { key: 'Clos',                        label: 'Clos',        color: '#9CA3AF', bg: 'rgba(156,163,175,0.1)' },
+  ];
+
+  const counts = {};
+  partners.forEach(p => {
+    counts[p.statut] = (counts[p.statut] || 0) + 1;
+  });
+
+  return (
+    <div className="grid gap-3 mb-4" style={{
+      gridTemplateColumns: `repeat(${statusConfig.length}, minmax(0, 1fr))`
+    }}>
+      {statusConfig.map(({ key, label, color, bg }) => (
+        <div key={key} style={{
+          background: 'white',
+          border: `1.5px solid ${color}30`,
+          borderLeft: `4px solid ${color}`,
+          borderRadius: '12px',
+          padding: '12px 16px',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.05)'
+        }}>
+          <div style={{ fontSize: '11px', color: '#6B7280', fontWeight: 600, letterSpacing: '0.5px', marginBottom: '4px' }}>
+            {label.toUpperCase()}
+          </div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color }}>
+            {counts[key] || 0}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const Dashboard = () => {
   // Phase 6 - Advanced Column Filtering & Sorting State
   const [columnFilters, setColumnFilters] = useState({});
@@ -5928,6 +5975,8 @@ const Dashboard = () => {
   };
 
   const [activeTab, setActiveTab] = useState("home");
+  const [showClosSourcing, setShowClosSourcing] = useState(false);
+  const [showClosDealflow, setShowClosDealflow] = useState(false);
   const [sourcingPartners, setSourcingPartners] = useState([]);
   const [monthlyData, setMonthlyData] = useState(null);
   const [distributionData, setDistributionData] = useState(null);
@@ -6039,7 +6088,7 @@ const Dashboard = () => {
         return dateB - dateA;
       });
       setSourcingPartners(sorted);
-      setFilteredSourcingPartners(sorted);
+      setFilteredSourcingPartners(sorted.filter(p => p.statut !== 'Clos'));
     } catch (error) {
       console.error("Error fetching sourcing partners:", error);
     }
@@ -7142,7 +7191,43 @@ const Dashboard = () => {
   <div className="space-y-6">
 
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <h2 className="text-2xl font-bold text-gray-900">Partenaires Sourcing</h2>
+      <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Partenaires Sourcing
+                  <span className="ml-3 text-base font-normal text-gray-500">
+                    ({filteredSourcingPartners.length} affichés / {sourcingPartners.length} total)
+                  </span>
+                </h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-gray-500">Afficher les Clos</span>
+                  <button
+                    onClick={() => {
+                      const next = !showClosSourcing;
+                      setShowClosSourcing(next);
+                      setFilteredSourcingPartners(
+                        next ? sourcingPartners : sourcingPartners.filter(p => p.statut !== 'Clos')
+                      );
+                    }}
+                    style={{
+                      width: '44px', height: '24px', borderRadius: '12px',
+                      background: showClosSourcing ? '#0391DF' : '#D1D5DB',
+                      border: 'none', cursor: 'pointer', position: 'relative',
+                      transition: 'background 0.2s'
+                    }}
+                  >
+                    <span style={{
+                      position: 'absolute', top: '3px',
+                      left: showClosSourcing ? '22px' : '3px',
+                      width: '18px', height: '18px', borderRadius: '50%',
+                      background: 'white', transition: 'left 0.2s',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                    }} />
+                  </button>
+                  <span className="text-xs font-medium" style={{ color: showClosSourcing ? '#0391DF' : '#9CA3AF' }}>
+                    {showClosSourcing ? 'ON' : 'OFF'}
+                  </span>
+                </div>
+              </div>
 
       <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
 
@@ -7182,7 +7267,9 @@ const Dashboard = () => {
 
       </div>
     </div>
-
+        
+    <StatusKPIBar partners={sourcingPartners} type="sourcing" />
+        
     <BulkActionsBar
       selectedItems={selectedItems}
       onBulkDelete={handleBulkDelete}
@@ -7236,21 +7323,35 @@ const Dashboard = () => {
                     ({filteredDealflowPartners.length} affichés / {dealflowPartners.length} total)
                   </span>
                 </h2>
-                <button
-                  onClick={() => {
-                    const showingClos = filteredDealflowPartners.some(p => p.statut === "Clos");
-                    if (showingClos) {
-                      setFilteredDealflowPartners(dealflowPartners.filter(p => p.statut !== "Clos"));
-                    } else {
-                      setFilteredDealflowPartners(dealflowPartners);
-                    }
-                  }}
-                  className="text-xs mt-1 text-blue-600 hover:underline"
-                >
-                  {filteredDealflowPartners.some(p => p.statut === "Clos")
-                    ? "🙈 Masquer les Clos"
-                    : "👁️ Afficher aussi les Clos"}
-                </button>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-gray-500">Afficher les Clos</span>
+                  <button
+                    onClick={() => {
+                      const next = !showClosDealflow;
+                      setShowClosDealflow(next);
+                      setFilteredDealflowPartners(
+                        next ? dealflowPartners : dealflowPartners.filter(p => p.statut !== 'Clos')
+                      );
+                    }}
+                    style={{
+                      width: '44px', height: '24px', borderRadius: '12px',
+                      background: showClosDealflow ? '#0391DF' : '#D1D5DB',
+                      border: 'none', cursor: 'pointer', position: 'relative',
+                      transition: 'background 0.2s'
+                    }}
+                  >
+                    <span style={{
+                      position: 'absolute', top: '3px',
+                      left: showClosDealflow ? '22px' : '3px',
+                      width: '18px', height: '18px', borderRadius: '50%',
+                      background: 'white', transition: 'left 0.2s',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                    }} />
+                  </button>
+                  <span className="text-xs font-medium" style={{ color: showClosDealflow ? '#0391DF' : '#9CA3AF' }}>
+                    {showClosDealflow ? 'ON' : 'OFF'}
+                  </span>
+                </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                 <div className="flex gap-2">
@@ -7285,6 +7386,8 @@ const Dashboard = () => {
                 )}
               </div>
             </div>
+                
+            <StatusKPIBar partners={dealflowPartners} type="dealflow" />
 
             <BulkActionsBar
               selectedItems={selectedItems}
