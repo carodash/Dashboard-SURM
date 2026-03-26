@@ -2686,12 +2686,8 @@ async def fix_nat_dates():
         {"date_reception_fichier": "NaT"},
         {"$set": {"date_reception_fichier": "2020-01-01"}}
     )
-    return {"fixed": result.modified_count}
-```
+return {"fixed": result.modified_count}
 
-Commite, attends le redéploiement Render, puis appelle cette URL :
-```
-https://dashboard-surm.onrender.com/api/fix-nat-dates
 
 app.include_router(api_router)
 
