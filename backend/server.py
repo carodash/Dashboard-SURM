@@ -2657,39 +2657,6 @@ async def migrate_domains():
  
     return results
 
-@api_router.get("/import-dealflow-history")
-async def import_dealflow_history():
-    import json, pathlib
-    json_path = pathlib.Path(__file__).parent / "dealflow_import.json"
-    if not json_path.exists():
-        raise HTTPException(status_code=404, detail="Fichier dealflow_import.json introuvable")
-    with open(json_path, encoding="utf-8") as f:
-        docs = json.load(f)
-    existing = set(
-        d["nom"].strip().lower()
-        for d in await db.dealflow_partners.find({}, {"nom": 1}).to_list(10000)
-        if d.get("nom")
-    )
-    inserted, skipped = 0, 0
-    for doc in docs:
-        nom = doc.get("nom", "").strip()
-        if not nom or nom.lower() in existing:
-            skipped += 1
-            continue
-        await db.dealflow_partners.insert_one(doc)
-        existing.add(nom.lower())
-        inserted += 1
-    return {"inserted": inserted, "skipped": skipped, "total": await db.dealflow_partners.count_documents({})}
-
-
-@api_router.get("/fix-nat-dates")
-async def fix_nat_dates():
-    result = await db.dealflow_partners.update_many(
-        {"date_reception_fichier": "NaT"},
-        {"$set": {"date_reception_fichier": "2020-01-01"}}
-    )
-    return {"fixed": result.modified_count}
-
 
 app.include_router(api_router)
 
