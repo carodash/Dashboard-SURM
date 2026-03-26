@@ -529,3 +529,35 @@ h1, h2, h3, h4,
   .no-print { display: none !important; }
   body { background: white !important; }
 }
+
+/* ── Statuts Dealflow spécifiques ── */
+.status-dealflow-inno {
+  background: rgba(3,145,223,0.12);
+  color: #0391DF;
+  border: 1px solid rgba(3,145,223,0.3);
+}
+.status-dealflow-metiers {
+  background: rgba(244,43,95,0.12);
+  color: #F42B5F;
+  border: 1px solid rgba(244,43,95,0.3);
+}
+.status-dealflow-go-metier {
+  background: rgba(0,0,105,0.1);
+  color: #000069;
+  border: 1px solid rgba(0,0,105,0.25);
+}
+.status-dealflow-experimentation {
+  background: rgba(15,210,182,0.12);
+  color: #0a9e8a;
+  border: 1px solid rgba(15,210,182,0.3);
+}
+.status-dealflow-generalisation {
+  background: rgba(34,197,94,0.12);
+  color: #16a34a;
+  border: 1px solid rgba(34,197,94,0.3);
+}
+.status-dealflow-presentation {
+  background: rgba(251,185,2,0.15);
+  color: #b45309;
+  border: 1px solid rgba(251,185,2,0.4);
+}
