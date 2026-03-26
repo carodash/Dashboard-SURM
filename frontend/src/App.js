@@ -4215,7 +4215,37 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
               </div>
             ))}
           </div>
-          
+
+        <div className="col-span-2">
+          <label className="block text-sm font-medium mb-2">
+            Logo de la startup (URL)
+          </label>
+          <div className="flex gap-3 items-center">
+            <input
+              type="text"
+              name="logo_url"
+              value={formData.logo_url || ''}
+              onChange={handleChange}
+              className="flex-1 border border-gray-300 rounded-md px-3 py-2"
+              placeholder="https://logo.clearbit.com/nomdusite.com"
+            />
+            {formData.logo_url && (
+              <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
+                style={{ border: '1.5px solid var(--surm-border)', background: '#f8fafc' }}>
+                <img
+                  src={formData.logo_url}
+                  alt="Logo"
+                  className="w-full h-full object-contain p-1"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            💡 Astuce : essaie https://logo.clearbit.com/nomdusite.com
+          </p>
+        </div>
+              
           <div>
             <label className="block text-sm font-medium mb-1">Actions/Commentaires</label>
             <textarea
