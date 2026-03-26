@@ -3737,6 +3737,7 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     tags_strategiques: Array.isArray(initialData?.tags_strategiques) 
       ? initialData.tags_strategiques.join(', ') 
       : (initialData?.tags_strategiques || ""),
+    logo_url: initialData?.logo_url || "",
     custom_fields: initialData?.custom_fields || {},
     ...customFields.reduce((acc, field) => {
       acc[field.name] = initialData?.[field.name] || field.defaultValue || "";
