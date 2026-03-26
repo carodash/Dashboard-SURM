@@ -5348,11 +5348,17 @@ const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, 
   // Badge statut
   const getStatusClass = (status) => {
     const map = {
-      "A traiter":   "status-a-traiter",
-      "Klaxoon":     "status-klaxoon",
-      "Dealflow":    "status-dealflow",
-      "Clos":        "status-clos",
-      "EN COURS":    "status-en-cours",
+      "A traiter":                      "status-a-traiter",
+      "Klaxoon":                        "status-klaxoon",
+      "Dealflow":                       "status-dealflow",
+      "Clos":                           "status-clos",
+      "EN COURS":                       "status-en-cours",
+      "En cours avec l'équipe inno":    "status-dealflow-inno",
+      "En cours avec les métiers":      "status-dealflow-metiers",
+      "Go métier étude":                "status-dealflow-go-metier",
+      "Go experimentation":             "status-dealflow-experimentation",
+      "Go généralisation":              "status-dealflow-generalisation",
+      "Présentation métiers":           "status-dealflow-presentation",
     };
     return map[status] || "status-a-traiter";
   };
@@ -5460,8 +5466,26 @@ const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, 
 
         {/* Pilote */}
         {partner.pilote && (
-          <div className="text-xs mb-3" style={{ color: 'var(--surm-muted)' }}>
+          <div className="text-xs mb-2" style={{ color: 'var(--surm-muted)' }}>
             👤 {partner.pilote}
+          </div>
+        )}
+
+        {/* Dates clés pour Dealflow */}
+        {type === 'dealflow' && (
+          <div className="text-xs mb-3 space-y-1" style={{ color: 'var(--surm-muted)' }}>
+            {partner.date_reception_fichier && (
+              <div>📥 Réception : {new Date(partner.date_reception_fichier).toLocaleDateString('fr-FR')}</div>
+            )}
+            {partner.date_go_metier_etude && (
+              <div>🎯 Go métier : {new Date(partner.date_go_metier_etude).toLocaleDateString('fr-FR')}</div>
+            )}
+            {partner.date_go_experimentation && (
+              <div>🧪 Go expé : {new Date(partner.date_go_experimentation).toLocaleDateString('fr-FR')}</div>
+            )}
+            {partner.date_go_generalisation && (
+              <div>🚀 Généralisation : {new Date(partner.date_go_generalisation).toLocaleDateString('fr-FR')}</div>
+            )}
           </div>
         )}
 
@@ -6024,8 +6048,15 @@ const Dashboard = () => {
   const fetchDealflowPartners = async () => {
     try {
       const response = await axios.get(`${API_URL}/dealflow`);
-      setDealflowPartners(response.data);
-      setFilteredDealflowPartners(response.data);
+      // Tri par date de réception (plus récent en premier)
+      const sorted = [...response.data].sort((a, b) => {
+        const dateA = new Date(a.date_reception_fichier || 0);
+        const dateB = new Date(b.date_reception_fichier || 0);
+        return dateB - dateA;
+      });
+      setDealflowPartners(sorted);
+      // Masquer "Clos" par défaut
+      setFilteredDealflowPartners(sorted.filter(p => p.statut !== "Clos"));
     } catch (error) {
       console.error("Error fetching dealflow partners:", error);
     }
@@ -7198,7 +7229,29 @@ const Dashboard = () => {
         {activeTab === "dealflow" && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h2 className="text-2xl font-bold text-gray-900">Partenaires Dealflow</h2>
+             <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Partenaires Dealflow
+                  <span className="ml-3 text-base font-normal text-gray-500">
+                    ({filteredDealflowPartners.length} affichés / {dealflowPartners.length} total)
+                  </span>
+                </h2>
+                <button
+                  onClick={() => {
+                    const showingClos = filteredDealflowPartners.some(p => p.statut === "Clos");
+                    if (showingClos) {
+                      setFilteredDealflowPartners(dealflowPartners.filter(p => p.statut !== "Clos"));
+                    } else {
+                      setFilteredDealflowPartners(dealflowPartners);
+                    }
+                  }}
+                  className="text-xs mt-1 text-blue-600 hover:underline"
+                >
+                  {filteredDealflowPartners.some(p => p.statut === "Clos")
+                    ? "🙈 Masquer les Clos"
+                    : "👁️ Afficher aussi les Clos"}
+                </button>
+              </div>
               <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                 <div className="flex gap-2">
                   <button
@@ -7241,10 +7294,7 @@ const Dashboard = () => {
               partnerType="dealflow"
             />
             
-            <EnhancedTableContainer 
-              tableId="dealflow-table" 
-              title="Table Dealflow"
-            >
+            <div className="bg-white border border-surm-border rounded-xl shadow-card p-4">
               <div className="startup-grid">
   {filteredDealflowPartners.map((partner) => (
     <StartupCard 
@@ -7266,7 +7316,7 @@ const Dashboard = () => {
                   <p className="text-gray-500">Aucun partenaire dealflow trouvé.</p>
                 </div>
               )}
-            </EnhancedTableContainer>
+            </div>
           </div>
         )}
       </div>
