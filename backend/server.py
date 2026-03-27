@@ -259,6 +259,7 @@ class SourcingPartner(BaseModel):
     score_potentiel: Optional[int] = None
     tags_strategiques: Optional[List[str]] = []
     logo_url: Optional[str] = None
+    site_web: Optional[str] = None
     enriched_data: Optional[Dict[str, Any]] = {}
     custom_fields: Optional[Dict[str, Any]] = {}
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -285,6 +286,7 @@ class SourcingPartnerCreate(BaseModel):
     score_potentiel: Optional[int] = None
     tags_strategiques: Optional[List[str]] = []
     logo_url: Optional[str] = None
+    site_web: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = {}
 
 class SourcingPartnerUpdate(BaseModel):
@@ -308,6 +310,7 @@ class SourcingPartnerUpdate(BaseModel):
     score_potentiel: Optional[int] = None
     tags_strategiques: Optional[List[str]] = None
     logo_url: Optional[str] = None
+    site_web: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = None
 
 class DealflowPartner(BaseModel):
@@ -343,6 +346,7 @@ class DealflowPartner(BaseModel):
     score_potentiel: Optional[int] = None
     tags_strategiques: Optional[List[str]] = []
     logo_url: Optional[str] = None
+    site_web: Optional[str] = None
     enriched_data: Optional[Dict[str, Any]] = {}
     custom_fields: Optional[Dict[str, Any]] = {}
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -374,6 +378,7 @@ class DealflowPartnerCreate(BaseModel):
     technologie: Optional[str] = None
     interet: Optional[bool] = None
     logo_url: Optional[str] = None
+    site_web: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = {}
 
 class DealflowPartnerUpdate(BaseModel):
@@ -397,6 +402,7 @@ class DealflowPartnerUpdate(BaseModel):
     points_etapes_intermediaires: Optional[str] = None
     date_prochaine_action: Optional[date] = None
     logo_url: Optional[str] = None
+    site_web: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = None
 
 class QuarterlyStats(BaseModel):
