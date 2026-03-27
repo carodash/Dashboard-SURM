@@ -5540,14 +5540,7 @@ const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, 
         {/* Site web */}
         {partner.site_web && (
           <div className="text-xs mb-2">
-            
-              href={partner.site_web}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              style={{ color: 'var(--surm-blue)' }}
-              className="hover:underline"
-            >
+            <a href={partner.site_web} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: 'var(--surm-blue)' }} className="hover:underline">
               🌐 {partner.site_web.replace(/^https?:\/\//, '').replace(/\/$/, '')}
             </a>
           </div>
