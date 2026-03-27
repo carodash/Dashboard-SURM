@@ -3926,11 +3926,17 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                     
                     console.log('🔍 ENRICHISSEMENT DEALFLOW - Données reçues:', enrichedData);
                     
+                    // APRÈS
                     if (enrichedData) {
-                      // Debug: Log current form data before update
                       console.log('📋 DEALFLOW AVANT ENRICHISSEMENT:', formData);
-                      
-                      // Auto-fill form fields with enriched data
+                    
+                      // Traduction de la description comme côté Sourcing
+                      const descriptionFR = enrichedData?.description
+                        ? await translateToFrench(enrichedData.description)
+                        : "";
+                    
+                      console.log('🇫🇷 DESCRIPTION TRADUITE (Dealflow):', descriptionFR);
+                    
                       const updatedData = {
                         ...formData,
                         domaine: enrichedData.industry && (!formData.domaine || formData.domaine === '') 
@@ -3940,8 +3946,9 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                            enrichedData.company_type === 'private' ? 'PME' : 
                            enrichedData.employees_count && enrichedData.employees_count > 250 ? 'Scale-up' : 
                            formData.typologie) : formData.typologie,
-                        objet: enrichedData.description && (!formData.objet || formData.objet === '') 
-                          ? enrichedData.description : formData.objet
+                        objet: descriptionFR && (!formData.objet || formData.objet === '') 
+                          ? descriptionFR.substring(0, 200) + (descriptionFR.length > 200 ? "..." : "")
+                          : formData.objet
                       };
                       
                       console.log('📋 DEALFLOW APRÈS ENRICHISSEMENT:', updatedData);
