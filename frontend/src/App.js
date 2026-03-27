@@ -3253,10 +3253,11 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                                 ? "Scale-up"
                                 : "Startup"
                           : formData.typologie,
-                      site_web:
-                        (!formData.site_web || formData.site_web === "") && enrichedData.website_url
-                          ? enrichedData.website_url
-                          : formData.site_web,
+                     site_web: (() => {
+                        if (formData.site_web && formData.site_web !== "") return formData.site_web;
+                        const urlMatch = enrichedData.description?.match(/https?:\/\/[^\s,)]+/);
+                        return urlMatch ? urlMatch[0] : (enrichedData.website_url || "");
+                      })(),
                       objet:
                         (!formData.objet || formData.objet === "") && descriptionFR
                           ? descriptionFR.substring(0, 200) + (descriptionFR.length > 200 ? "..." : "")
@@ -3966,10 +3967,11 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                            enrichedData.company_type === 'private' ? 'PME' : 
                            enrichedData.employees_count && enrichedData.employees_count > 250 ? 'Scale-up' : 
                            formData.typologie) : formData.typologie,
-                        site_web:
-                        (!formData.site_web || formData.site_web === '') && enrichedData.website_url
-                          ? enrichedData.website_url
-                          : formData.site_web,
+                        site_web: (() => {
+                          if (formData.site_web && formData.site_web !== '') return formData.site_web;
+                          const urlMatch = enrichedData.description?.match(/https?:\/\/[^\s,)]+/);
+                          return urlMatch ? urlMatch[0] : (enrichedData.website_url || '');
+                        })(),
                         objet: descriptionFR && (!formData.objet || formData.objet === '') 
                           ? descriptionFR.substring(0, 200) + (descriptionFR.length > 200 ? "..." : "")
                           : formData.objet
