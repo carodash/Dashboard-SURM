@@ -3007,7 +3007,8 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
     tags_strategiques: Array.isArray(initialData?.tags_strategiques) 
       ? initialData.tags_strategiques.join(', ') 
       : (initialData?.tags_strategiques || ""),
-    logo_url: initialData?.logo_url || ""
+    logo_url: initialData?.logo_url || "",
+    site_web: initialData?.site_web || ""
   });
 
   // Phase 5 - Duplicate Detection
@@ -3252,6 +3253,10 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                                 ? "Scale-up"
                                 : "Startup"
                           : formData.typologie,
+                      site_web:
+                        (!formData.site_web || formData.site_web === "") && enrichedData.website_url
+                          ? enrichedData.website_url
+                          : formData.site_web,
                       objet:
                         (!formData.objet || formData.objet === "") && descriptionFR
                           ? descriptionFR.substring(0, 200) + (descriptionFR.length > 200 ? "..." : "")
@@ -3635,7 +3640,21 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                 💡 Astuce : essaie https://img.logo.dev/nomdusite.com?token=pk_free ou https://www.google.com/s2/favicons?domain=nomdusite.com&sz=64
               </p>
             </div>
-            
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                🌐 Site web
+              </label>
+              <input
+                type="url"
+                name="site_web"
+                value={formData.site_web || ''}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="https://www.nomdusite.com"
+              />
+            </div>
+                  
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Date présentation métiers</label>
@@ -3738,6 +3757,7 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
       ? initialData.tags_strategiques.join(', ') 
       : (initialData?.tags_strategiques || ""),
     logo_url: initialData?.logo_url || "",
+    site_web: initialData?.site_web || ""
     custom_fields: initialData?.custom_fields || {},
     ...customFields.reduce((acc, field) => {
       acc[field.name] = initialData?.[field.name] || field.defaultValue || "";
@@ -3946,6 +3966,10 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                            enrichedData.company_type === 'private' ? 'PME' : 
                            enrichedData.employees_count && enrichedData.employees_count > 250 ? 'Scale-up' : 
                            formData.typologie) : formData.typologie,
+                        site_web:
+                        (!formData.site_web || formData.site_web === '') && enrichedData.website_url
+                          ? enrichedData.website_url
+                          : formData.site_web,
                         objet: descriptionFR && (!formData.objet || formData.objet === '') 
                           ? descriptionFR.substring(0, 200) + (descriptionFR.length > 200 ? "..." : "")
                           : formData.objet
@@ -4223,6 +4247,20 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
               </div>
             ))}
           </div>
+
+        <div className="col-span-2">
+          <label className="block text-sm font-medium mb-2">
+            🌐 Site web
+          </label>
+          <input
+            type="url"
+            name="site_web"
+            value={formData.site_web || ''}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://www.nomdusite.com"
+          />
+        </div>
 
         <div className="col-span-2">
           <label className="block text-sm font-medium mb-2">
@@ -5500,6 +5538,22 @@ const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, 
           <div className="flex items-center gap-1 mb-3 text-xs font-medium"
             style={{ color: new Date(partner.date_prochaine_action) < new Date() ? '#EF4444' : 'var(--surm-blue)' }}>
             📅 {new Date(partner.date_prochaine_action).toLocaleDateString('fr-FR')}
+          </div>
+        )}
+
+        {/* Site web */}
+        {partner.site_web && (
+          <div className="text-xs mb-2">
+            
+              href={partner.site_web}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              style={{ color: 'var(--surm-blue)' }}
+              className="hover:underline"
+            >
+              🌐 {partner.site_web.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+            </a>
           </div>
         )}
 
