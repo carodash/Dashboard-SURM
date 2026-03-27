@@ -4248,50 +4248,46 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
             ))}
           </div>
 
-        <div className="col-span-2">
-          <label className="block text-sm font-medium mb-2">
-            🌐 Site web
-          </label>
-          <input
-            type="url"
-            name="site_web"
-            value={formData.site_web || ''}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="https://www.nomdusite.com"
-          />
-        </div>
-
-        <div className="col-span-2">
-          <label className="block text-sm font-medium mb-2">
-            Logo de la startup (URL)
-          </label>
-          <div className="flex gap-3 items-center">
+          <div>
+            <label className="block text-sm font-medium mb-1">🌐 Site web</label>
             <input
-              type="text"
-              name="logo_url"
-              value={formData.logo_url || ''}
+              type="url"
+              name="site_web"
+              value={formData.site_web || ''}
               onChange={handleChange}
-              className="flex-1 border border-gray-300 rounded-md px-3 py-2"
-              placeholder="https://img.logo.dev/nomdusite.com?token=pk_free"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="https://www.nomdusite.com"
             />
-            {formData.logo_url && (
-              <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
-                style={{ border: '1.5px solid var(--surm-border)', background: '#f8fafc' }}>
-                <img
-                  src={formData.logo_url}
-                  alt="Logo"
-                  className="w-full h-full object-contain p-1"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              </div>
-            )}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            💡 Astuce : essaie https://img.logo.dev/nomdusite.com?token=pk_free ou https://www.google.com/s2/favicons?domain=nomdusite.com&sz=64
-          </p>
-        </div>
-              
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Logo de la startup (URL)</label>
+            <div className="flex gap-3 items-center">
+              <input
+                type="text"
+                name="logo_url"
+                value={formData.logo_url || ''}
+                onChange={handleChange}
+                className="flex-1 border border-gray-300 rounded-md px-3 py-2"
+                placeholder="https://img.logo.dev/nomdusite.com?token=pk_free"
+              />
+              {formData.logo_url && (
+                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
+                  style={{ border: '1.5px solid var(--surm-border)', background: '#f8fafc' }}>
+                  <img
+                    src={formData.logo_url}
+                    alt="Logo"
+                    className="w-full h-full object-contain p-1"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              💡 Astuce : essaie https://img.logo.dev/nomdusite.com?token=pk_free ou https://www.google.com/s2/favicons?domain=nomdusite.com&sz=64
+            </p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium mb-1">Actions/Commentaires</label>
             <textarea
