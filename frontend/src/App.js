@@ -3616,7 +3616,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                   value={formData.logo_url || ''}
                   onChange={handleChange}
                   className="flex-1 border border-gray-300 rounded-md px-3 py-2"
-                  placeholder="https://logo.clearbit.com/nomdusite.com"
+                  placeholder="https://img.logo.dev/nomdusite.com?token=pk_free"
                 />
                 {/* Prévisualisation du logo */}
                 {formData.logo_url && (
@@ -3632,7 +3632,7 @@ const SourcingForm = ({ onSubmit, initialData = null, onCancel, customFields = [
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                💡 Astuce : essaie https://logo.clearbit.com/nomdusite.com ou https://www.google.com/s2/favicons?domain=nomdusite.com&sz=64
+                💡 Astuce : essaie https://img.logo.dev/nomdusite.com?token=pk_free ou https://www.google.com/s2/favicons?domain=nomdusite.com&sz=64
               </p>
             </div>
             
@@ -4235,7 +4235,7 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
               value={formData.logo_url || ''}
               onChange={handleChange}
               className="flex-1 border border-gray-300 rounded-md px-3 py-2"
-              placeholder="https://logo.clearbit.com/nomdusite.com"
+              placeholder="https://img.logo.dev/nomdusite.com?token=pk_free"
             />
             {formData.logo_url && (
               <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
@@ -4250,7 +4250,7 @@ const DealflowForm = ({ onSubmit, initialData = null, onCancel, customFields = [
             )}
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            💡 Astuce : essaie https://logo.clearbit.com/nomdusite.com
+            💡 Astuce : essaie https://img.logo.dev/nomdusite.com?token=pk_free ou https://www.google.com/s2/favicons?domain=nomdusite.com&sz=64
           </p>
         </div>
               
@@ -5450,17 +5450,18 @@ const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, 
                 src={partner.logo_url}
                 alt={name}
                 className="w-full h-full object-contain p-1"
+                // APRÈS
                 onError={(e) => {
-                  // Google Favicons comme fallback final
+                  // Fallback 1 : si Logo.dev échoue → Google Favicons
                   if (partner.logo_url && !e.target.src.includes('google.com')) {
-                    const domain = partner.logo_url
+                    let domain = partner.logo_url
+                      .replace('https://img.logo.dev/', '')
                       .replace('https://logo.clearbit.com/', '')
-                      .replace('https://www.google.com/s2/favicons?domain=', '')
-                      .split('&')[0];
+                      .split('?')[0];
                     e.target.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
                     return;
                   }
-                  // Si tout échoue → lettre initiale
+                  // Fallback 2 : lettre initiale
                   e.target.style.display = 'none';
                   e.target.parentNode.innerHTML = `<span style="
                     display:flex;align-items:center;justify-content:center;
