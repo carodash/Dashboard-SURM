@@ -5393,7 +5393,274 @@ const EnrichedDataModal = ({ isOpen, onClose, partner, partnerType }) => {
   );
 };
 
-const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, onComments, onDocs, onTransition }) => {
+const StartupDetailPanel = ({ partner, type, isOpen, onClose, onEdit, onTimeline, onComments, onDocs, onTransition }) => {
+  if (!partner) return null;
+
+  const name = partner.nom_entreprise || partner.nom;
+  const domain = partner.domaine_activite || partner.domaine;
+
+  const formatDate = (d) => {
+    if (!d) return null;
+    return new Date(d).toLocaleDateString('fr-FR');
+  };
+
+  const Section = ({ title, children }) => (
+    <div className="mb-5">
+      <h4 style={{ color: 'var(--surm-navy)', fontSize: '11px', fontWeight: 700,
+        letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px',
+        borderBottom: '1px solid var(--surm-border)', paddingBottom: '6px' }}>
+        {title}
+      </h4>
+      {children}
+    </div>
+  );
+
+  const Field = ({ label, value }) => {
+    if (!value) return null;
+    return (
+      <div className="mb-3">
+        <div style={{ fontSize: '11px', color: 'var(--surm-muted)', fontWeight: 600, marginBottom: '2px' }}>
+          {label}
+        </div>
+        <div style={{ fontSize: '13px', color: 'var(--surm-navy)', lineHeight: '1.5' }}>
+          {value}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.3)',
+          zIndex: 40,
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? 'auto' : 'none',
+          transition: 'opacity 0.25s'
+        }}
+      />
+
+      {/* Panneau */}
+      <div style={{
+        position: 'fixed', top: 0, right: 0, bottom: 0,
+        width: '420px', maxWidth: '95vw',
+        background: 'white',
+        zIndex: 50,
+        transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
+        display: 'flex', flexDirection: 'column',
+        boxShadow: '-4px 0 24px rgba(0,0,105,0.12)'
+      }}>
+
+        {/* Header panneau */}
+        <div style={{
+          padding: '20px 24px 16px',
+          borderBottom: '1px solid var(--surm-border)',
+          background: 'linear-gradient(135deg, #000069, #0a0a8a)'
+        }}>
+          <div className="flex items-center justify-between mb-3">
+            <span style={{
+              fontSize: '11px', fontWeight: 700, letterSpacing: '1px',
+              color: type === 'sourcing' ? '#0FD2B6' : '#F42B5F',
+              textTransform: 'uppercase'
+            }}>
+              {type === 'sourcing' ? '🔍 Sourcing' : '🚀 Dealflow'}
+            </span>
+            <button onClick={onClose} style={{ color: 'rgba(255,255,255,0.6)', fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Logo */}
+            <div style={{
+              width: '48px', height: '48px', borderRadius: '12px',
+              background: 'rgba(255,255,255,0.1)', flexShrink: 0,
+              overflow: 'hidden', border: '1.5px solid rgba(255,255,255,0.2)'
+            }}>
+              {partner.logo_url ? (
+                <img src={partner.logo_url} alt={name}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentNode.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:18px">${name?.[0]?.toUpperCase() || '?'}</div>`;
+                  }}
+                />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'white', fontSize: '18px' }}>
+                  {name?.[0]?.toUpperCase() || '?'}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h2 style={{ color: 'white', fontSize: '18px', fontWeight: 700, lineHeight: 1.2 }}>
+                {name}
+              </h2>
+              {partner.site_web && (
+                <a href={partner.site_web} target="_blank" rel="noopener noreferrer"
+                  style={{ color: '#0FD2B6', fontSize: '12px' }}
+                  onClick={(e) => e.stopPropagation()}>
+                  🌐 {partner.site_web.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Statut badge */}
+          <div className="mt-3">
+            <span style={{
+              background: 'rgba(255,255,255,0.15)', color: 'white',
+              borderRadius: '20px', padding: '4px 12px', fontSize: '12px', fontWeight: 600
+            }}>
+              {partner.statut}
+            </span>
+            {partner.is_inactive && (
+              <span style={{
+                marginLeft: '8px', background: 'rgba(239,68,68,0.2)',
+                color: '#FCA5A5', borderRadius: '20px', padding: '4px 12px', fontSize: '12px'
+              }}>
+                ⚠️ Inactif {partner.days_since_update}j
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Corps scrollable */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+
+          <Section title="Informations générales">
+            <Field label="Domaine d'activité" value={domain} />
+            <Field label="Typologie" value={partner.typologie} />
+            <Field label="Pays d'origine" value={partner.pays_origine} />
+            <Field label="Pilote" value={partner.pilote} />
+            <Field label="Source" value={partner.source} />
+            {type === 'dealflow' && <Field label="Métiers concernés" value={partner.metiers_concernes} />}
+          </Section>
+
+          <Section title="Description">
+            <div style={{ fontSize: '13px', color: '#374151', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+              {partner.objet || <span style={{ color: 'var(--surm-muted)' }}>Aucune description</span>}
+            </div>
+            <Field label="Cas d'usage" value={partner.cas_usage} />
+            <Field label="Technologie" value={partner.technologie} />
+          </Section>
+
+          {(partner.score_maturite || partner.priorite_strategique || partner.score_potentiel || partner.tags_strategiques?.length > 0) && (
+            <Section title="Évaluation stratégique">
+              {partner.priorite_strategique && (
+                <div className="mb-2"><PriorityTag priority={partner.priorite_strategique} /></div>
+              )}
+              {partner.score_maturite && (
+                <div className="mb-2"><ScoreDisplay score={partner.score_maturite} type="maturite" /></div>
+              )}
+              {partner.score_potentiel && (
+                <div className="mb-2"><ScoreDisplay score={partner.score_potentiel} type="potentiel" /></div>
+              )}
+              {partner.tags_strategiques?.length > 0 && (
+                <StrategicTags tags={partner.tags_strategiques} />
+              )}
+            </Section>
+          )}
+
+          <Section title="Dates">
+            {type === 'sourcing' ? (
+              <>
+                <Field label="Entrée sourcing" value={formatDate(partner.date_entree_sourcing)} />
+                <Field label="Présentation métiers" value={formatDate(partner.date_presentation_metiers)} />
+              </>
+            ) : (
+              <>
+                <Field label="Réception fichier" value={formatDate(partner.date_reception_fichier)} />
+                <Field label="Pré-qualification" value={formatDate(partner.date_pre_qualification)} />
+                <Field label="Présentation meetup référents" value={formatDate(partner.date_presentation_meetup_referents)} />
+                <Field label="Présentation métiers" value={formatDate(partner.date_presentation_metiers)} />
+                <Field label="Go métier étude" value={formatDate(partner.date_go_metier_etude)} />
+                <Field label="Go expérimentation" value={formatDate(partner.date_go_experimentation)} />
+                <Field label="Go généralisation" value={formatDate(partner.date_go_generalisation)} />
+                <Field label="Clôture" value={formatDate(partner.date_cloture)} />
+              </>
+            )}
+            {partner.date_prochaine_action && (
+              <div className="mb-2">
+                <div style={{ fontSize: '11px', color: 'var(--surm-muted)', fontWeight: 600, marginBottom: '2px' }}>
+                  Prochaine action
+                </div>
+                <div style={{
+                  fontSize: '13px', fontWeight: 600,
+                  color: new Date(partner.date_prochaine_action) < new Date() ? '#EF4444' : '#22C55E'
+                }}>
+                  📅 {formatDate(partner.date_prochaine_action)}
+                </div>
+              </div>
+            )}
+          </Section>
+
+          {(partner.actions_commentaires || partner.points_etapes_intermediaires) && (
+            <Section title="Notes & Commentaires">
+              <Field label="Actions / Commentaires" value={partner.actions_commentaires} />
+              <Field label="Points d'étapes" value={partner.points_etapes_intermediaires} />
+            </Section>
+          )}
+        </div>
+
+        {/* Footer — actions */}
+        <div style={{
+          padding: '16px 24px',
+          borderTop: '1px solid var(--surm-border)',
+          display: 'flex', gap: '8px', flexWrap: 'wrap'
+        }}>
+          <button
+            onClick={() => { onEdit(partner); onClose(); }}
+            style={{
+              flex: 1, padding: '10px', borderRadius: '10px',
+              background: '#000069', color: 'white',
+              border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px'
+            }}
+          >
+            ✏️ Modifier
+          </button>
+          <button
+            onClick={() => onTimeline(partner, type)}
+            style={{
+              flex: 1, padding: '10px', borderRadius: '10px',
+              background: 'rgba(3,145,223,0.1)', color: '#0391DF',
+              border: '1.5px solid #0391DF', cursor: 'pointer', fontWeight: 600, fontSize: '13px'
+            }}
+          >
+            📋 Timeline
+          </button>
+          <button
+            onClick={() => onDocs(partner, type)}
+            style={{
+              flex: 1, padding: '10px', borderRadius: '10px',
+              background: 'rgba(0,0,0,0.05)', color: '#374151',
+              border: '1.5px solid #D1D5DB', cursor: 'pointer', fontWeight: 600, fontSize: '13px'
+            }}
+          >
+            📎 Docs
+          </button>
+          {type === 'sourcing' && (
+            <button
+              onClick={() => { onTransition(partner.id); onClose(); }}
+              style={{
+                width: '100%', padding: '10px', borderRadius: '10px',
+                background: 'rgba(244,43,95,0.1)', color: '#F42B5F',
+                border: '1.5px solid #F42B5F', cursor: 'pointer', fontWeight: 600, fontSize: '13px'
+              }}
+            >
+              → Passer en Dealflow
+            </button>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
+const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, onComments, onDocs, onTransition, onViewDetail }) => {
   const name = partner.nom_entreprise || partner.nom;
   const domain = partner.domaine_activite || partner.domaine || "";
   const description = partner.objet || partner.actions_commentaires || "Aucune description disponible.";
@@ -5449,7 +5716,7 @@ const StartupCard = ({ partner, type, isSelected, onSelect, onEdit, onTimeline, 
     <div
       className={`startup-card ${isSelected ? 'ring-2' : ''}`}
       style={isSelected ? { ringColor: 'var(--surm-pink)' } : {}}
-      onClick={() => onSelect(partner.id)}
+      onClick={() => onViewDetail ? onViewDetail(partner, type) : onSelect(partner.id)}
     >
       {/* Barre couleur domaine en haut */}
       <div className={`card-domain-bar ${getDomainBarClass(domain)}`} />
@@ -6074,6 +6341,8 @@ const Dashboard = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [editingPartner, setEditingPartner] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [detailPartner, setDetailPartner] = useState(null);
+  const [detailType, setDetailType] = useState(null);
   const [customFields, setCustomFields] = useState({
     sourcing: [],
     dealflow: []
@@ -7498,10 +7767,14 @@ const Dashboard = () => {
             type="sourcing"
             isSelected={selectedItems.includes(partner.id)}
             onSelect={handleSelectItem}
-            onEdit={(p) => {
-              setEditingPartner(p);
-              setShowSourcingForm(true);
-            }}
+            onEdit={(p) => { setEditingPartner(p); setShowSourcingForm(true); }}
+            onTimeline={handleShowTimeline}
+            onComments={handleShowComments}
+            onDocs={handleOpenDocuments}
+            onTransition={handleTransitionToDealflow}
+            onViewDetail={(p, t) => { setDetailPartner(p); setDetailType(t); }}
+          />
+        ))}
             onTimeline={handleShowTimeline}
             onComments={handleShowComments}
             onDocs={handleOpenDocuments}
@@ -7610,8 +7883,8 @@ const Dashboard = () => {
             <div className="bg-white border border-surm-border rounded-xl shadow-card p-4">
               <div className="startup-grid">
   {filteredDealflowPartners.map((partner) => (
-    <StartupCard 
-      key={partner.id} 
+    <StartupCard
+      key={partner.id}
       partner={partner}
       type="dealflow"
       isSelected={selectedItems.includes(partner.id)}
@@ -7620,6 +7893,7 @@ const Dashboard = () => {
       onTimeline={handleShowTimeline}
       onComments={handleShowComments}
       onDocs={handleOpenDocuments}
+      onViewDetail={(p, t) => { setDetailPartner(p); setDetailType(t); }}
     />
   ))}
 </div>
@@ -7734,6 +8008,22 @@ const Dashboard = () => {
           partnerName={selectedPartnerForDocs.name}
         />
       )}
+
+      {/* Panneau détail startup */}
+      <StartupDetailPanel
+        partner={detailPartner}
+        type={detailType}
+        isOpen={!!detailPartner}
+        onClose={() => { setDetailPartner(null); setDetailType(null); }}
+        onEdit={(p) => {
+          if (detailType === 'sourcing') { setEditingPartner(p); setShowSourcingForm(true); }
+          else { setEditingPartner(p); setShowDealflowForm(true); }
+        }}
+        onTimeline={handleShowTimeline}
+        onComments={handleShowComments}
+        onDocs={handleOpenDocuments}
+        onTransition={handleTransitionToDealflow}
+      />
     </div>
   );
 };
