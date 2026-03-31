@@ -6521,6 +6521,35 @@ const Dashboard = () => {
 
   const handleQuickView = async (viewType) => {
    try {
+     if (viewType === 'mes-startups') {
+      if (!selectedPilote) {
+        alert("👤 Veuillez d'abord sélectionner votre nom dans la liste déroulante du header.");
+        return;
+      }
+
+      const sourcingMes = sourcingPartners.filter(p =>
+        p.pilote && p.pilote.toLowerCase().trim() === selectedPilote.toLowerCase().trim()
+        && p.statut !== 'Clos'
+      );
+      const dealflowMes = dealflowPartners.filter(p =>
+        p.pilote && p.pilote.toLowerCase().trim() === selectedPilote.toLowerCase().trim()
+        && p.statut !== 'Clos'
+      );
+
+      setQuickViewData({
+        view_name: `👤 Mes Startups — ${selectedPilote}`,
+        description: `Startups dont vous êtes le pilote`,
+        sourcing: sourcingMes,
+        dealflow: dealflowMes,
+        summary: {
+          sourcing_count: sourcingMes.length,
+          dealflow_count: dealflowMes.length,
+          total: sourcingMes.length + dealflowMes.length
+        }
+      });
+      setShowQuickViewModal(true);
+      return;
+    }
      if (viewType === 'recentes') {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - 30);
