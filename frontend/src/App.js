@@ -5624,7 +5624,7 @@ const StartupDetailPanel = ({ partner, type, isOpen, onClose, onEdit, onTimeline
             ✏️ Modifier
           </button>
           <button
-            onClick={() => onTimeline(partner, type)}
+            onClick={() => { onTimeline(partner, type); onClose(); }}
             style={{
               flex: 1, padding: '10px', borderRadius: '10px',
               background: 'rgba(3,145,223,0.1)', color: '#0391DF',
@@ -5634,7 +5634,7 @@ const StartupDetailPanel = ({ partner, type, isOpen, onClose, onEdit, onTimeline
             📋 Timeline
           </button>
           <button
-            onClick={() => onDocs(partner, type)}
+            onClick={() => { onDocs(partner, type); onClose(); }}
             style={{
               flex: 1, padding: '10px', borderRadius: '10px',
               background: 'rgba(0,0,0,0.05)', color: '#374151',
