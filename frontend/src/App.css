@@ -561,3 +561,99 @@ h1, h2, h3, h4,
   color: #b45309;
   border: 1px solid rgba(251,185,2,0.4);
 }
+/* ============================================================
+   RESPONSIVE — corrections 15" et mobile
+   ============================================================ */
+
+/* Grand laptop (1280-1440px) — header trop chargé */
+@media (max-width: 1440px) {
+  .surm-navbar .max-w-\[1600px\] {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 1280px) {
+  /* Réduire la barre de recherche */
+  .surm-navbar input[placeholder="Recherche globale..."] {
+    width: 200px !important;
+  }
+
+  /* Réduire les boutons de navigation */
+  .surm-navbar nav button span:last-child {
+    display: none;
+  }
+
+  /* Réduire le sélecteur pilote */
+  .surm-navbar select {
+    max-width: 130px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Laptop 15" typique (1366px) */
+@media (max-width: 1366px) {
+  .startup-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+}
+
+/* Tablette (768-1024px) */
+@media (max-width: 1024px) {
+  .startup-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .kpi-value { font-size: 28px; }
+
+  /* Header : masquer les labels de nav, garder icônes */
+  .surm-navbar nav {
+    gap: 4px;
+  }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 768px) {
+  .startup-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px 0;
+  }
+
+  .kpi-value { font-size: 26px; }
+  .kpi-card { padding: 16px; }
+
+  /* Panneau détail — plein écran sur mobile */
+  div[style*="width: 420px"] {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+
+  /* Formulaires — 1 colonne */
+  .grid.grid-cols-1.md\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* StatusKPIBar — scroll horizontal sur mobile */
+  .grid[style*="gridTemplateColumns"] {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    padding-bottom: 8px;
+  }
+
+  .grid[style*="gridTemplateColumns"] > div {
+    min-width: 100px;
+    flex-shrink: 0;
+  }
+}
+
+/* Très petit mobile (< 480px) */
+@media (max-width: 480px) {
+  .startup-card-inner { padding: 12px 14px 10px; }
+  .status-badge { font-size: 10px; padding: 3px 8px; }
+  .tag-domaine, .tag-typologie, .tag-strategique { font-size: 10px; padding: 2px 8px; }
+  .kpi-value { font-size: 22px; }
+}
