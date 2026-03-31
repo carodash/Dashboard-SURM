@@ -842,7 +842,15 @@ const ActivityTimelineModal = ({ isOpen, onClose, partnerId, partnerType, partne
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <p className="font-medium text-gray-900">{activity.description}</p>
+                    <p className="font-medium text-gray-900">
+                      {activity.description
+                        .replace('Partenaire sourcing modifié.', '✏️ Fiche mise à jour')
+                        .replace('Partenaire dealflow modifié.', '✏️ Fiche mise à jour')
+                        .replace('Partenaire sourcing créé.', '✨ Fiche créée')
+                        .replace('Partenaire dealflow créé.', '✨ Fiche créée')
+                        .replace(/Champs:.*/, '')
+                        .trim()}
+                    </p>
                     <span className="text-xs text-gray-500">{formatDate(activity.created_at)}</span>
                   </div>
                   {activity.user_name && (
