@@ -7329,293 +7329,184 @@ const Dashboard = () => {
       </div>
     </div>
   );
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-  <div className="min-h-screen bg-gray-50">
-    <div className="surm-navbar">
-      <div className="max-w-[1600px] mx-auto px-6 py-3">
-        <div className="flex items-center justify-between gap-6">
-          {/* Bloc gauche : logo Pôle Innovation */}
-          <div className="flex items-center gap-3 min-w-[260px]">
-            <span className="surm-logo-bar" />
-            <div>
-              <div className="text-white font-bold text-sm leading-tight" style={{ letterSpacing: '0.5px' }}>
-                PÔLE INNOVATION
-              </div>
-              <div className="text-xs leading-tight font-medium" style={{ color: 'var(--surm-turquoise)', letterSpacing: '1px' }}>
-                & PROSPECTIVE
-              </div>
-            </div>
-            <span className="surm-badge ml-2">SURM</span>
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  return (
+  <div className="surm-layout">
+
+    {/* Overlay mobile */}
+    <div
+      className={`surm-sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
+      onClick={() => setSidebarOpen(false)}
+    />
+
+    {/* SIDEBAR */}
+    <aside className={`surm-sidebar ${sidebarOpen ? 'open' : ''}`}>
+
+      {/* Logo */}
+      <div className="surm-sidebar-logo">
+        <div className="surm-sidebar-logo-bar" />
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--surm-navy)', letterSpacing: '0.5px' }}>
+            PÔLE INNOVATION
           </div>
-
-          {/* Bloc centre : recherche + vues */}
-          <div className="flex items-center gap-3 flex-1 justify-center">
-            <GlobalSearchBar
-              onSearch={handleGlobalSearch}
-              onQuickView={handleQuickView}
-            />
-          </div>
-
-          {/* Bloc droite : navigation + user */}
-          <div className="flex items-center gap-3">
-            <nav className="hidden xl:flex items-center gap-2">
-             <button
-                onClick={() => setActiveTab("home")}
-                className="px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition"
-                style={activeTab === "home"
-                  ? { background: 'var(--surm-turquoise)', borderRadius: '10px', color: 'var(--surm-navy)' }
-                  : { color: 'rgba(255,255,255,0.65)' }}
-              >
-                <span>🏠</span>
-                <span>Accueil</span>
-              </button> 
-
-              <button
-                onClick={() => setActiveTab("kanban")}
-                className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
-                  activeTab === "kanban"
-                    ? "text-white"
-                    : "hover:bg-white hover:bg-opacity-10"
-                }`}
-              style={activeTab === "kanban"
-                ? { background: 'var(--surm-turquoise)', borderRadius: '10px' }
-                : { color: 'rgba(255,255,255,0.65)' }}
-              >
-                <span>📋</span>
-                <span>Kanban</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("sourcing")}
-                className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
-                  activeTab === "sourcing"
-                    ? "text-white"
-                    : "hover:bg-white hover:bg-opacity-10"
-                }`}
-              style={activeTab === "sourcing"
-                ? { background: 'var(--surm-blue)', borderRadius: '10px' }
-                : { color: 'rgba(255,255,255,0.65)' }}
-              >
-                <span>🔎</span>
-                <span>Sourcing</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("dealflow")}
-                className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center space-x-2 transition ${
-                  activeTab === "dealflox"
-                    ? "text-white"
-                    : "hover:bg-white hover:bg-opacity-10"
-                }`}
-              style={activeTab === "dealflow"
-                ? { background: '#22C55E', borderRadius: '10px' }
-                : { color: 'rgba(255,255,255,0.65)' }}
-              >
-                <span>🔁</span>
-                <span>Dealflow</span>
-              </button>
-            </nav>
-
-            <div className="flex items-center gap-3">
-              <div className="hidden lg:flex items-center gap-2">
-                <select
-                  value={selectedPilote}
-                  onChange={(e) => handlePiloteChange(e.target.value)}
-                  style={{
-                    background: 'rgba(255,255,255,0.1)',
-                    border: '1.5px solid rgba(255,255,255,0.2)',
-                    borderRadius: '10px',
-                    color: selectedPilote ? 'white' : 'rgba(255,255,255,0.5)',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    padding: '6px 12px',
-                    cursor: 'pointer',
-                    maxWidth: '160px'
-                  }}
-                >
-                  <option value="">👤 Choisir pilote...</option>
-                  {pilotesList.map(p => (
-                    <option key={p} value={p} style={{ color: '#000069', background: 'white' }}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-                {selectedPilote && (
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                )}
-              </div>
-
-              <div className="relative">
-                <button
-                  onClick={() => setShowHamburgerMenu(!showHamburgerMenu)}
-                  className="px-3 py-2 text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 flex items-center space-x-2"
-                >
-                  <span>☰</span>
-                  <span className="hidden lg:inline text-sm">Plus</span>
-                </button>
-
-                {showHamburgerMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-surm-border z-50">
-                    <div className="py-2">
-                      <div className="px-4 py-1 text-xs font-medium text-gray-400 uppercase tracking-wide">
-                        Vues Rapides
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setActiveTab("my-startups");
-                          setShowHamburgerMenu(false);
-                        }}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center space-x-2 text-sm"
-                      >
-                        <span>🌟</span>
-                        <span>Mes Startups</span>
-                      </button>
-
-                      <div className="relative">
-                        <button
-                          onClick={() => setShowQuickMenu(!showQuickMenu)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between text-sm"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <span>⚡</span>
-                            <span>Vues</span>
-                          </div>
-                          <span
-                            className={`text-xs transition-transform ${
-                              showQuickMenu ? "rotate-90" : ""
-                            }`}
-                          >
-                            ›
-                          </span>
-                        </button>
-
-                        {showQuickMenu && (
-                          <div className="ml-6 border-l border-gray-200 pl-2">
-                            {quickViews.map((view) => (
-                              <button
-                                key={view.id}
-                                onClick={() => {
-                                  handleQuickViewSelect(view.id);
-                                  setShowHamburgerMenu(false);
-                                  setShowQuickMenu(false);
-                                }}
-                                className="w-full text-left px-2 py-1 hover:bg-gray-50 text-xs text-gray-600"
-                              >
-                                {view.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <hr className="my-2" />
-
-                      <div className="px-4 py-1 text-xs font-medium text-gray-400 uppercase tracking-wide">
-                        Rapports
-                      </div>
-                      <button
-                        onClick={() => {
-                          setActiveTab("reports");
-                          setShowHamburgerMenu(false);
-                        }}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center space-x-2 text-sm"
-                      >
-                        <span>📑</span>
-                        <span>Rapports</span>
-                      </button>
-
-                      <hr className="my-2" />
-
-                      <div className="px-4 py-1 text-xs font-medium text-gray-400 uppercase tracking-wide">
-                        Administration
-                      </div>
-
-                      {hasPermission("manage_config") && (
-                        <button
-                          onClick={() => {
-                            setShowSettings(true);
-                            setShowHamburgerMenu(false);
-                          }}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center space-x-2 text-sm"
-                        >
-                          <span>⚙️</span>
-                          <span>Paramètres</span>
-                        </button>
-                      )}
-
-                      {hasPermission("manage_users") && (
-                        <button
-                          onClick={() => {
-                            setShowUserRoleManager(true);
-                            setShowHamburgerMenu(false);
-                          }}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center space-x-2 text-sm"
-                        >
-                          <span>👥</span>
-                          <span>Rôles</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--surm-turquoise)', letterSpacing: '1px' }}>
+            & PROSPECTIVE
           </div>
         </div>
+        <span className="surm-badge ml-auto" style={{ fontSize: '11px', padding: '3px 8px' }}>SURM</span>
+      </div>
 
-        {/* Navigation mobile */}
-        <div className="xl:hidden border-t border-surm-border mt-4 pt-3">
-          <div className="flex space-x-2 overflow-x-auto pb-1">
-            <button
-              onClick={() => setActiveTab("home")}
-              className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap`}
-              style={activeTab === "home"
-                ? { background: 'var(--surm-turquoise)', color: 'var(--surm-navy)' }
-                : { color: '#6B7280' }}
-            >
-              🏠 Accueil
-            </button>
+      {/* Navigation principale */}
+      <nav className="surm-sidebar-nav">
+        <div className="surm-sidebar-section">
+          <div className="surm-sidebar-section-label">Navigation</div>
 
+          {[
+            { id: 'home', icon: '🏠', label: 'Accueil' },
+            { id: 'sourcing', icon: '🔎', label: 'Sourcing' },
+            { id: 'dealflow', icon: '🔁', label: 'Dealflow' },
+            { id: 'kanban', icon: '📋', label: 'Kanban' },
+            { id: 'reports', icon: '📊', label: 'Rapports' },
+          ].map(item => (
             <button
-              onClick={() => setActiveTab("kanban")}
-              className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${
-                activeTab === "kanban"
-                  ? "bg-orange-100 text-orange-700"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              key={item.id}
+              onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
+              className={`surm-nav-item ${activeTab === item.id ? 'active' : ''}`}
+              style={{ position: 'relative' }}
             >
-              📋 Kanban
+              {activeTab === item.id && <span className="nav-accent" />}
+              <span className="nav-icon">{item.icon}</span>
+              <span>{item.label}</span>
+              {item.id === 'sourcing' && (
+                <span style={{
+                  marginLeft: 'auto', fontSize: '11px', fontWeight: 700,
+                  background: 'rgba(0,0,105,0.08)', color: 'var(--surm-navy)',
+                  borderRadius: '10px', padding: '1px 8px'
+                }}>
+                  {sourcingPartners.filter(p => p.statut !== 'Clos').length}
+                </span>
+              )}
+              {item.id === 'dealflow' && (
+                <span style={{
+                  marginLeft: 'auto', fontSize: '11px', fontWeight: 700,
+                  background: 'rgba(244,43,95,0.08)', color: 'var(--surm-pink)',
+                  borderRadius: '10px', padding: '1px 8px'
+                }}>
+                  {dealflowPartners.filter(p => p.statut !== 'Clos').length}
+                </span>
+              )}
             </button>
+          ))}
+        </div>
 
+        {/* Vues rapides */}
+        <div className="surm-sidebar-section">
+          <div className="surm-sidebar-section-label">Vues rapides</div>
+          {[
+            { id: 'mes-startups', icon: '👤', label: 'Mes Startups' },
+            { id: 'a-relancer', icon: '⏰', label: 'À Relancer' },
+            { id: 'en-experimentation', icon: '🧪', label: 'En Expé' },
+            { id: 'recentes', icon: '🆕', label: 'Récentes (30j)' },
+          ].map(view => (
             <button
-              onClick={() => setActiveTab("sourcing")}
-              className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${
-                activeTab === "sourcing"
-                  ? "bg-surm-pink/10 text-surm-navy"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              key={view.id}
+              onClick={() => { handleQuickView(view.id); setSidebarOpen(false); }}
+              className="surm-quick-view-btn"
             >
-              🔎 Sourcing
+              <span>{view.icon}</span>
+              <span>{view.label}</span>
             </button>
+          ))}
+        </div>
 
+        {/* Admin */}
+        <div className="surm-sidebar-section">
+          <div className="surm-sidebar-section-label">Administration</div>
+          {hasPermission('manage_config') && (
             <button
-              onClick={() => setActiveTab("dealflow")}
-              className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap ${
-                activeTab === "dealflow"
-                  ? "bg-green-100 text-green-700"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              onClick={() => { setShowSettings(true); setSidebarOpen(false); }}
+              className="surm-quick-view-btn"
             >
-              🔁 Dealflow
+              <span>⚙️</span>
+              <span>Paramètres</span>
             </button>
+          )}
+        </div>
+      </nav>
+
+      {/* Sélecteur pilote en bas */}
+      <div className="surm-sidebar-pilote">
+        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--surm-muted)', marginBottom: '6px', letterSpacing: '0.5px' }}>
+          👤 PILOTE ACTIF
+        </div>
+        <select
+          value={selectedPilote}
+          onChange={(e) => handlePiloteChange(e.target.value)}
+        >
+          <option value="">Choisir...</option>
+          {pilotesList.map(p => (
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </select>
+        {selectedPilote && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22C55E' }} />
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--surm-navy)' }}>{selectedPilote}</span>
           </div>
+        )}
+      </div>
+    </aside>
+
+    {/* MAIN */}
+    <main className="surm-main">
+
+      {/* Topbar */}
+      <div className="surm-topbar">
+        {/* Hamburger mobile */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+          style={{ color: 'var(--surm-navy)' }}
+        >
+          ☰
+        </button>
+
+        {/* Recherche globale */}
+        <div className="surm-topbar-search relative">
+          <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--surm-muted)' }}>
+            🔍
+          </div>
+          <input
+            type="text"
+            placeholder="Recherche globale..."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && e.target.value.trim().length >= 2) {
+                handleGlobalSearch(e.target.value.trim());
+              }
+            }}
+          />
+        </div>
+
+        {/* Titre de la page courante */}
+        <div style={{ marginLeft: '8px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--surm-muted)' }}>
+            {activeTab === 'home' && '🏠 Accueil'}
+            {activeTab === 'sourcing' && '🔎 Sourcing'}
+            {activeTab === 'dealflow' && '🔁 Dealflow'}
+            {activeTab === 'kanban' && '📋 Kanban'}
+            {activeTab === 'reports' && '📊 Rapports'}
+          </span>
         </div>
       </div>
-    </div>
 
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Contenu principal */}
+      <div className="px-6 py-6" style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+
+    <div className="px-6 py-6" style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
         {activeTab === "kanban" && (
           <KanbanBoard isVisible={true} />
         )}
@@ -8176,7 +8067,8 @@ const DocumentModal = ({ isOpen, onClose, partnerId, partnerType, partnerName })
           </button>
         </div>
       </div>
-    </div>
+    </main>
+  </div>
   );
 };
 
