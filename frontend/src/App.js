@@ -7332,9 +7332,6 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  return (
   <div className="surm-layout">
 
     {/* Overlay mobile */}
