@@ -2338,11 +2338,12 @@ const GlobalSearchBar = ({ onSearch, onQuickView }) => {
     }
   };
 
+  // APRÈS
   const quickViews = [
     { id: 'mes-startups', label: '👨‍💼 Mes Startups', color: 'purple' },
     { id: 'a-relancer', label: '⏰ À Relancer', color: 'red' },
-    { id: 'avec-documents', label: '📄 Avec Docs', color: 'blue' },
-    { id: 'en-experimentation', label: '🧪 En Expé', color: 'green' }
+    { id: 'en-experimentation', label: '🧪 En Expé', color: 'green' },
+    { id: 'recentes', label: '🆕 Récentes (30j)', color: 'blue' }
   ];
 
   const handleQuickViewSelect = (viewType) => {
@@ -6134,10 +6135,10 @@ const Dashboard = () => {
   
   // Phase 4 - Quick Views configuration
   const quickViews = [
-    { id: 'mes-startups', label: '👨‍💼 Mes Startups', color: 'purple' },
-    { id: 'a-relancer', label: '⏰ À Relancer', color: 'red' },
-    { id: 'avec-documents', label: '📄 Avec Docs', color: 'blue' },
-    { id: 'en-experimentation', label: '🧪 En Expé', color: 'green' }
+   { id: 'mes-startups', label: '👨‍💼 Mes Startups', color: 'purple' },
+   { id: 'a-relancer', label: '⏰ À Relancer', color: 'red' },
+   { id: 'en-experimentation', label: '🧪 En Expé', color: 'green' },
+   { id: 'recentes', label: '🆕 Récentes (30j)', color: 'blue' }
   ];
   
   const handleQuickViewSelect = (viewType) => {
@@ -6519,14 +6520,73 @@ const Dashboard = () => {
   };
 
   const handleQuickView = async (viewType) => {
-    try {
-      const response = await axios.get(`${API_URL}/quick-views/${viewType}?user_id=default_user`);
-      setQuickViewData(response.data);
+   try {
+     if (viewType === 'recentes') {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+
+      const sourcingRecentes = sourcingPartners.filter(p =>
+        p.created_at && new Date(p.created_at) > cutoff
+      );
+      const dealflowRecentes = dealflowPartners.filter(p =>
+        p.created_at && new Date(p.created_at) > cutoff
+      );
+
+      setQuickViewData({
+        view_name: "🆕 Récemment ajoutées",
+        description: "Startups ajoutées dans les 30 derniers jours",
+        sourcing: sourcingRecentes,
+        dealflow: dealflowRecentes,
+        summary: {
+          sourcing_count: sourcingRecentes.length,
+          dealflow_count: dealflowRecentes.length,
+          total: sourcingRecentes.length + dealflowRecentes.length
+        }
+      });
       setShowQuickViewModal(true);
-    } catch (error) {
-      console.error("Error loading quick view:", error);
+      return;
     }
-  };
+
+    // "À Relancer" géré localement pour plus de fiabilité
+    if (viewType === 'a-relancer') {
+      const today = new Date();
+      const cutoff = new Date();
+      cutoff.setDate(today.getDate() - 60);
+
+      const filterRelancer = (partners) => partners.filter(p => {
+        // Date prochaine action dépassée
+        if (p.date_prochaine_action && new Date(p.date_prochaine_action) < today) return true;
+        // Pas de mise à jour depuis 60 jours
+        if (p.updated_at && new Date(p.updated_at) < cutoff) return true;
+        return false;
+      });
+
+      const sourcingRelancer = filterRelancer(sourcingPartners.filter(p => p.statut !== 'Clos'));
+      const dealflowRelancer = filterRelancer(dealflowPartners.filter(p => p.statut !== 'Clos'));
+
+      setQuickViewData({
+        view_name: "⏰ À Relancer",
+        description: "Fiches sans activité depuis 60j ou avec une action en retard",
+        sourcing: sourcingRelancer,
+        dealflow: dealflowRelancer,
+        summary: {
+          sourcing_count: sourcingRelancer.length,
+          dealflow_count: dealflowRelancer.length,
+          total: sourcingRelancer.length + dealflowRelancer.length
+        }
+      });
+      setShowQuickViewModal(true);
+      return;
+    }
+
+    const userId = selectedPilote ? encodeURIComponent(selectedPilote) : 'default_user';
+    const response = await axios.get(`${API_URL}/quick-views/${viewType}?user_id=${userId}`);
+    setQuickViewData(response.data);
+    setShowQuickViewModal(true);
+  } catch (error) {
+    console.error("Error loading quick view:", error);
+  }
+};
 
   const handleCloseQuickView = () => {
     setShowQuickViewModal(false);
@@ -7051,11 +7111,32 @@ const Dashboard = () => {
             </nav>
 
             <div className="flex items-center gap-3">
-              <div className="hidden lg:flex items-center bg-gray-100 rounded-xl px-3 py-2">
-                <span className="text-xs text-gray-600 mr-2">
-                  {USER_ROLES[currentUser.role]?.label}
-                </span>
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <div className="hidden lg:flex items-center gap-2">
+                <select
+                  value={selectedPilote}
+                  onChange={(e) => handlePiloteChange(e.target.value)}
+                  style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    border: '1.5px solid rgba(255,255,255,0.2)',
+                    borderRadius: '10px',
+                    color: selectedPilote ? 'white' : 'rgba(255,255,255,0.5)',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                    maxWidth: '160px'
+                  }}
+                >
+                  <option value="">👤 Choisir pilote...</option>
+                  {pilotesList.map(p => (
+                    <option key={p} value={p} style={{ color: '#000069', background: 'white' }}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+                {selectedPilote && (
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                )}
               </div>
 
               <div className="relative">
