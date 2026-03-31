@@ -6586,6 +6586,22 @@ const Dashboard = () => {
     permissions: USER_ROLES.ADMIN.permissions
   });
 
+  // Sélecteur de pilote
+  const [selectedPilote, setSelectedPilote] = useState(localStorage.getItem('surm_pilote') || "");
+
+  const pilotesList = useMemo(() => {
+    const allPilotes = [
+      ...sourcingPartners.map(p => p.pilote),
+      ...dealflowPartners.map(p => p.pilote)
+    ].filter(p => p && p.trim() !== "");
+    return [...new Set(allPilotes)].sort();
+  }, [sourcingPartners, dealflowPartners]);
+
+  const handlePiloteChange = (pilote) => {
+    setSelectedPilote(pilote);
+    localStorage.setItem('surm_pilote', pilote);
+  };
+
   const handleSettingsSave = () => {
     fetchCustomFields();
     fetchColumnConfig();
