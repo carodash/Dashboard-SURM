@@ -2822,7 +2822,7 @@ const DocumentList = ({ partnerId, documents, onDeleteDocument, onRefreshDocumen
 };
 
 // Phase 4 - Quick Views Component
-const QuickViewResults = ({ isVisible, viewData, onClose }) => {
+const QuickViewResults = ({ isVisible, viewData, onClose, onViewDetail }) => {
   if (!isVisible || !viewData) return null;
 
   const renderPartnerCard = (partner, type) => {
@@ -2830,7 +2830,8 @@ const QuickViewResults = ({ isVisible, viewData, onClose }) => {
     const domain = type === 'sourcing' ? partner.domaine_activite : partner.domaine;
     
     return (
-      <div key={partner.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+      <div key={partner.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+        onClick={() => onViewDetail && onViewDetail(partner, type)}>
         <div className="flex justify-between items-start mb-2">
           <div className="flex-1">
             <h4 className="font-semibold text-gray-800">{name}</h4>
@@ -7970,12 +7971,12 @@ const Dashboard = () => {
       )}
 
       {/* Phase 4 - Quick View Results Modal */}
-      <QuickViewResults
+       <QuickViewResults
         isVisible={showQuickViewModal}
         viewData={quickViewData}
         onClose={handleCloseQuickView}
+        onViewDetail={(p, t) => { setDetailPartner(p); setDetailType(t); }}
       />
-
       {/* Phase 3 - Private Comments Modal */}
       {showCommentsModal && selectedCommentsPartner && (
         <PrivateCommentsModal
