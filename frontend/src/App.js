@@ -7681,9 +7681,8 @@ const Dashboard = () => {
       )}
 
     </div>
-
-  </div>
-)}
+        </div>
+        )}
 
         {activeTab === "dealflow" && (
           <div className="space-y-6">
