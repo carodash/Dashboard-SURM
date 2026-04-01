@@ -7356,7 +7356,29 @@ const Dashboard = () => {
         </div>
         <span className="surm-badge ml-auto" style={{ fontSize: '11px', padding: '3px 8px' }}>SURM</span>
       </div>
-
+      
+      {/* Sélecteur pilote en bas */}
+      <div className="surm-sidebar-pilote">
+        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--surm-muted)', marginBottom: '6px', letterSpacing: '0.5px' }}>
+          👤 PILOTE ACTIF
+        </div>
+        <select
+          value={selectedPilote}
+          onChange={(e) => handlePiloteChange(e.target.value)}
+        >
+          <option value="">Choisir...</option>
+          {pilotesList.map(p => (
+            <option key={p} value={p}>{p}</option>
+          ))}
+        </select>
+        {selectedPilote && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22C55E' }} />
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--surm-navy)' }}>{selectedPilote}</span>
+          </div>
+        )}
+      </div>
+    
       {/* Navigation principale */}
       <nav className="surm-sidebar-nav">
         <div className="surm-sidebar-section">
@@ -7434,30 +7456,8 @@ const Dashboard = () => {
           )}
         </div>
       </nav>
-
-      {/* Sélecteur pilote en bas */}
-      <div className="surm-sidebar-pilote">
-        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--surm-muted)', marginBottom: '6px', letterSpacing: '0.5px' }}>
-          👤 PILOTE ACTIF
-        </div>
-        <select
-          value={selectedPilote}
-          onChange={(e) => handlePiloteChange(e.target.value)}
-        >
-          <option value="">Choisir...</option>
-          {pilotesList.map(p => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
-        {selectedPilote && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22C55E' }} />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--surm-navy)' }}>{selectedPilote}</span>
-          </div>
-        )}
-      </div>
     </aside>
-
+      
     {/* MAIN */}
     <main className="surm-main">
 
