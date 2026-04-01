@@ -7641,7 +7641,7 @@ const Dashboard = () => {
 
       </div>
     </div>
-        
+
     <StatusKPIBar partners={sourcingPartners} type="sourcing" />
         
     <BulkActionsBar
@@ -7681,7 +7681,7 @@ const Dashboard = () => {
       )}
 
     </div>
-        </div>
+  </div>
         )}
 
         {activeTab === "dealflow" && (
