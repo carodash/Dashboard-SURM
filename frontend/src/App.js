@@ -7784,8 +7784,7 @@ const Dashboard = () => {
       onViewDetail={(p, t) => { setDetailPartner(p); setDetailType(t); }}
     />
   ))}
-</div>
-              
+              </div>              
               {filteredDealflowPartners.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-gray-500">Aucun partenaire dealflow trouvé.</p>
@@ -7795,8 +7794,7 @@ const Dashboard = () => {
           </div>
         </div>
         )}
-      </div>
-
+    
       {showSourcingForm && (
         <SourcingForm
           onSubmit={editingPartner ? handleEditSourcing : handleCreateSourcing}
