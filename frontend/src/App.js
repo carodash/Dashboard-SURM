@@ -7502,8 +7502,6 @@ const Dashboard = () => {
 
       {/* Contenu principal */}
       <div className="px-6 py-6" style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
-
-    <div className="px-6 py-6" style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
         {activeTab === "kanban" && (
           <KanbanBoard isVisible={true} />
         )}
@@ -7921,7 +7919,9 @@ const Dashboard = () => {
         onDocs={handleOpenDocuments}
         onTransition={handleTransitionToDealflow}
       />
-    </div>
+      </div>
+    </main>
+  </div>
   );
 };
 
