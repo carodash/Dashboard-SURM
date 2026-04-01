@@ -7792,8 +7792,9 @@ const Dashboard = () => {
                   <p className="text-gray-500">Aucun partenaire dealflow trouvé.</p>
                 </div>
               )}
-            </div>
+           </div>
           </div>
+        </div>
         )}
       </div>
 
