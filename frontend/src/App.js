@@ -6956,12 +6956,19 @@ const Dashboard = () => {
   // Sélecteur de pilote
   const [selectedPilote, setSelectedPilote] = useState(localStorage.getItem('surm_pilote') || "");
 
+  // APRÈS
   const pilotesList = useMemo(() => {
     const allPilotes = [
       ...sourcingPartners.map(p => p.pilote),
       ...dealflowPartners.map(p => p.pilote)
     ].filter(p => p && p.trim() !== "");
-    return [...new Set(allPilotes)].sort();
+    // Dédoublonnage insensible à la casse
+    const seen = new Map();
+    allPilotes.forEach(p => {
+      const key = p.trim().toLowerCase();
+      if (!seen.has(key)) seen.set(key, p.trim());
+    });
+    return [...seen.values()].sort((a, b) => a.localeCompare(b, 'fr'));
   }, [sourcingPartners, dealflowPartners]);
 
   const handlePiloteChange = (pilote) => {
@@ -7371,12 +7378,6 @@ const Dashboard = () => {
             <option key={p} value={p}>{p}</option>
           ))}
         </select>
-        {selectedPilote && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22C55E' }} />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--surm-navy)' }}>{selectedPilote}</span>
-          </div>
-        )}
       </div>
     
       {/* Navigation principale */}
