@@ -5940,91 +5940,33 @@ const HomePage = ({ statistics, onNavigate }) => {
   return (
     <div className="space-y-8 fade-in-up">
  
-      {/* ── HERO ── */}
-      <div
-        className="rounded-2xl p-8 relative overflow-hidden"
-        style={{
-          background: "linear-gradient(135deg, #000069 0%, #0a0a8a 60%, #001a99 100%)",
-          minHeight: "200px"
-        }}
-      >
-        {/* Cercles décoratifs */}
-        <div style={{
-          position: "absolute", right: "-40px", top: "-40px",
-          width: "200px", height: "200px", borderRadius: "50%",
-          background: "rgba(244,43,95,0.15)"
-        }} />
-        <div style={{
-          position: "absolute", right: "80px", bottom: "-30px",
-          width: "120px", height: "120px", borderRadius: "50%",
-          background: "rgba(15,210,182,0.12)"
-        }} />
-        <div style={{
-          position: "absolute", left: "40%", top: "-20px",
-          width: "80px", height: "80px", borderRadius: "50%",
-          background: "rgba(3,145,223,0.15)"
-        }} />
- 
-        <div className="relative">
-          <div className="flex items-center gap-3 mb-3">
-            <div style={{
-              background: "#F42B5F", borderRadius: "10px",
-              padding: "8px 14px", display: "inline-block"
-            }}>
-              <span style={{ color: "white", fontWeight: 700, fontSize: "13px", letterSpacing: "1px" }}>
-                SURM
-              </span>
-            </div>
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>
-              Start Up Relationship Management
-            </span>
-          </div>
- 
+      {/* ── HEADER COMPACT ── */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '8px'
+      }}>
+        <div>
           <h1 style={{
-            color: "white", fontSize: "32px", fontWeight: 700,
-            marginBottom: "8px", lineHeight: 1.2
+            fontSize: '22px', fontWeight: 700,
+            color: 'var(--surm-navy)', lineHeight: 1.2
           }}>
             Bonjour 👋
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "16px", marginBottom: "28px" }}>
+          <p style={{ fontSize: '13px', color: 'var(--surm-muted)', marginTop: '2px' }}>
             Pôle Innovation & Prospective — Tableau de bord Open Innovation
           </p>
- 
-          {/* Actions rapides */}
-          <div className="flex flex-wrap gap-3">
-            {quickActions.map((action) => (
-              <button
-                key={action.tab}
-                onClick={() => onNavigate(action.tab)}
-                style={{
-                  background: "rgba(255,255,255,0.1)",
-                  border: "1.5px solid rgba(255,255,255,0.2)",
-                  borderRadius: "10px",
-                  padding: "10px 18px",
-                  color: "white",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  backdropFilter: "blur(4px)",
-                  transition: "all 0.2s"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = action.color;
-                  e.currentTarget.style.border = `1.5px solid ${action.color}`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.1)";
-                  e.currentTarget.style.border = "1.5px solid rgba(255,255,255,0.2)";
-                }}
-              >
-                <span>{action.icon}</span>
-                <span>{action.label}</span>
-              </button>
-            ))}
-          </div>
+        </div>
+        <div style={{
+          fontSize: '13px', fontWeight: 500,
+          color: 'var(--surm-muted)',
+          background: 'white',
+          border: '1px solid var(--surm-border)',
+          borderRadius: '10px',
+          padding: '8px 14px'
+        }}>
+          📅 {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </div>
       </div>
  
