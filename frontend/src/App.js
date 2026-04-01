@@ -7792,9 +7792,8 @@ const Dashboard = () => {
               )}
            </div>
           </div>
-        </div>
         )}
-    
+
       {showSourcingForm && (
         <SourcingForm
           onSubmit={editingPartner ? handleEditSourcing : handleCreateSourcing}
