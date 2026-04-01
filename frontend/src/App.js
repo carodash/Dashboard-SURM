@@ -7670,12 +7670,6 @@ const Dashboard = () => {
             onViewDetail={(p, t) => { setDetailPartner(p); setDetailType(t); }}
           />
         ))}
-            onTimeline={handleShowTimeline}
-            onComments={handleShowComments}
-            onDocs={handleOpenDocuments}
-            onTransition={handleTransitionToDealflow}
-          />
-        ))}
       </div>
 
       {filteredSourcingPartners.length === 0 && (
