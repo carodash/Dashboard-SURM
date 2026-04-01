@@ -8055,8 +8055,9 @@ const DocumentModal = ({ isOpen, onClose, partnerId, partnerType, partnerName })
           </button>
         </div>
       </div>
-      );
-    };
+    </div>
+  );
+};
 
 function App() {
   return (
