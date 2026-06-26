@@ -6700,7 +6700,7 @@ const Dashboard = () => {
     if (!window.confirm(`Supprimer définitivement "${name}" ? Cette action est irréversible.`)) return;
     try {
       if (type === 'sourcing') {
-        await axios.delete(`${API_URL}/sourcing/${id}`);
+        await axios.delete(`${API_URL}/sourcing/${id}?user_id=default_user`);
         await fetchSourcingPartners();
       } else {
         await axios.delete(`${API_URL}/dealflow/${id}`);
