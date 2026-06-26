@@ -5402,7 +5402,7 @@ const EnrichedDataModal = ({ isOpen, onClose, partner, partnerType }) => {
   );
 };
 
-const StartupDetailPanel = ({ partner, type, isOpen, onClose, onEdit, onTimeline, onComments, onDocs, onTransition }) => {
+const StartupDetailPanel = ({ partner, type, isOpen, onClose, onEdit, onTimeline, onComments, onDocs, onTransition, onDelete }) => {
   if (!partner) return null;
 
   const name = partner.nom_entreprise || partner.nom;
@@ -5663,6 +5663,16 @@ const StartupDetailPanel = ({ partner, type, isOpen, onClose, onEdit, onTimeline
               → Passer en Dealflow
             </button>
           )}
+          <button
+            onClick={() => onDelete && onDelete(partner.id, type)}
+            style={{
+              width: '100%', padding: '10px', borderRadius: '10px',
+              background: 'rgba(239,68,68,0.08)', color: '#EF4444',
+              border: '1.5px solid #EF4444', cursor: 'pointer', fontWeight: 600, fontSize: '13px'
+            }}
+          >
+            🗑️ Supprimer cette fiche
+          </button>
         </div>
       </div>
     </>
@@ -6682,6 +6692,25 @@ const Dashboard = () => {
       } catch (error) {
         console.error("Error deleting dealflow partner:", error);
       }
+    }
+  };
+
+  const handleDeleteFromDetail = async (id, type) => {
+    const name = detailPartner?.nom_entreprise || detailPartner?.nom || 'cette fiche';
+    if (!window.confirm(`Supprimer définitivement "${name}" ? Cette action est irréversible.`)) return;
+    try {
+      if (type === 'sourcing') {
+        await axios.delete(`${API_URL}/sourcing/${id}`);
+        await fetchSourcingPartners();
+      } else {
+        await axios.delete(`${API_URL}/dealflow/${id}`);
+        await fetchDealflowPartners();
+      }
+      await fetchStatistics();
+      setDetailPartner({ ...detailPartner, _deleted: true, _deletedName: name });
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+      alert('Erreur lors de la suppression. Veuillez réessayer.');
     }
   };
 
@@ -7838,21 +7867,50 @@ const Dashboard = () => {
         />
       )}
 
-      {/* Panneau détail startup */}
-      <StartupDetailPanel
-        partner={detailPartner}
-        type={detailType}
-        isOpen={!!detailPartner}
-        onClose={() => { setDetailPartner(null); setDetailType(null); }}
-        onEdit={(p) => {
-          if (detailType === 'sourcing') { setEditingPartner(p); setShowSourcingForm(true); }
-          else { setEditingPartner(p); setShowDealflowForm(true); }
-        }}
-        onTimeline={handleShowTimeline}
-        onComments={handleShowComments}
-        onDocs={handleOpenDocuments}
-        onTransition={handleTransitionToDealflow}
-      />
+     {/* Panneau détail startup */}
+      {detailPartner?._deleted ? (
+        <div style={{
+          position: 'fixed', top: 0, right: 0, bottom: 0, width: '420px', maxWidth: '95vw',
+          background: 'white', zIndex: 50,
+          boxShadow: '-4px 0 24px rgba(0,0,105,0.12)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          gap: '16px', padding: '40px'
+        }}>
+          <div style={{ fontSize: '48px' }}>🗑️</div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: '#000069', textAlign: 'center' }}>
+            Fiche supprimée
+          </div>
+          <div style={{ fontSize: '13px', color: '#6B7280', textAlign: 'center' }}>
+            « {detailPartner._deletedName} » a été supprimée définitivement.
+          </div>
+          <button
+            onClick={() => { setDetailPartner(null); setDetailType(null); }}
+            style={{
+              marginTop: '8px', padding: '10px 24px', borderRadius: '10px',
+              background: '#000069', color: 'white',
+              border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px'
+            }}
+          >
+            Fermer
+          </button>
+        </div>
+      ) : (
+        <StartupDetailPanel
+          partner={detailPartner}
+          type={detailType}
+          isOpen={!!detailPartner}
+          onClose={() => { setDetailPartner(null); setDetailType(null); }}
+          onEdit={(p) => {
+            if (detailType === 'sourcing') { setEditingPartner(p); setShowSourcingForm(true); }
+            else { setEditingPartner(p); setShowDealflowForm(true); }
+          }}
+          onTimeline={handleShowTimeline}
+          onComments={handleShowComments}
+          onDocs={handleOpenDocuments}
+          onTransition={handleTransitionToDealflow}
+          onDelete={handleDeleteFromDetail}
+        />
+      )}
       </div>
     </main>
   </div>
