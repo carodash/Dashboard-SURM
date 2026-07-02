@@ -1476,6 +1476,11 @@ async def add_manual_activity(partner_id: str, partner_type: str,
     collection = db.sourcing_partners if partner_type == "sourcing" else db.dealflow_partners
     partner = await collection.find_one({"id": partner_id})
     if not partner:
+        try:
+            partner = await collection.find_one({"_id": ObjectId(partner_id)})
+        except Exception:
+            partner = None
+    if not partner:
         raise HTTPException(status_code=404, detail="Partner not found")
     activity = await log_activity(
         partner_id=partner_id,
