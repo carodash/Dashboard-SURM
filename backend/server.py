@@ -2668,7 +2668,188 @@ async def migrate_domains():
  
     return results
 
+# ============================================================
+# NETTOYAGE DES DONNÉES : accents cassés + doublons (casse / espaces)
+# Utilisation :
+#   .../api/nettoyage-donnees            -> SIMULATION (ne modifie rien, affiche le rapport)
+#   .../api/nettoyage-donnees?apply=true -> APPLIQUE (après création d'une sauvegarde)
+# ============================================================
+import unicodedata
+from collections import Counter, defaultdict
+from pymongo import UpdateOne
 
+# Les accents cassés sont des octets cp850 lus comme des caractères de contrôle
+# (ex. "é" -> U+0082, "è" -> U+008A). Ces caractères n'existent jamais dans un
+# texte légitime : la correction est donc sûre et sans dictionnaire.
+_CP850_FIX = {chr(c): bytes([c]).decode("cp850") for c in range(0x80, 0xA0)}
+
+
+def _fix_encoding(s: str) -> str:
+    return "".join(_CP850_FIX.get(ch, ch) for ch in s)
+
+
+def _fix_value(v):
+    if isinstance(v, str):
+        return _fix_encoding(v)
+    if isinstance(v, list):
+        return [_fix_value(x) for x in v]
+    if isinstance(v, dict):
+        return {k: _fix_value(x) for k, x in v.items()}
+    return v
+
+
+def _clean_text(s: str) -> str:
+    return " ".join(s.split())          # supprime espaces de début/fin et doublons d'espaces
+
+
+def _fold(s: str) -> str:
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return " ".join(s.lower().split())
+
+
+def _has_accent(s: str) -> bool:
+    return any(unicodedata.combining(c) for c in unicodedata.normalize("NFD", s))
+
+
+def _canonical_map(values):
+    """Regroupe les variantes (casse, espaces, accents) et choisit la forme de référence :
+    d'abord la version accentuée, puis celle qui commence par une majuscule, puis la plus fréquente."""
+    counts = Counter(v for v in values if v)
+    groups = defaultdict(list)
+    for v in counts:
+        groups[_fold(v)].append(v)
+    mapping = {}
+    for variants in groups.values():
+        best = sorted(variants, key=lambda v: (not _has_accent(v), not v[:1].isupper(), -counts[v], v))[0]
+        for v in variants:
+            mapping[v] = best
+    return mapping
+
+
+# Champs "catalogue" à harmoniser. Un même groupe partage la même liste de référence
+# entre Sourcing et Dealflow, pour que les libellés soient identiques partout.
+_CLEANUP_GROUPS = {
+    "typologie": [("sourcing_partners", "typologie"), ("dealflow_partners", "typologie")],
+    "source":    [("sourcing_partners", "source"), ("dealflow_partners", "source")],
+    "pilote":    [("sourcing_partners", "pilote"), ("dealflow_partners", "pilote")],
+    "domaine":   [("sourcing_partners", "domaine_activite"), ("dealflow_partners", "domaine")],
+    "pays":      [("sourcing_partners", "pays_origine")],
+    "métiers":   [("dealflow_partners", "metiers_concernes")],
+}
+_EXPECTED_STATUTS = {
+    "sourcing_partners": ["A traiter", "Clos", "Dealflow", "Klaxoon"],
+    "dealflow_partners": ["Clos", "En cours avec les métiers", "En cours avec l'équipe inno",
+                          "Go métier étude", "Go experimentation", "Go généralisation"],
+}
+
+
+def _as_list(v):
+    return v if isinstance(v, list) else [v]
+
+
+@api_router.get("/nettoyage-donnees")
+async def nettoyage_donnees(apply: bool = False):
+    collections = ["sourcing_partners", "dealflow_partners"]
+    docs = {c: await db[c].find({}).to_list(20000) for c in collections}
+
+    # 1) Correction des accents sur TOUS les champs texte
+    fixed = {c: [] for c in collections}
+    accents_examples, accents_count = [], 0
+    for c in collections:
+        for d in docs[c]:
+            nd = {k: _fix_value(v) for k, v in d.items()}
+            for k, v in d.items():
+                if nd[k] != v:
+                    accents_count += 1
+                    if len(accents_examples) < 20 and isinstance(v, str):
+                        accents_examples.append({"collection": c, "champ": k,
+                                                 "avant": repr(v)[:60], "après": nd[k][:60]})
+            fixed[c].append(nd)
+
+    # 2) Nettoyage espaces + harmonisation casse/accents sur les champs catalogue
+    merges = []
+    for group, targets in _CLEANUP_GROUPS.items():
+        values = []
+        for c, f in targets:
+            for d in fixed[c]:
+                v = d.get(f)
+                if v:
+                    values += [_clean_text(x) for x in _as_list(v) if isinstance(x, str)]
+        mapping = _canonical_map(values)
+        # Rapport : variantes fusionnées
+        by_target = defaultdict(list)
+        for variant, best in mapping.items():
+            by_target[best].append(variant)
+        cnt = Counter(values)
+        for best, variants in by_target.items():
+            if len(variants) > 1:
+                merges.append({"champ": group, "devient": best,
+                               "variantes": sorted(variants), "nb_valeurs": sum(cnt[v] for v in variants)})
+        for c, f in targets:
+            for d in fixed[c]:
+                v = d.get(f)
+                if isinstance(v, str):
+                    cv = _clean_text(v)
+                    d[f] = mapping.get(cv, cv)
+                elif isinstance(v, list):
+                    d[f] = [mapping.get(_clean_text(x), _clean_text(x)) if isinstance(x, str) else x for x in v]
+
+    # 3) Différences à écrire en base
+    updates = {c: [] for c in collections}
+    for c in collections:
+        for old, new in zip(docs[c], fixed[c]):
+            changes = {k: v for k, v in new.items() if k != "_id" and old.get(k) != v}
+            if changes:
+                updates[c].append(UpdateOne({"_id": old["_id"]}, {"$set": changes}))
+
+    # 4) Points à vérifier à la main (jamais modifiés automatiquement)
+    anomalies = {}
+    for c in collections:
+        statuts = Counter(d.get("statut") for d in fixed[c])
+        inattendus = {str(s): n for s, n in statuts.items() if s not in _EXPECTED_STATUTS[c]}
+        pilotes = Counter(d.get("pilote") or "(vide)" for d in fixed[c])
+        residuels = sum(1 for d in fixed[c] for v in d.values() if isinstance(v, str) and "\ufffd" in v)
+        anomalies[c] = {"statuts_inhabituels": inattendus, "pilotes": dict(pilotes),
+                        "valeurs_avec_caractere_illisible_restant": residuels}
+
+    total_docs = sum(len(u) for u in updates.values())
+    report = {
+        "mode": "APPLIQUÉ" if apply else "SIMULATION — rien n'a été modifié en base",
+        "documents_analysés": {c: len(docs[c]) for c in collections},
+        "documents_à_modifier": {c: len(updates[c]) for c in collections},
+        "champs_accents_corrigés": accents_count,
+        "exemples_accents": accents_examples,
+        "variantes_fusionnées": sorted(merges, key=lambda m: -m["nb_valeurs"]),
+        "à_vérifier_manuellement": anomalies,
+    }
+
+    if apply and total_docs:
+        stamp = datetime.now().strftime("%Y%m%d_%H%M")
+        backups = []
+        try:
+            for c in collections:                      # sauvegarde AVANT toute écriture
+                name = f"{c}_backup_{stamp}"
+                await db[c].aggregate([{"$out": name}]).to_list(None)
+                backups.append(name)
+        except Exception as e:
+            report["mode"] = "ANNULÉ — la sauvegarde a échoué, rien n'a été modifié"
+            report["erreur"] = str(e)
+            return report
+        for c in collections:
+            ops = updates[c]
+            for i in range(0, len(ops), 500):
+                await db[c].bulk_write(ops[i:i + 500], ordered=False)
+        report["sauvegardes_créées"] = backups
+        report["message"] = f"✅ {total_docs} documents nettoyés. Sauvegardes : {', '.join(backups)}"
+    elif apply:
+        report["message"] = "✅ Rien à nettoyer : les données sont déjà propres."
+    elif total_docs:
+        report["message"] = (f"{total_docs} documents seraient modifiés. "
+                             "Ajoutez ?apply=true à l'adresse pour appliquer.")
+    else:
+        report["message"] = "✅ Rien à nettoyer : les données sont déjà propres."
+    return report
 app.include_router(api_router)
 
 logging.basicConfig(
