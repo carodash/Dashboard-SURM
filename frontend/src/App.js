@@ -7124,6 +7124,7 @@ const Dashboard = () => {
     // ---- Définition des colonnes : [clé, libellé, largeur, type] ----
     const sourcingAll = [
       ['nom_entreprise', 'Nom Entreprise', 28, 'text'],
+      ['site_web', 'Site web', 30, 'link'],
       ['statut', 'Statut', 14, 'text'],
       ['domaine_activite', "Domaine d'Activité", 18, 'text'],
       ['typologie', 'Typologie', 18, 'text'],
@@ -7140,11 +7141,12 @@ const Dashboard = () => {
       ['date_prochaine_action', 'Prochaine Action', 16, 'date'],
       ['actions_commentaires', 'Actions & Commentaires', 70, 'text'],
     ];
-    const sourcingEssential = ['nom_entreprise', 'statut', 'domaine_activite', 'typologie', 'pilote', 'source',
+    const sourcingEssential = ['nom_entreprise', 'site_web', 'statut', 'domaine_activite', 'typologie', 'pilote', 'source',
       'date_entree_sourcing', 'objet', 'priorite_strategique', 'date_prochaine_action'];
 
     const dealflowAll = [
       ['nom', 'Nom Startup', 28, 'text'],
+      ['site_web', 'Site web', 30, 'link'],
       ['statut', 'Statut', 26, 'text'],
       ['domaine', 'Domaine', 18, 'text'],
       ['typologie', 'Typologie', 18, 'text'],
@@ -7162,7 +7164,7 @@ const Dashboard = () => {
       ['date_prochaine_action', 'Prochaine Action', 16, 'date'],
       ['actions_commentaires', 'Actions & Commentaires', 70, 'text'],
     ];
-    const dealflowEssential = ['nom', 'statut', 'domaine', 'typologie', 'pilote', 'source', 'metiers_concernes',
+    const dealflowEssential = ['nom', 'site_web', 'statut', 'domaine', 'typologie', 'pilote', 'source', 'metiers_concernes',
       'objet', 'date_reception_fichier', 'date_prochaine_action'];
 
     const allCols = isSourcing ? sourcingAll : dealflowAll;
@@ -7201,7 +7203,12 @@ const Dashboard = () => {
     const cellValue = (row, [key, , , kind]) => {
       const v = row[key];
       if (v === null || v === undefined || v === '') return null;
-      if (kind === 'date') return exportToDate(v) || String(v);
+            if (kind === 'date') return exportToDate(v) || String(v);
+      if (kind === 'link') {
+        const url = String(v).trim();
+        const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+        return { text: url.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''), hyperlink: href };
+      }
       if (kind === 'number') { const n = Number(v); return isNaN(n) ? String(v) : n; }
       if (typeof v === 'boolean') return v ? 'Oui' : 'Non';
       if (Array.isArray(v)) return v.join('; ');
@@ -7237,7 +7244,8 @@ const Dashboard = () => {
           const cell = row.getCell(i + 1);
           cell.alignment = { vertical: 'top', wrapText: true };
           cell.border = { bottom: { style: 'hair', color: { argb: 'FFD1D5DB' } } };
-          if (c[3] === 'date') cell.numFmt = 'dd/mm/yyyy';
+                    if (c[3] === 'date') cell.numFmt = 'dd/mm/yyyy';
+          if (c[3] === 'link' && cell.value) cell.font = { color: { argb: 'FF0391DF' }, underline: true };
         });
         const st = statusStyle[row.getCell(colIndex.statut).value];
         if (st) {
