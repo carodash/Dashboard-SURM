@@ -7091,23 +7091,285 @@ const Dashboard = () => {
     }
   };
 
+  // ===================== EXPORT EXCEL (remplace l'export CSV) =====================
+  // La bibliothèque ExcelJS est chargée à la demande depuis un CDN :
+  // aucune modification de package.json n'est nécessaire.
+  const loadExcelJS = () => new Promise((resolve, reject) => {
+    if (window.ExcelJS) return resolve(window.ExcelJS);
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    script.onload = () => (window.ExcelJS ? resolve(window.ExcelJS) : reject(new Error('ExcelJS indisponible')));
+    script.onerror = () => reject(new Error('Chargement ExcelJS impossible'));
+    document.head.appendChild(script);
+  });
+
+  // Convertit "2026-09-24..." ou "24/09/2026" en vraie date Excel (UTC pour éviter tout décalage de jour)
+  const exportToDate = (v) => {
+    if (!v) return null;
+    if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+    if (typeof v === 'string') {
+      let m = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+      m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+    }
+    return null;
+  };
+
+  const buildExportWorkbook = (ExcelJS, data, type) => {
+    const isSourcing = type === 'sourcing';
+    const NAVY = 'FF000069';
+    const today = new Date();
+
+    // ---- Définition des colonnes : [clé, libellé, largeur, type] ----
+    const sourcingAll = [
+      ['nom_entreprise', 'Nom Entreprise', 28, 'text'],
+      ['statut', 'Statut', 14, 'text'],
+      ['domaine_activite', "Domaine d'Activité", 18, 'text'],
+      ['typologie', 'Typologie', 18, 'text'],
+      ['pays_origine', "Pays d'Origine", 16, 'text'],
+      ['pilote', 'Pilote', 14, 'text'],
+      ['source', 'Source', 14, 'text'],
+      ['date_entree_sourcing', 'Date Entrée Sourcing', 16, 'date'],
+      ['interet', 'Intérêt', 10, 'text'],
+      ['objet', 'Objet', 55, 'text'],
+      ['cas_usage', "Cas d'Usage", 35, 'text'],
+      ['technologie', 'Technologie', 22, 'text'],
+      ['score_maturite', 'Score Maturité', 12, 'number'],
+      ['priorite_strategique', 'Priorité Stratégique', 16, 'text'],
+      ['date_prochaine_action', 'Prochaine Action', 16, 'date'],
+      ['actions_commentaires', 'Actions & Commentaires', 70, 'text'],
+    ];
+    const sourcingEssential = ['nom_entreprise', 'statut', 'domaine_activite', 'typologie', 'pilote', 'source',
+      'date_entree_sourcing', 'objet', 'priorite_strategique', 'date_prochaine_action'];
+
+    const dealflowAll = [
+      ['nom', 'Nom Startup', 28, 'text'],
+      ['statut', 'Statut', 26, 'text'],
+      ['domaine', 'Domaine', 18, 'text'],
+      ['typologie', 'Typologie', 18, 'text'],
+      ['pilote', 'Pilote', 14, 'text'],
+      ['source', 'Source', 14, 'text'],
+      ['metiers_concernes', 'Métiers Concernés', 24, 'text'],
+      ['objet', 'Objet', 55, 'text'],
+      ['date_reception_fichier', 'Date Réception', 16, 'date'],
+      ['date_pre_qualification', 'Date Pré-qualification', 18, 'date'],
+      ['date_presentation_metiers', 'Date Présentation Métiers', 20, 'date'],
+      ['date_go_metier_etude', 'Date Go Métier Étude', 18, 'date'],
+      ['date_go_experimentation', 'Date Go Expérimentation', 20, 'date'],
+      ['date_go_generalisation', 'Date Go Généralisation', 20, 'date'],
+      ['date_cloture', 'Date Clôture', 16, 'date'],
+      ['date_prochaine_action', 'Prochaine Action', 16, 'date'],
+      ['actions_commentaires', 'Actions & Commentaires', 70, 'text'],
+    ];
+    const dealflowEssential = ['nom', 'statut', 'domaine', 'typologie', 'pilote', 'source', 'metiers_concernes',
+      'objet', 'date_reception_fichier', 'date_prochaine_action'];
+
+    const allCols = isSourcing ? sourcingAll : dealflowAll;
+    const essentialKeys = isSourcing ? sourcingEssential : dealflowEssential;
+    const essentialCols = allCols.filter(c => essentialKeys.includes(c[0]));
+    const nameKey = isSourcing ? 'nom_entreprise' : 'nom';
+    const domainKey = isSourcing ? 'domaine_activite' : 'domaine';
+    const entryDateKey = isSourcing ? 'date_entree_sourcing' : 'date_reception_fichier';
+
+    // ---- Statuts : couleur de fond, couleur de texte, ordre de tri ----
+    const statusStyle = {
+      'A traiter': ['FFFBB902', 'FF000000'],
+      'Klaxoon': ['FF0FD2B6', 'FF000000'],
+      'Dealflow': ['FF0391DF', 'FFFFFFFF'],
+      'Clos': ['FF9CA3AF', 'FF000000'],
+      "En cours avec l'équipe inno": ['FF0391DF', 'FFFFFFFF'],
+      'En cours avec les métiers': ['FFF42B5F', 'FFFFFFFF'],
+      'Go métier étude': ['FF000069', 'FFFFFFFF'],
+      'Go experimentation': ['FF0FD2B6', 'FF000000'],
+      'Go généralisation': ['FF22C55E', 'FF000000'],
+    };
+    const statusOrder = isSourcing
+      ? ['A traiter', 'Klaxoon', 'Dealflow', 'Clos']
+      : ["En cours avec l'équipe inno", 'En cours avec les métiers', 'Go métier étude',
+         'Go experimentation', 'Go généralisation', 'Clos'];
+    const rank = (s) => { const i = statusOrder.indexOf(s); return i === -1 ? statusOrder.length : i; };
+
+    // Tri : statuts actifs en premier, puis date d'entrée la plus récente
+    const sorted = [...data].sort((a, b) => {
+      const r = rank(a.statut) - rank(b.statut);
+      if (r !== 0) return r;
+      const da = exportToDate(a[entryDateKey]); const db = exportToDate(b[entryDateKey]);
+      return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+    });
+
+    const cellValue = (row, [key, , , kind]) => {
+      const v = row[key];
+      if (v === null || v === undefined || v === '') return null;
+      if (kind === 'date') return exportToDate(v) || String(v);
+      if (kind === 'number') { const n = Number(v); return isNaN(n) ? String(v) : n; }
+      if (typeof v === 'boolean') return v ? 'Oui' : 'Non';
+      if (Array.isArray(v)) return v.join('; ');
+      if (typeof v === 'object') return JSON.stringify(v);
+      return String(v);
+    };
+
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'SURM';
+    wb.created = today;
+
+    // ---- Onglets de données ----
+    const addDataSheet = (name, cols) => {
+      const ws = wb.addWorksheet(name, { views: [{ state: 'frozen', ySplit: 1, xSplit: 1 }], pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+      ws.columns = cols.map(c => ({ header: c[1], key: c[0], width: c[2] }));
+      sorted.forEach(row => {
+        const obj = {};
+        cols.forEach(c => { obj[c[0]] = cellValue(row, c); });
+        ws.addRow(obj);
+      });
+      const header = ws.getRow(1);
+      header.height = 30;
+      header.eachCell(cell => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } };
+        cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+      });
+      const colIndex = {};
+      cols.forEach((c, i) => { colIndex[c[0]] = i + 1; });
+      for (let r = 2; r <= ws.rowCount; r++) {
+        const row = ws.getRow(r);
+        cols.forEach((c, i) => {
+          const cell = row.getCell(i + 1);
+          cell.alignment = { vertical: 'top', wrapText: true };
+          cell.border = { bottom: { style: 'hair', color: { argb: 'FFD1D5DB' } } };
+          if (c[3] === 'date') cell.numFmt = 'dd/mm/yyyy';
+        });
+        const st = statusStyle[row.getCell(colIndex.statut).value];
+        if (st) {
+          const sc = row.getCell(colIndex.statut);
+          sc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: st[0] } };
+          sc.font = { bold: true, color: { argb: st[1] } };
+          sc.alignment = { vertical: 'top', horizontal: 'center', wrapText: true };
+        }
+        const nc = row.getCell(colIndex[nameKey]);
+        nc.font = { bold: true };
+      }
+      ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
+      return ws;
+    };
+
+    // ---- Onglet Synthèse ----
+    const ws0 = wb.addWorksheet('Synthèse', { views: [{ showGridLines: false }], pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+    ws0.getColumn(1).width = 30; ws0.getColumn(2).width = 12; ws0.getColumn(3).width = 10;
+    ws0.getColumn(4).width = 4;
+    ws0.getColumn(5).width = 30; ws0.getColumn(6).width = 12; ws0.getColumn(7).width = 10;
+
+    ws0.mergeCells('A1:G1');
+    const t = ws0.getCell('A1');
+    t.value = isSourcing ? 'SURM — Synthèse du sourcing' : 'SURM — Synthèse du dealflow';
+    t.font = { bold: true, size: 18, color: { argb: NAVY } };
+    ws0.getRow(1).height = 30;
+
+    const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 3600 * 1000);
+    const recent = sorted.filter(r => { const d = exportToDate(r[entryDateKey]); return d && d >= thirtyDaysAgo; }).length;
+    ws0.mergeCells('A2:G2');
+    ws0.getCell('A2').value = `Export du ${today.toLocaleDateString('fr-FR')} — ${sorted.length} startups (données filtrées à l'écran au moment de l'export) — dont ${recent} entrées dans les 30 derniers jours`;
+    ws0.getCell('A2').font = { italic: true, color: { argb: 'FF6B7280' } };
+    ws0.getCell('A2').alignment = { wrapText: true, vertical: 'top' };
+    ws0.getRow(2).height = 32;
+
+    const countBy = (key, limit) => {
+      // Regroupement insensible à la casse ("Kim" et "kim" sont comptés ensemble)
+      const m = {}; const labels = {};
+      sorted.forEach(r => {
+        const raw = (r[key] === null || r[key] === undefined) ? '' : String(r[key]).trim();
+        const v = raw === '' ? 'Non renseigné' : raw;
+        const k = v.toLowerCase();
+        if (!labels[k]) labels[k] = v.charAt(0).toUpperCase() + v.slice(1);
+        m[k] = (m[k] || 0) + 1;
+      });
+      let entries = Object.entries(m).map(([k, n]) => [labels[k], n]).sort((a, b) => b[1] - a[1]);
+      if (limit && entries.length > limit) {
+        const rest = entries.slice(limit).reduce((s, e) => s + e[1], 0);
+        entries = [...entries.slice(0, limit), ['Autres', rest]];
+      }
+      return entries;
+    };
+
+    const writeBlock = (startRow, col, title, entries) => {
+      const h = ws0.getRow(startRow);
+      [title, 'Nombre', '%'].forEach((label, i) => {
+        const c = h.getCell(col + i);
+        c.value = label;
+        c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } };
+        c.alignment = { horizontal: i === 0 ? 'left' : 'right' };
+      });
+      let r = startRow + 1;
+      entries.forEach(([label, n]) => {
+        const row = ws0.getRow(r);
+        row.getCell(col).value = label;
+        row.getCell(col + 1).value = n;
+        const pc = row.getCell(col + 2);
+        pc.value = sorted.length ? n / sorted.length : 0;
+        pc.numFmt = '0%';
+        [0, 1, 2].forEach(i => { row.getCell(col + i).border = { bottom: { style: 'hair', color: { argb: 'FFD1D5DB' } } }; });
+        const st = statusStyle[label];
+        if (st && title === 'Statut') {
+          row.getCell(col).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: st[0] } };
+          row.getCell(col).font = { bold: true, color: { argb: st[1] } };
+        }
+        r++;
+      });
+      return r + 1;
+    };
+
+    let left = 4; let right = 4;
+    left = writeBlock(left, 1, 'Statut', countBy('statut'));
+    left = writeBlock(left, 1, 'Typologie', countBy('typologie', 10));
+    left = writeBlock(left, 1, 'Source', countBy('source', 10));
+    right = writeBlock(right, 5, isSourcing ? "Domaine d'activité" : 'Domaine', countBy(domainKey, 12));
+    right = writeBlock(right, 5, 'Pilote', countBy('pilote', 10));
+    if (isSourcing) right = writeBlock(right, 5, 'Priorité stratégique', countBy('priorite_strategique'));
+
+    addDataSheet(isSourcing ? 'Sourcing' : 'Dealflow', essentialCols);
+    addDataSheet('Détail complet', allCols);
+    return wb;
+  };
+
+  const exportToExcel = async (data, type, filename) => {
+    if (!data || data.length === 0) {
+      alert('Aucune donnée à exporter.');
+      return;
+    }
+    try {
+      const ExcelJS = await loadExcelJS();
+      const wb = buildExportWorkbook(ExcelJS, data, type);
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Export Excel impossible, bascule sur le CSV :', error);
+      alert("L'export Excel n'a pas pu être généré ; un export CSV est téléchargé à la place.");
+      downloadCSV(convertToCSV(data), filename.replace(/\.xlsx$/, '.csv'));
+    }
+  };
+
   const handleBulkExport = () => {
-    const data = activeTab === 'sourcing' 
+    const data = activeTab === 'sourcing'
       ? sourcingPartners.filter(p => selectedItems.includes(p.id))
       : dealflowPartners.filter(p => selectedItems.includes(p.id));
-    
-    const csv = convertToCSV(data);
-    downloadCSV(csv, `${activeTab}_export_${new Date().toISOString().split('T')[0]}.csv`);
+
+    exportToExcel(data, activeTab, `SURM_${activeTab}_selection_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   const handleGlobalExport = () => {
-    // Export ALL filtered data, not just selected items
-    const data = activeTab === 'sourcing' 
-      ? filteredSourcingPartners 
+    // Export de TOUTES les données filtrées, pas seulement les éléments sélectionnés
+    const data = activeTab === 'sourcing'
+      ? filteredSourcingPartners
       : filteredDealflowPartners;
-    
-    const csv = convertToCSV(data);
-    downloadCSV(csv, `${activeTab}_export_global_${new Date().toISOString().split('T')[0]}.csv`);
+
+    exportToExcel(data, activeTab, `SURM_${activeTab}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   const convertToCSV = (data) => {
