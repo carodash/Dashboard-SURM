@@ -1281,24 +1281,41 @@ async def update_dealflow_partner(partner_id: str, partner_update: DealflowPartn
     return DealflowPartner(**updated_partner)
 
 
-@api_router.delete("/dealflow/{partner_id}")
-async def delete_dealflow_partner(partner_id: str):
-    partner = await db.dealflow_partners.find_one({"id": partner_id})
-    if not partner:
+
+@api_router.delete("/sourcing/{partner_id}")
+async def delete_sourcing_partner(partner_id: str, user_id: str = "default_user"):
+    current_user = await get_current_user(user_id)
+
+    # Recherche par id ou par _id MongoDB
+    try:
+        query = {"$or": [{"id": partner_id}, {"_id": ObjectId(partner_id)}]}
+    except (InvalidId, TypeError):
+        query = {"id": partner_id}
+
+    partner = await db.sourcing_partners.find_one(query)
+
+    if partner is None:
         raise HTTPException(status_code=404, detail="Partner not found")
-    result = await db.dealflow_partners.delete_one({"id": partner_id})
+
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can delete partners")
+
+    result = await db.sourcing_partners.delete_one(query)
+
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Partner not found")
+
     await log_activity(
         partner_id=partner_id,
-        partner_type="dealflow",
+        partner_type="sourcing",
         activity_type=ActivityType.UPDATED,
-        description=f"Startup '{partner['nom']}' supprimée du dealflow",
+        description=f"Startup '{partner['nom_entreprise']}' supprimée du sourcing",
         details={"action": "deleted"},
-        user_name="System"
+        user_id=current_user.id,
+        user_name=current_user.full_name
     )
-    return {"message": "Partner deleted successfully"}
 
+    return {"message": "Partner deleted successfully"}
 
 @api_router.post("/transition/{sourcing_id}")
 async def transition_to_dealflow(sourcing_id: str, dealflow_data: Dict[str, Any] = Body(...)):
