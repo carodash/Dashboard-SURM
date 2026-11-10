@@ -914,30 +914,6 @@ async def update_sourcing_partner(
     partner_with_status = add_inactivity_status(updated_partner_doc)
     return SourcingPartner(**partner_with_status)
 
-
-@api_router.delete("/sourcing/{partner_id}")
-async def delete_sourcing_partner(partner_id: str, user_id: str = "default_user"):
-    current_user = await get_current_user(user_id)
-    partner = await db.sourcing_partners.find_one({"id": partner_id})
-    if not partner:
-        raise HTTPException(status_code=404, detail="Partner not found")
-    if current_user.role != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Only admin can delete partners")
-    result = await db.sourcing_partners.delete_one({"id": partner_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Partner not found")
-    await log_activity(
-        partner_id=partner_id,
-        partner_type="sourcing",
-        activity_type=ActivityType.UPDATED,
-        description=f"Startup '{partner['nom_entreprise']}' supprimée du sourcing",
-        details={"action": "deleted"},
-        user_id=current_user.id,
-        user_name=current_user.full_name
-    )
-    return {"message": "Partner deleted successfully"}
-
-
 # --- Duplicate detection ---
 @api_router.get("/partners/check-duplicate")
 async def check_duplicate_partners(name: str):
