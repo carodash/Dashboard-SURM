@@ -6305,7 +6305,38 @@ const Dashboard = () => {
   // Gestion des fiches startups ouvertes
   const [openPartnerTabs, setOpenPartnerTabs] = useState([]);
   const [activePartnerTab, setActivePartnerTab] = useState(null);
+// Ouvrir une fiche startup dans un onglet interne
+  const openPartnerTab = (partner, type) => {
+    const partnerId = partner?.id || partner?._id;
 
+    if (!partnerId) {
+      alert("Impossible d'ouvrir cette fiche : identifiant manquant.");
+      return;
+    }
+
+    const tabId = `${type}-${partnerId}`;
+
+    setOpenPartnerTabs(prev => {
+      const alreadyOpen = prev.some(tab => tab.id === tabId);
+
+      if (alreadyOpen) {
+        return prev;
+      }
+
+      return [
+        ...prev,
+        {
+          id: tabId,
+          partnerId,
+          type,
+          partner,
+          title: partner.nom_entreprise || "Sans nom"
+        }
+      ];
+    });
+
+    setActivePartnerTab(tabId);
+  };
   const [loading, setLoading] = useState(false);
   const [detailPartner, setDetailPartner] = useState(null);
   const [detailType, setDetailType] = useState(null);
