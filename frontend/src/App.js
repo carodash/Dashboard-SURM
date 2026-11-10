@@ -6301,6 +6301,11 @@ const Dashboard = () => {
   const [showDealflowForm, setShowDealflowForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [editingPartner, setEditingPartner] = useState(null);
+
+  // Gestion des fiches startups ouvertes
+  const [openPartnerTabs, setOpenPartnerTabs] = useState([]);
+  const [activePartnerTab, setActivePartnerTab] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [detailPartner, setDetailPartner] = useState(null);
   const [detailType, setDetailType] = useState(null);
